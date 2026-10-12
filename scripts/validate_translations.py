@@ -1,4 +1,5 @@
-"""Check translated MIR files for completeness and consistency across exam years.
+"""Check the English MIR files against their Spanish text, for completeness and consistency
+across exam years.
 
 Checks per file:
     - empty translated fields and leftover option markers
@@ -6,7 +7,6 @@ Checks per file:
     - numbers in the Spanish source that are missing from the English translation
       (decimal commas are normalized, so 3,5 matches 3.5)
     - English to Spanish length ratios far outside the typical range for the file
-    - fallback rate from translate_mir.py (fields translated separately)
 
 Outputs:
     written to --out-dir (default data/translation_checks):
@@ -31,7 +31,7 @@ MARKER_PATTERN = re.compile(r"\[\[\s*[A-D]?\s*\]\]")
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("files", nargs="+", help="Translated CSV files produced by translate_mir.py.")
+    parser.add_argument("files", nargs="+", help="English MIR files (data/mir_<year>_en.csv).")
     parser.add_argument("--sample-size", type=int, default=15, help="Questions per year for manual spot checks.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--out-dir", default="data/translation_checks", help="Directory for the check reports.")
@@ -69,7 +69,6 @@ def check_file(path):
         if ratio < low or ratio > high:
             flags.append((row_id, field, f"unusual length ratio {ratio:.2f}"))
 
-    fallback_rate = (df.get("translation_mode", pd.Series(dtype=str)) == "per_field").mean()
     summary = {
         "file": path,
         "years": ", ".join(str(y) for y in sorted(df["year"].unique())),
@@ -77,7 +76,6 @@ def check_file(path):
         "answer_distribution": df["answer"].value_counts().sort_index().to_dict(),
         "mean_question_chars_en": round(df["question_en"].astype(str).str.len().mean(), 1),
         "median_length_ratio_en_es": round(ratio_series.median(), 3),
-        "fallback_rate": round(float(fallback_rate), 3),
         "flagged_fields": len(flags),
     }
     flag_df = pd.DataFrame(flags, columns=["id", "field", "issue"])

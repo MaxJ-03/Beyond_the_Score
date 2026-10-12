@@ -62,8 +62,6 @@ You need:
   huggingface.co while logged in and accept the license. MedGemma additionally requires
   accepting the Health AI Developer Foundations terms. Approval is usually immediate.
 * A Hugging Face access token (huggingface.co, Settings, Access Tokens, type "Read").
-* For the MIR translation: either a Google Cloud project with the Cloud Translation API
-  enabled, or the free `deep-translator` package (see section 5.3 for the trade-off).
 * The scraped MIR 2026 files in `data/external/` (MIR 2026 is not on Hugging Face; see
   section 5): the original Spanish `mir2026_text_primary_es.csv` (included in the project)
   and the translated `mir_2026_en_mlt.csv` (add it to the repository).
@@ -180,7 +178,21 @@ In every new terminal session, activate the environment again with
 
 ## 5. Preparing data and models
 
-### 5.1 One command
+### 5.1 Files in `data/external/`
+
+`data/external/` holds the files that do not come from the internet automatically. The folder
+is tracked by Git, so files added on your computer reach Snellius with `git pull`.
+
+| File | Content | Status |
+|---|---|---|
+| `mir2026_text_primary_es.csv` | MIR 2026, original Spanish questions and answers (170 questions) | included |
+| `mir2026_text_primary_es.jsonl` | the same in JSON Lines format (not used by the pipeline; kept for reference) | included |
+| `mir_2026_en_mlt.csv` | MIR 2026, the same questions with the English translation | **add this file** |
+
+MIR 2022 and 2024 need no files here: they are downloaded from CareQA on Hugging Face
+(Spanish and English) by the preparation step.
+
+### 5.2 One command
 
 ```bash
 source ~/venvs/medeval/bin/activate
@@ -209,7 +221,7 @@ At the end of the dataset step, a summary lists every dataset and its number of 
 Expect roughly 170 to 180 questions per edition, with the same number in Spanish and English
 for each edition.
 
-### 5.2 Selection rules
+### 5.3 Selection rules
 
 All editions use the same rules, applied by `scripts/download_mir.py`:
 
@@ -232,7 +244,7 @@ Points to settle before reporting results:
 * The original Spanish text of 2026 comes from the scraper; check a few questions for
   formatting artifacts (words split by hyphens, leftover numbering).
 
-### 5.3 Translations
+### 5.4 Translations
 
 The English versions come from two translators: GPT-4 for 2022 and 2024 (CareQA, validated by
 human evaluators) and Google machine translation for 2026 (scraped file). Report both in the
@@ -245,12 +257,7 @@ the editions should look similar), `validation_flags.csv` (fields with possible 
 as numbers missing from the English text) and `spot_check_sample.csv` (15 questions per edition
 for a Spanish-speaking group member to compare, filling in `reviewer_ok` and `reviewer_notes`).
 
-To use a different translation for 2026 later, `scripts/translate_mir.py` translates
-`data/raw/mir_2026_es.csv` into the same format (backends: `google-cloud`, `deep-translator`,
-`mock`); then rerun the evaluation for 2026 with
-`FORCE=1 DATASETS="mir_2026" bash scripts/submit_all.sh`.
-
-### 5.4 Optional: MedQA
+### 5.5 Optional: MedQA
 
 ```bash
 python scripts/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl
@@ -463,9 +470,7 @@ and finally `bash scripts/submit_all.sh`, which only runs the new model.
 | Job hits its time limit | Time limit too short | Increase `slurm_time` in `models.yaml` and resubmit |
 | High `invalid_rate` | Model answers in an unexpected format | Inspect `response` fields; adjust the prompt or the parser and rerun all models |
 | High `truncated_rate` | Token limit too low (mainly with thinking) | Increase `max_tokens_thinking` or `max_model_len` |
-| Translation script: missing columns | Source CSV uses other names | Rename columns or pass `COLUMN_MAP` |
 | `download_mir.py pdf` finds far fewer than 210 questions | Different PDF layout | Check the warnings; use the `csv` source with an existing scrape instead |
-| Many translation fallbacks | Translator alters the option markers | Usually harmless; check those questions in the spot check |
 
 ## 12. Reproducibility checklist for the paper
 
@@ -478,7 +483,8 @@ Record and report:
 * MIR sources (CareQA or official PDFs), selection rules (200 main questions; image-based,
   annulled and reserve questions removed) and the number of questions per year
   (`data/raw/mir_<year>_es.report.json`)
-* translation backend, model and date (`data/mir_<year>_en.meta.json`) and the spot-check result
+* translation sources (CareQA's GPT-4 translation for 2022 and 2024, the scraped Google
+  machine translation for 2026; see `data/mir_<year>_en.meta.json`) and the spot-check result
 * the parameter counts used for FLOPs (`results/param_counts.json`) and the choice of
   `lm_total` or `lm_non_embedding`
 * the prompts (`configs/datasets.yaml`)

@@ -1,8 +1,7 @@
-# Needed only for data preparation (scripts/download_mir.py, translate_mir.py,
-# validate_translations.py, prepare_medqa.py). Not needed on the GPU nodes.
+# Optional extras for data preparation outside the main environment (for example on your
+# own computer). The Snellius environment from scripts/setup_env.sh already covers
+# scripts/prepare_data.py.
 pandas
 datasets          # CareQA and MedQA downloads
-pdfplumber        # MIR booklets in PDF format
+pdfplumber        # only for download_mir.py with official PDF booklets
 requests
-google-cloud-translate   # translation backend: google-cloud
-deep-translator          # translation backend: deep-translator
