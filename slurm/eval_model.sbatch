@@ -20,6 +20,9 @@ source "$HOME/venvs/medeval/bin/activate"
 
 export HF_HOME="/scratch-shared/$USER/hf_cache"
 export HF_HUB_OFFLINE=1
+# Use vLLM's built-in sampler instead of FlashInfer's, which compiles GPU code at startup
+# and needs the CUDA compiler. Greedy decoding gives identical results with both.
+export VLLM_USE_FLASHINFER_SAMPLER=0
 export TOKENIZERS_PARALLELISM=false
 
 cd "$SLURM_SUBMIT_DIR"
