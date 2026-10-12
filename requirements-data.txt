@@ -1,0 +1,8 @@
+# Needed only for data preparation (scripts/download_mir.py, translate_mir.py,
+# validate_translations.py, prepare_medqa.py). Not needed on the GPU nodes.
+pandas
+datasets          # CareQA and MedQA downloads
+pdfplumber        # MIR booklets in PDF format
+requests
+google-cloud-translate   # translation backend: google-cloud
+deep-translator          # translation backend: deep-translator

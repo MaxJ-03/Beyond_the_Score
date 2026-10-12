@@ -1,0 +1,111 @@
+# Model registry.
+#
+# All models run on a single NVIDIA H100 (94 GB) so that measured GPU time is
+# comparable across models. Parameter counts for the FLOPs metric are not set here:
+# they are computed from the downloaded weights by scripts/count_params.py.
+#
+# Main comparisons:
+#   size:                 gemma3-4b vs gemma3-27b (and gemma3-1b)
+#   medical fine-tuning:  gemma3-4b vs medgemma-4b, gemma3-27b vs medgemma-27b
+#   independent family:   qwen3-1.7b and qwen3-4b
+#
+# Release dates are recorded for the exposure analysis; verify them against the
+# official model cards before reporting.
+
+defaults:
+  dtype: bfloat16
+  gpu_memory_utilization: 0.90
+  max_model_len: 8192
+  tensor_parallel_size: 1
+  seed: 0
+  thinking: false
+  slurm_time: "01:00:00"
+  llm_kwargs: {}
+  chat_template_kwargs: {}
+
+models:
+  # Gemma 3 (general purpose). The 4B and 27B instruction-tuned checkpoints are
+  # multimodal; image inputs are disabled because all questions are text-only.
+  # The 1B checkpoint is text-only.
+  gemma3-1b:
+    hf_id: google/gemma-3-1b-it
+    family: gemma3
+    size_b: 1
+    medical: false
+    release: "2025-03-12"
+
+  gemma3-4b:
+    hf_id: google/gemma-3-4b-it
+    family: gemma3
+    size_b: 4
+    medical: false
+    release: "2025-03-12"
+    llm_kwargs: {limit_mm_per_prompt: {image: 0}}
+
+  gemma3-27b:
+    hf_id: google/gemma-3-27b-it
+    family: gemma3
+    size_b: 27
+    medical: false
+    release: "2025-03-12"
+    llm_kwargs: {limit_mm_per_prompt: {image: 0}}
+    slurm_time: "02:00:00"
+
+  # MedGemma (medical fine-tunes of Gemma 3). Both checkpoints require accepting
+  # the Health AI Developer Foundations terms on Hugging Face.
+  medgemma-4b:
+    hf_id: google/medgemma-4b-it
+    family: gemma3
+    size_b: 4
+    medical: true
+    release: "2025-05-20"
+    llm_kwargs: {limit_mm_per_prompt: {image: 0}}
+
+  medgemma-27b:
+    hf_id: google/medgemma-27b-text-it
+    family: gemma3
+    size_b: 27
+    medical: true
+    release: "2025-05-20"
+    slurm_time: "02:00:00"
+
+  # Qwen3 (original April 2025 checkpoints, not the later "2507" updates).
+  # Thinking is disabled through the chat template for comparability with Gemma.
+  qwen3-1.7b:
+    hf_id: Qwen/Qwen3-1.7B
+    family: qwen3
+    size_b: 1.7
+    medical: false
+    release: "2025-04-29"
+    chat_template_kwargs: {enable_thinking: false}
+
+  qwen3-4b:
+    hf_id: Qwen/Qwen3-4B
+    family: qwen3
+    size_b: 4
+    medical: false
+    release: "2025-04-29"
+    chat_template_kwargs: {enable_thinking: false}
+
+  # Optional: medical fine-tune of the Qwen family. Fill in the exact Hugging Face
+  # identifier after verifying the checkpoint, then remove `optional`.
+  # huatuo-8b:
+  #   hf_id: <verified identifier>
+  #   family: qwen
+  #   size_b: 8
+  #   medical: true
+  #   release: "<release date>"
+  #   optional: true
+
+  # Optional variant with thinking enabled, to measure the cost of reasoning.
+  qwen3-4b-think:
+    hf_id: Qwen/Qwen3-4B
+    family: qwen3
+    size_b: 4
+    medical: false
+    release: "2025-04-29"
+    thinking: true
+    max_model_len: 16384
+    chat_template_kwargs: {enable_thinking: true}
+    slurm_time: "06:00:00"
+    optional: true

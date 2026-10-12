@@ -1,0 +1,7 @@
+data/*
+!data/.gitkeep
+results*/
+logs/
+__pycache__/
+*.egg-info/
+requirements.lock.txt

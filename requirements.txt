@@ -1,0 +1,9 @@
+# Exact installed versions are recorded in requirements.lock.txt by scripts/setup_env.sh.
+vllm
+pandas
+numpy
+pyyaml
+matplotlib
+huggingface_hub
+datasets
+safetensors

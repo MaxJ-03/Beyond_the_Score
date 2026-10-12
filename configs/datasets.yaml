@@ -1,0 +1,111 @@
+# Dataset registry.
+#
+# Every dataset is converted to the same internal format (question, lettered options,
+# correct letter). Two input formats are supported:
+#   jsonl: one JSON object per line with keys id, year, question, options, answer
+#          (options is a mapping from letter to text, answer is a letter)
+#   csv:   one row per question; the columns block maps the CSV columns to fields
+#
+# The group label drives the analysis:
+#   older_exam = older MIR editions, used as the standard benchmark (possibly seen in training)
+#   new_exam   = newest MIR edition, released after all evaluated models
+#   real_world = questions from clinical practice (to be added)
+#   reference  = additional benchmark, not part of the main comparison
+#
+# The *_es entries evaluate the original Spanish text from the same files, to test
+# whether translation affects accuracy. The instructions stay in English.
+
+datasets:
+  mir_2022:
+    format: csv
+    path: data/mir_2022_en.csv
+    group: older_exam
+    language: en
+    columns: &mir_en
+      id: id
+      year: year
+      question: question_en
+      answer: answer
+      options: {A: option_a_en, B: option_b_en, C: option_c_en, D: option_d_en}
+
+  mir_2024:
+    format: csv
+    path: data/mir_2024_en.csv
+    group: older_exam
+    language: en
+    columns: *mir_en
+
+  mir_2026:
+    format: csv
+    path: data/mir_2026_en.csv
+    group: new_exam
+    language: en
+    columns: *mir_en
+
+  mir_2022_es:
+    format: csv
+    path: data/mir_2022_en.csv
+    group: older_exam
+    language: es
+    columns: &mir_es
+      id: id
+      year: year
+      question: question_es
+      answer: answer
+      options: {A: option_a_es, B: option_b_es, C: option_c_es, D: option_d_es}
+
+  mir_2024_es:
+    format: csv
+    path: data/mir_2024_en.csv
+    group: older_exam
+    language: es
+    columns: *mir_es
+
+  mir_2026_es:
+    format: csv
+    path: data/mir_2026_en.csv
+    group: new_exam
+    language: es
+    columns: *mir_es
+
+  # Optional reference benchmark (reproduction of widely reported scores).
+  medqa:
+    format: jsonl
+    path: data/medqa_test.jsonl
+    group: reference
+    language: en
+
+  # Placeholder for the real-world dataset. The pipeline scores multiple-choice
+  # questions only; once a dataset is chosen and converted to the jsonl format above,
+  # uncomment and adjust the path.
+  # real_world:
+  #   format: jsonl
+  #   path: data/real_world.jsonl
+  #   group: real_world
+  #   language: en
+
+# Main comparison in English. Add the *_es entries to test the effect of translation,
+# and medqa to reproduce reported scores.
+default_datasets: [mir_2022, mir_2024, mir_2026]
+
+evaluation:
+  system_prompt: "You are a medical expert answering multiple-choice questions."
+  # Instruction used when thinking is disabled: the answer is expected immediately.
+  instruction_direct: >-
+    Answer the following multiple-choice question. Respond with only the letter
+    of the correct option.
+  # Instruction used when thinking is enabled: reasoning is allowed before the answer.
+  instruction_thinking: >-
+    Answer the following multiple-choice question. Reason step by step, then end
+    your response with "Answer: X", where X is the letter of the correct option.
+  temperature: 0.0
+  max_tokens_direct: 64
+  max_tokens_thinking: 8192
+
+analysis:
+  # Parameter count used in FLOPs = 2 * N * (input tokens + output tokens).
+  # lm_total: all language-model parameters, including embeddings (vision encoder excluded)
+  # lm_non_embedding: language-model parameters excluding the input embedding table
+  flops_param_count: lm_total
+  bootstrap_samples: 2000
+  bootstrap_seed: 0
