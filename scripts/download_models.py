@@ -1,8 +1,10 @@
-"""Download all model weights into the Hugging Face cache before running jobs.
+"""Download all model weights into the Hugging Face cache, then count their parameters.
 
 Run this on a login node (or on the staging partition) with HF_HOME pointing to
 /scratch-shared/<username>/hf_cache. Evaluation jobs then run with HF_HUB_OFFLINE=1.
 Gated models (Gemma 3, MedGemma) require a Hugging Face login and accepted licenses.
+After downloading, parameter counts for the FLOPs metric are written to
+results/param_counts.json.
 
 Usage:
     python scripts/download_models.py               all non-optional models
@@ -11,6 +13,7 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import sys
 from pathlib import Path
 
@@ -39,6 +42,12 @@ def main():
         path = snapshot_download(repo_id=hf_id, allow_patterns=ALLOW_PATTERNS)
         print(f"  stored at {path}")
         done.add(hf_id)
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location("count_params", root / "scripts" / "count_params.py")
+    count_params = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(count_params)
+    count_params.count_all(root / "results" / "param_counts.json")
 
 
 if __name__ == "__main__":

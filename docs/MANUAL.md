@@ -10,8 +10,8 @@ quick reference at the end.
 2. Before you start
 3. Connecting to Snellius
 4. Installing the pipeline
-5. Preparing the data
-6. Downloading the models
+5. Preparing data and models
+6. Checking the models
 7. Running the evaluation
 8. Analysing the results
 9. Configuration reference
@@ -32,26 +32,26 @@ how much compute each correct answer costs, on three kinds of questions:
 | Standard benchmark | MIR 2022 and 2024 | Older editions of the exam, possibly seen in training |
 | Same-type benchmark | MIR 2026 | Same exam, released after all models |
 | Real-world questions | to be decided | Transfer to clinical practice |
-| Translation check (optional) | MIR in the original Spanish | Does translation affect accuracy? |
 | Reference (optional) | MedQA (USMLE) | Reproduce widely reported scores |
+
+Every MIR edition is evaluated in the original Spanish and in English. English for 2022 and
+2024 comes from CareQA's official translation (GPT-4); English for 2026 comes from the
+scraped translation (Google machine translation).
 
 Models: Gemma 3 1B, 4B and 27B, MedGemma 4B and 27B (text), Qwen3 1.7B and 4B, plus an
 optional Qwen3 4B variant with thinking enabled.
 
-The work is split into three stages, each run separately:
-
 ```
-Stage 1: data preparation (once)               Stage 2: evaluation (once per model)   Stage 3: analysis
-  download MIR (Spanish) ─ translate ─ validate ─> data/mir_<year>_en.csv ─> results/raw/ ─> accuracy, cost metrics,
-  (optional) MedQA from Hugging Face ──────────> data/medqa_test.jsonl        (one job per    rankings, exam shift,
-                                                                               model, 1 H100)  Pareto plots
+Stage 1: preparation (once)                 Stage 2: evaluation              Stage 3: analysis
+  scripts/prepare_all.sh                      scripts/submit_all.sh            python -m medeval.analyze
+  datasets + models + parameter counts  ──>   one Slurm job per model    ──>   accuracy, cost metrics,
+                                              (only missing results)           rankings, exam shift, plots
 ```
 
-* **Stage 1** runs on your own computer or a Snellius login node. It needs internet access
-  but no GPU.
+* **Stage 1** runs on a Snellius login node (internet access, no GPU).
 * **Stage 2** runs as Slurm jobs on Snellius GPU nodes. Each model is loaded once and answers
-  all questions of all datasets.
-* **Stage 3** runs anywhere (it only reads result files) and takes seconds.
+  all questions of all available datasets.
+* **Stage 3** only reads result files and takes seconds.
 
 ## 2. Before you start
 
@@ -64,8 +64,9 @@ You need:
 * A Hugging Face access token (huggingface.co, Settings, Access Tokens, type "Read").
 * For the MIR translation: either a Google Cloud project with the Cloud Translation API
   enabled, or the free `deep-translator` package (see section 5.3 for the trade-off).
-* For MIR 2026 (not on Hugging Face): the official booklet and answer key as PDF, or the
-  CSV from Asen's scraper (see section 5.2).
+* The scraped MIR 2026 files in `data/external/` (MIR 2026 is not on Hugging Face; see
+  section 5): the original Spanish `mir2026_text_primary_es.csv` (included in the project)
+  and the translated `mir_2026_en_mlt.csv` (add it to the repository).
 
 ## 3. Connecting to Snellius
 
@@ -123,7 +124,21 @@ scp -r medeval snellius:~/                 # project folder to Snellius
 scp snellius:~/medeval/results/analysis/summary.csv .   # a result back to your computer
 ```
 
-### 3.5 Rules on Snellius
+### 3.5 Getting the code onto Snellius with Git
+
+The project lives in a private GitHub repository. On Snellius:
+
+```bash
+git config --global credential.helper store
+git clone https://github.com/<owner>/<repository>.git
+```
+
+GitHub asks for a username and a password; the password must be a **personal access token**,
+not your GitHub password (github.com, Settings, Developer settings, Personal access tokens,
+Fine-grained, access to the repository with "Contents: Read and write"). After changing code
+on your computer and pushing it, update Snellius with `git pull`.
+
+### 3.6 Rules on Snellius
 
 * The login node is only for editing files, installing software and submitting jobs.
   Never run models there; use Slurm jobs.
@@ -134,11 +149,12 @@ scp snellius:~/medeval/results/analysis/summary.csv .   # a result back to your 
 
 ## 4. Installing the pipeline
 
-Copy the project to Snellius (section 3.4), log in and run:
+Get the project onto Snellius (section 3.5), log in, go to the project folder (the folder
+containing `configs`, `scripts` and `src`) and run:
 
 ```bash
-cd ~/medeval
-module avail Python
+module load 2024
+module avail Python               # press q to leave the list
 ```
 
 Check that `Python/3.12.3-GCCcore-13.3.0` appears in the list. If the name differs, use the
@@ -156,200 +172,122 @@ Then log in to Hugging Face once:
 
 ```bash
 source ~/venvs/medeval/bin/activate
-huggingface-cli login            # paste your access token
+hf auth login                    # paste your access token (older versions: huggingface-cli login)
 ```
 
 In every new terminal session, activate the environment again with
 `source ~/venvs/medeval/bin/activate` before running any script.
 
-## 5. Preparing the data
+## 5. Preparing data and models
 
-All data preparation runs on your own computer or a Snellius login node (internet, no GPU).
-Install its dependencies once:
-
-```bash
-pip install -r requirements-data.txt
-```
-
-All input data lives in `data/`. The pipeline reads these files:
-
-```
-data/mir_2022_en.csv      MIR 2022 (Spanish and English side by side)
-data/mir_2024_en.csv      MIR 2024
-data/mir_2026_en.csv      MIR 2026
-data/medqa_test.jsonl     optional, only for the MedQA reference run
-```
-
-The Spanish versions (`mir_<year>_es` datasets) are read from the same files, from the
-Spanish columns.
-
-### 5.1 MedQA (optional reference)
-
-```bash
-python scripts/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl
-```
-
-The script detects the layout of the dataset and prints the columns it used and the first
-converted item. Check that item: the options should be labelled A, B, C, D (and E if
-present) and the answer letter should match the correct option. If detection fails, pass
-the column names explicitly with `--question-col`, `--options-col` and `--answer-col`.
-
-Note the number of options and the split in the paper, since reported MedQA scores refer to
-specific versions (most often the 4-option US test set with 1,273 questions).
-
-### 5.2 MIR: collecting the Spanish questions
-
-`scripts/download_mir.py` collects the Spanish questions of each year into
-`data/raw/mir_<year>_es.csv`, in one shared format, from one of three sources:
-
-**MIR 2020 to 2024: download from CareQA** (Hugging Face, built from the official
-ministry booklets, with image-based and annulled questions already removed):
-
-```bash
-python scripts/download_mir.py careqa --years 2022 2024
-```
-
-**MIR 2026: from the official PDFs.** Download the exam booklet (use the official version,
-"V0") and the definitive answer key from the Ministry of Health website, then:
-
-```bash
-python scripts/download_mir.py pdf --year 2026 \
-    --questions-pdf cuaderno_mir_2026_v0.pdf --answers-pdf respuestas_mir_2026.pdf
-```
-
-URLs can be given instead of file paths. PDF layouts change between years, so check the
-printed report: about 200 main and 10 reserve questions should be found, and the script
-warns about question numbers it could not parse completely. Make sure the answer key
-belongs to the same exam version as the booklet.
-
-**Alternatively, from an existing CSV** (for example Asen's scraped 2026 file):
-
-```bash
-python scripts/download_mir.py csv --year 2026 --input mir2026_text_primary_es.csv \
-    --column-map '{"pregunta": "question", "a": "option_a", "b": "option_b", "c": "option_c", "d": "option_d", "respuesta": "answer"}'
-```
-
-Adjust the column mapping to the actual column names. Answers may be letters (A to D) or
-numbers (1 to 4).
-
-All three sources apply the same rules: questions that mention an image are removed,
-annulled questions (no valid answer) are removed, and whitespace is normalized. Each year
-also gets a report, `data/raw/mir_<year>_es.report.json`, listing how many questions were
-removed and why. Compare the reports across years; the numbers of remaining questions should
-be similar. The output columns are:
-
-| Column | Content |
-|---|---|
-| `id` | unique identifier, e.g. `mir2026-017` |
-| `year` | exam year |
-| `question_number` | number in the original exam |
-| `question` | question text in Spanish |
-| `option_a` ... `option_d` | the four answer options in Spanish |
-| `answer` | correct letter, A to D |
-
-Decide as a group whether to keep the 10 reserve questions, and apply the same choice to
-every year (for the PDF source, `--max-question 200` drops them).
-
-### 5.3 MIR: translation
-
-All years must be translated with the same method, in the same period. Translate the
-Spanish source files yourself, rather than combining your own translation of one year with
-an existing translation of another (for example CareQA's English version), because a
-difference in translation quality could otherwise explain differences in accuracy.
-
-Choose one backend and use it for all years:
-
-| Backend | Requirements | Reproducibility |
-|---|---|---|
-| `google-cloud` (recommended) | Google Cloud project with the Cloud Translation API enabled; `gcloud auth application-default login` | Model is selectable and recorded |
-| `deep-translator` | none (free Google Translate web service) | Model cannot be pinned; translate all years in one session |
-
-Run the translation and validation for all years in one go:
-
-```bash
-BACKEND=google-cloud PROJECT_ID=<your-project> bash scripts/prepare_mir.sh
-# or
-BACKEND=deep-translator bash scripts/prepare_mir.sh
-```
-
-Optional settings: `YEARS="2022 2024 2025 2026"` to change the years,
-`MODEL=general/translation-llm` to use Google's LLM-based translation model, and
-`COLUMN_MAP='{"pregunta": "question"}'` if your source columns are named differently.
-
-Each question is translated together with its options, so that a term appearing in both
-is translated the same way. If the translation damages the option markers, that question
-is retranslated field by field; these cases are listed in the metadata file.
-
-Outputs per year: `data/mir_<year>_en.csv` (Spanish and English side by side) and
-`data/mir_<year>_en.meta.json` (backend, model and date; needed for the paper).
-
-### 5.4 MIR: checking the translation
-
-`prepare_mir.sh` ends by running the validation script, which writes three files to
-`data/translation_checks/`:
-
-* `validation_summary.csv`: one row per year. The years should look similar: comparable
-  English-to-Spanish length ratios, a low fallback rate and few flagged fields.
-* `validation_flags.csv`: every suspicious field, for example a number in the Spanish text
-  that is missing from the English text (a lab value of 3,5 should appear as 3.5), an empty
-  translation, or an unusually short or long translation. Check each flagged question and
-  fix the English text by hand where needed.
-* `spot_check_sample.csv`: 15 random questions per year. A group member who reads Spanish
-  should compare Spanish and English, focusing on drug names, abbreviations, lab values and
-  negations, and fill in the `reviewer_ok` and `reviewer_notes` columns. Report the share of
-  acceptable translations per year in the paper.
-
-## 6. Downloading the models
-
-Compute nodes should not download anything, so download all weights first, from a login node:
+### 5.1 One command
 
 ```bash
 source ~/venvs/medeval/bin/activate
-python scripts/download_models.py
+nohup bash scripts/prepare_all.sh > logs/prepare.log 2>&1 &
+tail -f logs/prepare.log          # Ctrl+C stops watching, not the preparation
 ```
 
-This stores about 140 GB in `/scratch-shared/scur0455/hf_cache`. A "401" or "gated repo"
-error means the license for that model has not been accepted yet (section 2).
+This runs two steps:
 
-Then count the language-model parameters, which the FLOPs metric needs:
+1. **Datasets** (`scripts/prepare_data.py`, about a minute):
+   * MIR 2022 and 2024 in Spanish, from CareQA on Hugging Face, written to
+     `data/raw/mir_<year>_es.csv`
+   * MIR 2022 and 2024 in English, from CareQA's official English version (translated with
+     GPT-4 and validated by human evaluators), written to `data/mir_<year>_en.csv` with the
+     Spanish text in parallel columns
+   * MIR 2026 in Spanish, from `data/external/mir2026_text_primary_es.csv`, written to
+     `data/raw/mir_2026_es.csv`
+   * MIR 2026 in English, from `data/external/mir_2026_en_mlt.csv`, written to
+     `data/mir_2026_en.csv` (`scripts/prepare_mir2026_en.py`)
+   * a validation of all English files, with a spot-check sample, in `data/translation_checks/`
+2. **Models** (`scripts/download_models.py`, about an hour): downloads all weights (about
+   140 GB) to `/scratch-shared/$USER/hf_cache` and then writes the parameter counts for the
+   FLOPs metric to `results/param_counts.json`.
+
+At the end of the dataset step, a summary lists every dataset and its number of questions.
+Expect roughly 170 to 180 questions per edition, with the same number in Spanish and English
+for each edition.
+
+### 5.2 Selection rules
+
+All editions use the same rules, applied by `scripts/download_mir.py`:
+
+* only the 200 main questions (the 10 reserve questions, 201 to 210, are removed, because
+  the 2026 source has none)
+* questions referring to an attached image ("Pregunta vinculada a la imagen") are removed;
+  general mentions of imaging ("prueba de imagen") are kept
+* annulled questions (no valid answer) are removed
+
+Each edition gets a report, `data/raw/mir_<year>_es.report.json`, with the number of removed
+questions per rule. The English files of 2022 and 2024 have a `.meta.json` file reporting how
+many questions were matched between the Spanish and English versions, and whether any answers
+differ between them (unmatched questions and answer mismatches should both be 0).
+
+Points to settle before reporting results:
+
+* The 2026 answers in the scraped file come from an exam-preparation website. Compare them
+  with the official definitive answer key of the Ministry of Health. The answer distribution
+  of 2026 is less balanced than in 2022 and 2024, which makes this check important.
+* The original Spanish text of 2026 comes from the scraper; check a few questions for
+  formatting artifacts (words split by hyphens, leftover numbering).
+
+### 5.3 Translations
+
+The English versions come from two translators: GPT-4 for 2022 and 2024 (CareQA, validated by
+human evaluators) and Google machine translation for 2026 (scraped file). Report both in the
+paper. Because the Spanish questions are the original exam text for every edition, the
+Spanish comparison of old and new editions is free of translation effects; comparing
+Spanish and English results per edition shows whether translation affects accuracy.
+
+`data/translation_checks/` contains three files: `validation_summary.csv` (one row per edition;
+the editions should look similar), `validation_flags.csv` (fields with possible problems, such
+as numbers missing from the English text) and `spot_check_sample.csv` (15 questions per edition
+for a Spanish-speaking group member to compare, filling in `reviewer_ok` and `reviewer_notes`).
+
+To use a different translation for 2026 later, `scripts/translate_mir.py` translates
+`data/raw/mir_2026_es.csv` into the same format (backends: `google-cloud`, `deep-translator`,
+`mock`); then rerun the evaluation for 2026 with
+`FORCE=1 DATASETS="mir_2026" bash scripts/submit_all.sh`.
+
+### 5.4 Optional: MedQA
 
 ```bash
-python scripts/count_params.py --out results/param_counts.json
+python scripts/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl
+DATASETS="medqa" bash scripts/submit_all.sh
 ```
 
-The script reads only the file headers, so it runs in seconds. It excludes the image
-components of the multimodal Gemma checkpoints and prints the counts per model.
+MedQA is marked as optional, so it is only evaluated when requested.
 
-Because scratch files are deleted after 14 days without use, run `download_models.py` again
-if a job reports that a model cannot be found.
+## 6. Checking the models
+
+`prepare_all.sh` prints the parameter count of each model at the end of `logs/prepare.log`.
+Check that they roughly match the model names (about 1B, 4B and 27B for Gemma, 1.7B and 4B for
+Qwen). A "401" or "gated repo" error during the download means the license of that model has
+not been accepted yet (section 2). Because scratch files are deleted after 14 days without
+use, rerun `python scripts/download_models.py` if a job later reports a missing model.
 
 ## 7. Running the evaluation
 
 ### 7.1 Smoke test
 
-Always run the smoke test first, after installing and after changing prompts or settings.
-It evaluates one small model on 20 questions per dataset (about 20 minutes, at most 64 SBU):
+Run the smoke test first, and again after changing prompts or settings. It evaluates one small
+model on 20 questions of every available dataset (about 20 minutes, at most 64 SBU):
 
 ```bash
 sbatch slurm/smoke_test.sbatch
-```
-
-When it has finished, check:
-
-```bash
+squeue -u $USER                    # wait until the job disappears
 cat logs/medeval_smoke_*.out
-head -n 3 results_smoke/raw/qwen3-4b/mir_2026.jsonl
+head -n 3 results_smoke/raw/qwen3-4b/mir_2026_es.jsonl
 ```
 
 Each line in the `.jsonl` files shows the model's `response`, the `predicted` letter and
-whether it was `correct`. Look for:
+whether it was `correct`. Check that:
 
-* `predicted` filled in for nearly all questions. Many `null` values mean the model answers
-  in a format the parser does not recognise; inspect the responses.
-* `finish_reason` equal to `stop`. The value `length` means the answer was cut off.
-* Accuracy clearly above chance (25% with four options).
-
-To test another model the same way: `sbatch --export=ALL,MODEL_KEY=gemma3-4b slurm/smoke_test.sbatch`.
+* `predicted` is filled in for nearly all questions (many `null` values mean the model answers
+  in a format the parser does not recognise)
+* `finish_reason` is `stop` (the value `length` means the answer was cut off)
+* accuracy is clearly above chance (25% with four options)
 
 ### 7.2 Full run
 
@@ -357,14 +295,15 @@ To test another model the same way: `sbatch --export=ALL,MODEL_KEY=gemma3-4b slu
 bash scripts/submit_all.sh
 ```
 
-This submits one job per model, each with the time limit set in `configs/models.yaml`. To
-include the optional Qwen3 thinking variant: `INCLUDE_OPTIONAL=1 bash scripts/submit_all.sh`.
-To run only some datasets: `DATASETS="mir_2024 mir_2026" bash scripts/submit_all.sh`.
-To include the Spanish versions and MedQA:
-`DATASETS="mir_2022 mir_2024 mir_2026 mir_2022_es mir_2024_es mir_2026_es medqa" bash scripts/submit_all.sh`.
+This submits one job per model for every available dataset that has no results yet, so it can
+safely be run again at any time: after adding a dataset, only the new dataset is evaluated.
 
-Each job also measures latency by answering the first 20 questions of every dataset one at a
-time. Change the number with `LATENCY_SAMPLE=<n>` or disable it with `LATENCY_SAMPLE=0`.
+| Variation | Command |
+|---|---|
+| Only some datasets | `DATASETS="mir_2026 mir_2026_es" bash scripts/submit_all.sh` |
+| Include the optional Qwen3 thinking variant | `INCLUDE_OPTIONAL=1 bash scripts/submit_all.sh` |
+| Rerun everything, overwriting results | `FORCE=1 bash scripts/submit_all.sh` |
+| Change the latency sample (default 20) | `LATENCY_SAMPLE=50 bash scripts/submit_all.sh` |
 
 ### 7.3 Monitoring jobs
 
@@ -376,24 +315,19 @@ time. Change the number with `LATENCY_SAMPLE=<n>` or disable it with `LATENCY_SA
 | Cancel a job | `scancel <jobid>` |
 | Remaining budget | `accinfo` |
 
-A job in state `PD` (pending) is waiting for a free GPU; this can take from minutes to hours.
-
-### 7.4 Rerunning
-
-Rerunning a model overwrites its files in `results/raw/<model>/`. To keep an earlier run,
-rename that folder first. A single model can be submitted on its own with:
-
-```bash
-sbatch --job-name=medeval_qwen3-4b --time=01:00:00 --export=ALL,MODEL_KEY=qwen3-4b slurm/eval_model.sbatch
-```
+A job in state `PD` (pending) is waiting for a free GPU.
 
 ## 8. Analysing the results
 
 When all jobs have finished:
 
 ```bash
-python -m medeval.analyze --results results
+python -m medeval.analyze
+git add results/analysis && git commit -m "Update analysis" && git push
 ```
+
+The analysis folder is tracked by Git, so the results can be pulled on any computer. Pushing
+from Snellius requires a GitHub token with write access (section 3.5).
 
 ### 8.1 Output files
 
@@ -478,7 +412,8 @@ Settings under `defaults` apply to all models unless a model overrides them.
 | | `group` | `older_exam`, `new_exam`, `real_world` or `reference`; drives the analysis |
 | | `language` | `en` or `es`; exam shifts are computed per language |
 | | `columns` | for CSV files: which column holds the id, year, question, options and answer |
-| `default_datasets` | | datasets evaluated when none are specified |
+| | `optional` | if true, only evaluated when requested with `DATASETS=...` |
+| `default_datasets` | | `auto`: every non-optional dataset whose input file exists |
 | `evaluation` | `system_prompt`, `instruction_direct`, `instruction_thinking` | prompt texts |
 | | `temperature` | 0 means always the most likely answer |
 | | `max_tokens_direct`, `max_tokens_thinking` | answer length limits |
@@ -499,9 +434,9 @@ every model is evaluated with identical settings.
    ```
 
 2. Save it as `data/real_world.jsonl`.
-3. In `configs/datasets.yaml`, uncomment the `real_world` entry and add `real_world` to
-   `default_datasets`.
-4. Run the smoke test, then submit the models with `DATASETS="real_world" bash scripts/submit_all.sh`.
+3. In `configs/datasets.yaml`, uncomment the `real_world` entry.
+4. Run `bash scripts/submit_all.sh`; the new dataset is detected automatically and only it is
+   evaluated.
 
 The pipeline handles multiple-choice questions only. Datasets with free-text answers would
 need an additional grading step, which is not part of the pipeline.
@@ -509,8 +444,9 @@ need an additional grading step, which is not part of the pipeline.
 ### 10.2 Adding a model
 
 Add an entry to `configs/models.yaml` (copy an existing one and change `hf_id` and the
-metadata), then run `download_models.py --models <key>`, `count_params.py`, the smoke test
-with `MODEL_KEY=<key>`, and finally submit the job.
+metadata), then run `python scripts/download_models.py --models <key>` (which also updates the
+parameter counts), the smoke test with `sbatch --export=ALL,MODEL_KEY=<key> slurm/smoke_test.sbatch`,
+and finally `bash scripts/submit_all.sh`, which only runs the new model.
 
 ## 11. Troubleshooting
 
@@ -519,7 +455,7 @@ with `MODEL_KEY=<key>`, and finally submit the job.
 | `ssh: connect ... timed out` | Off-campus network not allowed | Use the TU/e VPN or `doornode.hpcv.surf.nl` |
 | `Permission denied` after several attempts | Ban after 5 failed logins | Wait 24 hours or use another login node; set up key login |
 | `module: Python/... not found` | Different module name | `module avail Python` and set `PYTHON_MODULE` |
-| `401` or `gated repo` while downloading | License not accepted or not logged in | Accept the license on the model page; `huggingface-cli login` |
+| `401` or `gated repo` while downloading | License not accepted or not logged in | Accept the license on the model page; `hf auth login` |
 | Job fails with "cannot find model" or offline error | Weights missing or deleted from scratch | Run `download_models.py` again on a login node |
 | `Disk quota exceeded` | Weights stored in home | Check that `HF_HOME` points to `/scratch-shared/$USER/hf_cache` |
 | CUDA out of memory | Context length too large for the GPU | Lower `max_model_len` for that model |
@@ -539,8 +475,8 @@ Record and report:
 * GPU type (`gpu_name` in `summary.csv`), dtype, temperature, seed and token limits
 * exact model identifiers and whether Qwen3 thinking was enabled
 * MedQA version (dataset name, split, number of options, number of questions)
-* MIR sources (CareQA or official PDFs), selection rules (image and annulled questions
-  removed, reserve questions) and the number of questions per year
+* MIR sources (CareQA or official PDFs), selection rules (200 main questions; image-based,
+  annulled and reserve questions removed) and the number of questions per year
   (`data/raw/mir_<year>_es.report.json`)
 * translation backend, model and date (`data/mir_<year>_en.meta.json`) and the spot-check result
 * the parameter counts used for FLOPs (`results/param_counts.json`) and the choice of
@@ -555,27 +491,21 @@ Publish the code, the configuration files, the item identifiers and the raw outp
 ```bash
 # Every session
 ssh snellius
-cd ~/medeval && source ~/venvs/medeval/bin/activate
+cd ~/<project folder> && source ~/venvs/medeval/bin/activate
 
-# Once: installation
-bash scripts/setup_env.sh && huggingface-cli login
+# Once
+bash scripts/setup_env.sh
+hf auth login
 
-# Once: data (own computer or login node)
-pip install -r requirements-data.txt
-python scripts/download_mir.py careqa --years 2022 2024
-python scripts/download_mir.py pdf --year 2026 --questions-pdf <booklet.pdf> --answers-pdf <key.pdf>
-BACKEND=google-cloud PROJECT_ID=<project> bash scripts/prepare_mir.sh
-python scripts/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl   # optional
-
-# Once: models
-python scripts/download_models.py
-python scripts/count_params.py --out results/param_counts.json
+# Preparation: datasets, models, parameter counts
+nohup bash scripts/prepare_all.sh > logs/prepare.log 2>&1 &
 
 # Evaluation
 sbatch slurm/smoke_test.sbatch
-bash scripts/submit_all.sh
+bash scripts/submit_all.sh          # safe to rerun; only missing results are submitted
 squeue -u $USER
 
 # Analysis
-python -m medeval.analyze --results results
+python -m medeval.analyze
+git add results/analysis && git commit -m "Update analysis" && git push
 ```

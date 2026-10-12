@@ -1,6 +1,8 @@
 #!/bin/bash
-# Translate all MIR exam years with one fixed configuration, then validate the results.
-# Run this once, before the evaluation pipeline.
+# Translate MIR exam years with one fixed configuration, then validate the results.
+# Only needed to replace the existing English 2026 translation. By default only 2026 is
+# translated (this overwrites data/mir_2026_en.csv); the English versions of 2022 and 2024
+# come from CareQA (scripts/prepare_data.py) and must not be overwritten.
 #
 # Input:  data/raw/mir_<year>_es.csv  (Spanish, one row per question)
 # Output: data/mir_<year>_en.csv      (Spanish and English side by side, used by the pipeline)
@@ -8,7 +10,7 @@
 #         data/translation_checks/     (validation reports and spot-check sample)
 #
 # Configuration through environment variables:
-#   YEARS        exam years to translate (default: "2022 2024 2026")
+#   YEARS        exam years to translate (default: "2026")
 #   BACKEND      google-cloud | deep-translator | mock (default: google-cloud)
 #   PROJECT_ID   Google Cloud project ID (required for google-cloud)
 #   MODEL        Cloud Translation model (default: general/nmt)
@@ -20,7 +22,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-YEARS=${YEARS:-"2022 2024 2026"}
+YEARS=${YEARS:-"2026"}
 BACKEND=${BACKEND:-google-cloud}
 MODEL=${MODEL:-general/nmt}
 PYTHON=${PYTHON:-python}
@@ -48,5 +50,6 @@ for year in $YEARS; do
 done
 
 echo "Validating translations ..."
-"$PYTHON" scripts/validate_translations.py "${OUTPUTS[@]}"
+ALL_EN=(data/mir_*_en.csv)
+"$PYTHON" scripts/validate_translations.py "${ALL_EN[@]}"
 echo "Done. Review data/translation_checks/ and complete the spot check before running the pipeline."

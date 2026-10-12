@@ -37,3 +37,20 @@ def load_datasets_config():
 def resolve_path(path):
     path = Path(path)
     return path if path.is_absolute() else PROJECT_ROOT / path
+
+
+def available_datasets(ds_cfg):
+    """Datasets evaluated by default: all non-optional entries whose input file exists."""
+    keys = []
+    for key, spec in ds_cfg["datasets"].items():
+        if spec.get("optional"):
+            continue
+        if resolve_path(spec["path"]).exists():
+            keys.append(key)
+    return keys
+
+
+def default_datasets(ds_cfg):
+    """Resolve the default_datasets setting, which is either a list or 'auto'."""
+    setting = ds_cfg.get("default_datasets", "auto")
+    return available_datasets(ds_cfg) if setting == "auto" else list(setting)

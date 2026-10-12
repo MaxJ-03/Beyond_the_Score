@@ -23,7 +23,7 @@ import random
 import time
 from datetime import datetime, timezone
 
-from .config import load_datasets_config, load_models, resolve_path
+from .config import default_datasets, load_datasets_config, load_models, resolve_path
 from .data import load_dataset
 from .parsing import extract_answer
 from .prompts import build_messages
@@ -33,7 +33,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--model", required=True, help="Model key from configs/models.yaml.")
     parser.add_argument("--datasets", nargs="+", default=None,
-                        help="Dataset keys from configs/datasets.yaml (default: default_datasets).")
+                        help="Dataset keys from configs/datasets.yaml (default: every non-optional "
+                             "dataset whose input file exists).")
     parser.add_argument("--out", default="results", help="Output directory.")
     parser.add_argument("--limit", type=int, default=None, help="Evaluate only the first N items per dataset.")
     parser.add_argument("--backend", choices=["vllm", "mock"], default="vllm",
@@ -131,7 +132,9 @@ def main():
 
     ds_cfg = load_datasets_config()
     eval_cfg = ds_cfg["evaluation"]
-    dataset_keys = args.datasets or ds_cfg["default_datasets"]
+    dataset_keys = args.datasets or default_datasets(ds_cfg)
+    if not dataset_keys:
+        raise SystemExit("No datasets available. Run scripts/prepare_data.py first.")
     unknown = [d for d in dataset_keys if d not in ds_cfg["datasets"]]
     if unknown:
         raise SystemExit(f"Unknown datasets {unknown}. Available: {sorted(ds_cfg['datasets'])}")

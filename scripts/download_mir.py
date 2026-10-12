@@ -13,8 +13,10 @@ Three sources are supported, so that every exam year ends up in the same format:
   csv     Normalize an existing CSV (for example a file produced by another scraper)
           into the required format, using a column mapping.
 
-All sources apply the same selection rule: questions that refer to an image are
-removed, so that every year is filtered identically. Output columns:
+All sources apply the same selection rules, so that every year is filtered identically:
+questions that refer to an attached image are removed, annulled questions (without a valid
+answer) are removed, and only questions up to --max-question are kept (default 200, which
+excludes the 10 reserve questions). Output columns:
     id, year, question_number, question, option_a, option_b, option_c, option_d, answer
 
 Examples:
@@ -63,8 +65,6 @@ def parse_args():
     pdf.add_argument("--year", type=int, required=True)
     pdf.add_argument("--questions-pdf", required=True, help="Exam booklet (path or URL).")
     pdf.add_argument("--answers-pdf", required=True, help="Definitive answer key (path or URL).")
-    pdf.add_argument("--max-question", type=int, default=210,
-                     help="Highest question number to keep (200 main questions plus 10 reserve).")
 
     csv = sub.add_parser("csv", help="Normalize an existing CSV.")
     csv.add_argument("--year", type=int, required=True)
@@ -74,6 +74,9 @@ def parse_args():
     for p in (careqa, pdf, csv):
         p.add_argument("--keep-image-questions", action="store_true",
                        help="Do not remove questions that refer to an image.")
+        p.add_argument("--max-question", type=int, default=200,
+                       help="Highest question number to keep. The default of 200 keeps the main "
+                            "questions and removes the 10 reserve questions (201 to 210).")
     return parser.parse_args()
 
 
@@ -88,12 +91,20 @@ def answer_to_letter(value):
     return None
 
 
-def finalize(df, year, keep_images):
+def finalize(df, year, keep_images, max_question):
     """Apply the shared selection rules, validate and write the output file."""
     df = df.copy()
     df["year"] = year
     df["answer"] = df["answer"].map(answer_to_letter)
-    report = {"year": year, "rows_in": len(df)}
+    report = {"year": year, "rows_in": len(df), "max_question": max_question}
+
+    numbers = pd.to_numeric(df["question_number"], errors="coerce")
+    if numbers.notna().all():
+        beyond = numbers > max_question
+        report["removed_reserve_questions"] = int(beyond.sum())
+        df = df[~beyond]
+    else:
+        report["removed_reserve_questions"] = "not applied (question numbers are not numeric)"
 
     invalid = df["answer"].isna()
     report["removed_invalid_answer"] = int(invalid.sum())
@@ -130,11 +141,12 @@ def finalize(df, year, keep_images):
     (DATA_RAW / f"mir_{year}_es.report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False))
     print(json.dumps(report, indent=2, ensure_ascii=False))
     print(f"Wrote {out}")
+    return df
 
 
 # ---------------------------------------------------------------- source: CareQA
 
-def from_careqa(years, category, keep_images):
+def from_careqa(years, category, keep_images, max_question):
     from datasets import load_dataset
 
     ds = load_dataset("HPAI-BSC/CareQA", "CareQA_es", split="test").to_pandas()
@@ -165,7 +177,7 @@ def from_careqa(years, category, keep_images):
             "option_d": part["op4"].values,
             "answer": part["cop"].values,
         })
-        finalize(df, year, keep_images)
+        finalize(df, year, keep_images, max_question)
 
 
 # ---------------------------------------------------------------- source: official PDFs
@@ -231,7 +243,7 @@ def parse_answer_key(text):
 
 
 def from_pdf(year, questions_pdf, answers_pdf, max_question, keep_images):
-    questions, n_headers = parse_booklet(read_pdf_text(questions_pdf), max_question)
+    questions, n_headers = parse_booklet(read_pdf_text(questions_pdf), 210)
     key = parse_answer_key(read_pdf_text(answers_pdf))
     print(f"Found {n_headers} question headers, {len(questions)} complete questions, "
           f"{len(key)} entries in the answer key ({sum(v is None for v in key.values())} annulled).")
@@ -250,12 +262,12 @@ def from_pdf(year, questions_pdf, answers_pdf, max_question, keep_images):
             "option_c": q["options"][2], "option_d": q["options"][3],
             "answer": answer if answer is not None else "ANNULLED",
         })
-    finalize(pd.DataFrame(rows), year, keep_images)
+    finalize(pd.DataFrame(rows), year, keep_images, max_question)
 
 
 # ---------------------------------------------------------------- source: existing CSV
 
-def from_csv(year, path, column_map, keep_images):
+def from_csv(year, path, column_map, keep_images, max_question):
     df = pd.read_csv(path)
     if column_map:
         df = df.rename(columns=json.loads(column_map))
@@ -265,17 +277,17 @@ def from_csv(year, path, column_map, keep_images):
     missing = [c for c in required if c not in df.columns]
     if missing:
         raise SystemExit(f"Missing columns {missing}. Found {list(df.columns)}. Use --column-map.")
-    finalize(df, year, keep_images)
+    finalize(df, year, keep_images, max_question)
 
 
 def main():
     args = parse_args()
     if args.source == "careqa":
-        from_careqa(args.years, args.category, args.keep_image_questions)
+        from_careqa(args.years, args.category, args.keep_image_questions, args.max_question)
     elif args.source == "pdf":
         from_pdf(args.year, args.questions_pdf, args.answers_pdf, args.max_question, args.keep_image_questions)
     else:
-        from_csv(args.year, args.input, args.column_map, args.keep_image_questions)
+        from_csv(args.year, args.input, args.column_map, args.keep_image_questions, args.max_question)
 
 
 if __name__ == "__main__":

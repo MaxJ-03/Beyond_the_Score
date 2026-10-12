@@ -12,8 +12,9 @@
 #   real_world = questions from clinical practice (to be added)
 #   reference  = additional benchmark, not part of the main comparison
 #
-# The *_es entries evaluate the original Spanish text from the same files, to test
-# whether translation affects accuracy. The instructions stay in English.
+# The *_es entries evaluate the original Spanish questions from data/raw/, which also
+# allows running before the translation is done. The instructions stay in English, so
+# that only the language of the question differs between the two versions.
 
 datasets:
   mir_2022:
@@ -42,38 +43,42 @@ datasets:
     language: en
     columns: *mir_en
 
+  # Original Spanish questions, read directly from the source files in data/raw/,
+  # so that they can be evaluated independently of the translation.
   mir_2022_es:
     format: csv
-    path: data/mir_2022_en.csv
+    path: data/raw/mir_2022_es.csv
     group: older_exam
     language: es
     columns: &mir_es
       id: id
       year: year
-      question: question_es
+      question: question
       answer: answer
-      options: {A: option_a_es, B: option_b_es, C: option_c_es, D: option_d_es}
+      options: {A: option_a, B: option_b, C: option_c, D: option_d}
 
   mir_2024_es:
     format: csv
-    path: data/mir_2024_en.csv
+    path: data/raw/mir_2024_es.csv
     group: older_exam
     language: es
     columns: *mir_es
 
   mir_2026_es:
     format: csv
-    path: data/mir_2026_en.csv
+    path: data/raw/mir_2026_es.csv
     group: new_exam
     language: es
     columns: *mir_es
 
-  # Optional reference benchmark (reproduction of widely reported scores).
+  # Optional reference benchmark (reproduction of widely reported scores). Only run
+  # when requested explicitly, e.g. DATASETS="medqa" bash scripts/submit_all.sh
   medqa:
     format: jsonl
     path: data/medqa_test.jsonl
     group: reference
     language: en
+    optional: true
 
   # Placeholder for the real-world dataset. The pipeline scores multiple-choice
   # questions only; once a dataset is chosen and converted to the jsonl format above,
@@ -84,9 +89,10 @@ datasets:
   #   group: real_world
   #   language: en
 
-# Main comparison in English. Add the *_es entries to test the effect of translation,
-# and medqa to reproduce reported scores.
-default_datasets: [mir_2022, mir_2024, mir_2026]
+# "auto" evaluates every non-optional dataset whose input file exists. A dataset added
+# later (for example MIR 2026 in English) is picked up automatically, and
+# scripts/submit_all.sh only runs the model and dataset combinations without results.
+default_datasets: auto
 
 evaluation:
   system_prompt: "You are a medical expert answering multiple-choice questions."

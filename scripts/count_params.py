@@ -49,11 +49,8 @@ def count_checkpoint(path):
     return counts
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--out", default="results/param_counts.json")
-    args = parser.parse_args()
-
+def count_all(out_path):
+    """Count parameters for every downloaded model and write them to out_path."""
     results = {}
     for key, cfg in load_models().items():
         try:
@@ -67,10 +64,17 @@ def main():
               f"lm_non_embedding={c['lm_non_embedding'] / 1e9:.2f}B, "
               f"vision_excluded={c['vision_excluded'] / 1e9:.2f}B")
 
-    out = Path(args.out)
+    out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(results, indent=2))
     print(f"Wrote {out}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--out", default=str(Path(__file__).resolve().parents[1] / "results" / "param_counts.json"))
+    args = parser.parse_args()
+    count_all(args.out)
 
 
 if __name__ == "__main__":

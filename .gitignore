@@ -1,7 +1,12 @@
 data/*
 !data/.gitkeep
-results*/
+!data/external/
+results/*
+!results/analysis/
+results_smoke/
 logs/
 __pycache__/
 *.egg-info/
 requirements.lock.txt
+.venv/
+venv/
