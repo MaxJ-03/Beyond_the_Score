@@ -38,8 +38,17 @@ OUTPUT_COLUMNS = ["id", "year", "question_number", "question",
                   "option_a", "option_b", "option_c", "option_d", "answer"]
 DATA_RAW = Path(__file__).resolve().parents[1] / "data" / "raw"
 
-# Questions mentioning an image cannot be answered from text alone.
-IMAGE_PATTERN = re.compile(r"\b(?:imagen|imágenes|figura|fotograf[ií]a|radiograf[ií]a adjunta)\b", re.IGNORECASE)
+# Questions that refer to an attached image cannot be answered from text alone. The MIR
+# booklets mark them as "Pregunta vinculada a la imagen nº X". General mentions of imaging
+# ("prueba de imagen", "imagen en vidrio deslustrado") are deliberately not matched.
+IMAGE_PATTERN = re.compile(
+    r"vinculada a la imagen"
+    r"|imagen\s*n\.?\s*[º°o]?\s*\d+"
+    r"|(?:imagen|figura|fotograf[ií]a)\s+adjunta"
+    r"|(?:observe|véase|vea|ver|muestra|mostrada en|se muestra en)\s+la\s+(?:siguiente\s+)?(?:imagen|figura|fotograf[ií]a)"
+    r"|la\s+(?:siguiente\s+)?(?:imagen|figura|fotograf[ií]a)\s+(?:que\s+se\s+muestra|mostrada|adjunta)",
+    re.IGNORECASE,
+)
 
 
 def parse_args():
@@ -48,7 +57,7 @@ def parse_args():
 
     careqa = sub.add_parser("careqa", help="Download MIR 2020 to 2024 from CareQA.")
     careqa.add_argument("--years", nargs="+", type=int, required=True)
-    careqa.add_argument("--category", default="MEDICINA", help="CareQA category to keep (MIR = MEDICINA).")
+    careqa.add_argument("--category", default="Medicine", help="CareQA category to keep (MIR = Medicine).")
 
     pdf = sub.add_parser("pdf", help="Extract questions from official PDF booklets.")
     pdf.add_argument("--year", type=int, required=True)
@@ -98,8 +107,13 @@ def finalize(df, year, keep_images):
 
     if not keep_images:
         text = df["question"] + " " + df[["option_a", "option_b", "option_c", "option_d"]].agg(" ".join, axis=1)
-        has_image = text.str.contains(IMAGE_PATTERN)
+        matches = text.str.extract(f"({IMAGE_PATTERN.pattern})", flags=re.IGNORECASE)[0]
+        has_image = matches.notna()
         report["removed_image_questions"] = int(has_image.sum())
+        report["removed_image_details"] = [
+            {"question_number": str(n), "matched": m, "question_start": q[:120]}
+            for n, m, q in zip(df.loc[has_image, "question_number"], matches[has_image], df.loc[has_image, "question"])
+        ]
         df = df[~has_image]
 
     df["id"] = [f"mir{year}-{int(n):03d}" if str(n).isdigit() else f"mir{year}-{n}"
@@ -132,12 +146,16 @@ def from_careqa(years, category, keep_images):
     print(f"Categories available: {sorted(ds['category'].unique())}")
 
     for year in years:
-        part = ds[(ds["year"].astype(int) == year) & (ds["category"] == category)]
+        part = ds[(ds["year"].astype(int) == year)
+                  & (ds["category"].astype(str).str.lower() == category.lower())]
         if part.empty:
             print(f"No CareQA questions for {year} in category {category}; skipped.")
             continue
-        # Prefer the question number in the original exam; fall back to CareQA's unique id.
-        number_column = next((c for c in ("question_number", "unique_id") if c in part.columns), None)
+        # Prefer a column that identifies the question within the exam and is unique per year.
+        number_column = next((c for c in ("question_number", "exam_id", "unique_id")
+                              if c in part.columns and part[c].is_unique), None)
+        print(f"{year}: {len(part)} questions; question numbers taken from "
+              f"'{number_column or 'row order'}'")
         df = pd.DataFrame({
             "question_number": part[number_column].values if number_column else range(1, len(part) + 1),
             "question": part["question"].values,
