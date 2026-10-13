@@ -1,20 +1,18 @@
 """Prepare all MIR datasets with one command.
 
 What it produces:
-    data/raw/mir_2022_es.csv, data/raw/mir_2024_es.csv   original Spanish, from CareQA
-    data/mir_2022_en.csv, data/mir_2024_en.csv           English, from CareQA's official
-                                                         translation (GPT-4, validated by
-                                                         human evaluators)
+    data/raw/mir_2020_es.csv through mir_2024_es.csv    Spanish, from CareQA
+    data/mir_2020_en.csv through mir_2024_en.csv        CareQA English translations
+    data/raw/mir_2025_es.csv                             Spanish, from audited Version 0 PDFs
     data/raw/mir_2026_es.csv                             original Spanish, from the scraped
                                                          file data/external/mir2026_text_primary_es.csv
     data/mir_2026_en.csv                                 English, from the scraped translation
                                                          data/external/mir_2026_en_mlt.csv
     data/translation_checks/                             validation of all English files
 
-All English files have the same format, with the Spanish text in parallel columns, and
-contain exactly the questions of the corresponding Spanish file. All years use the same
-selection rules (see download_mir.py): the 200 main questions, without reserve,
-image-based or annulled questions.
+All English files have Spanish text in parallel columns. The main-question cutoff is
+175 for MIR 2020-2021 and 200 for MIR 2022-2026; image-linked, annulled, and reserve
+questions are excluded. Audited transcription corrections run during preparation.
 
 Usage:
     python scripts/prepare_data.py
@@ -41,6 +39,7 @@ def _load_script(name):
 
 download_mir = _load_script("download_mir")
 prepare_mir2026_en = _load_script("prepare_mir2026_en")
+audited_fixes = _load_script("audited_mir_corrections")
 
 ASEN_COLUMNS = {
     "question_id": "question_number",
@@ -51,6 +50,8 @@ ASEN_COLUMNS = {
     "option_4_es": "option_d",
     "correct_answer": "answer",
 }
+
+
 
 
 def parse_args():
@@ -103,7 +104,9 @@ def prepare_careqa(years, max_question):
             "match_key": es_year[key].values,
         })
         print(f"\n--- MIR {year} (Spanish, CareQA) ---")
-        main_limit = 175 if year in (2020, 2021) else max_question
+        if year == 2020:
+            es_frame = audited_fixes.fix_2020_spanish(es_frame)
+        main_limit = min(max_question, 175) if year in (2020, 2021) else max_question
         selected = download_mir.finalize(
             es_frame, year, keep_images=False, max_question=main_limit
         )
@@ -124,7 +127,10 @@ def prepare_careqa(years, max_question):
                       "question_es": row["question"], "question_en": str(en["question"]).strip()}
             for letter, number in zip(LETTERS, range(1, 5)):
                 record[f"option_{letter}_es"] = row[f"option_{letter}"]
-                record[f"option_{letter}_en"] = str(en[f"op{number}"]).strip()
+                en_option = str(en[f"op{number}"]).strip()
+                if year == 2020 and int(row["question_number"]) == 104:
+                    en_option = audited_fixes.fix_2020_english_option(letter, en_option)
+                record[f"option_{letter}_en"] = en_option
             rows.append(record)
 
         out = DATA / f"mir_{year}_en.csv"
@@ -154,6 +160,7 @@ def prepare_2026(path, max_question):
     missing = [c for c in [*ASEN_COLUMNS, "has_image", "annulled"] if c not in df.columns]
     if missing:
         raise SystemExit(f"MIR 2026 file: missing columns {missing}. Found {list(df.columns)}.")
+    df = audited_fixes.fix_2026_source(df)
     selected = df[~df["has_image"].astype(bool) & ~df["annulled"].astype(bool)]
     frame = selected[list(ASEN_COLUMNS)].rename(columns=ASEN_COLUMNS)
     print(f"\n--- MIR 2026 (Spanish, scraped file: {len(df)} rows, "

@@ -48,6 +48,8 @@ def build(translation_path):
 
     spanish = pd.read_csv(SPANISH)
     english = pd.read_csv(translation_path)
+    from audited_mir_corrections import fix_2026_translation
+    english = fix_2026_translation(english)
     missing = [c for c in ENGLISH_COLUMNS if c not in english.columns]
     if missing:
         raise SystemExit(f"Translation file: missing columns {missing}. Found {list(english.columns)}.")
