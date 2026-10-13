@@ -16,6 +16,6 @@ echo "=== Step 1/2: datasets ==="
 python scripts/prepare_data.py
 
 echo "=== Step 2/2: models and parameter counts ==="
-python scripts/download_models.py
+# python scripts/download_models.py
 
 echo "=== Preparation complete ==="

@@ -109,3 +109,22 @@ models:
     chat_template_kwargs: {enable_thinking: true}
     slurm_time: "06:00:00"
     optional: true
+
+  # Llama 3 — base model
+  llama3-8b:
+    hf_id: meta-llama/Meta-Llama-3-8B-Instruct
+    family: llama3
+    size_b: 8
+    medical: false
+    release: "2024-04-18"
+    slurm_time: "02:00:00"
+
+  # Med42-v2 — medically specialized Llama 3
+  med42-8b:
+    hf_id: m42-health/Llama3-Med42-8B
+    family: llama3
+    size_b: 8
+    medical: true
+    release: "2024-08"
+    slurm_time: "02:00:00"
+

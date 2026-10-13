@@ -55,7 +55,7 @@ ASEN_COLUMNS = {
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--years", nargs="+", type=int, default=[2022, 2024], help="CareQA years.")
+    parser.add_argument("--years", nargs="+", type=int, default=[2020, 2021, 2022, 2023, 2024], help="CareQA years.")
     parser.add_argument("--mir2026-es", default="data/external/mir2026_text_primary_es.csv",
                         help="Scraped MIR 2026 file with the original Spanish questions.")
     parser.add_argument("--mir2026-en", default="data/external/mir_2026_en_mlt.csv",
@@ -103,7 +103,10 @@ def prepare_careqa(years, max_question):
             "match_key": es_year[key].values,
         })
         print(f"\n--- MIR {year} (Spanish, CareQA) ---")
-        selected = download_mir.finalize(es_frame, year, keep_images=False, max_question=max_question)
+        main_limit = 175 if year in (2020, 2021) else max_question
+        selected = download_mir.finalize(
+            es_frame, year, keep_images=False, max_question=main_limit
+        )
 
         en_index = en_year.set_index(key)
         if not en_index.index.is_unique:
@@ -176,7 +179,7 @@ def validate_translations():
 
 def summary():
     print("\n=== Datasets ready for the pipeline ===")
-    for year in (2022, 2024, 2026):
+    for year in (2020, 2021, 2022, 2023, 2024, 2025, 2026):
         for language, path in (("es", DATA / "raw" / f"mir_{year}_es.csv"), ("en", DATA / f"mir_{year}_en.csv")):
             status = f"{len(pd.read_csv(path))} questions" if path.exists() else "missing"
             print(f"  MIR {year} {language}: {status}")
@@ -186,6 +189,7 @@ def main():
     args = parse_args()
     (DATA / "raw").mkdir(parents=True, exist_ok=True)
     prepare_careqa(args.years, args.max_question)
+    _load_script("prepare_mir2025").main()
     prepare_2026(args.mir2026_es, args.max_question)
     if (DATA / "raw" / "mir_2026_es.csv").exists():
         print("\n--- MIR 2026 (English, scraped translation) ---")

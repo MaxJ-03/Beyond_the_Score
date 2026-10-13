@@ -43,6 +43,28 @@ datasets:
     language: en
     columns: *mir_en
 
+  mir_2020:
+    format: csv
+    path: data/mir_2020_en.csv
+    group: older_exam
+    language: en
+    columns: *mir_en
+
+  mir_2021:
+    format: csv
+    path: data/mir_2021_en.csv
+    group: older_exam
+    language: en
+    columns: *mir_en
+
+  mir_2023:
+    format: csv
+    path: data/mir_2023_en.csv
+    group: older_exam
+    language: en
+    columns: *mir_en
+
+
   # Original Spanish questions, read directly from the source files in data/raw/,
   # so that they can be evaluated independently of the translation.
   mir_2022_es:
@@ -70,6 +92,36 @@ datasets:
     group: new_exam
     language: es
     columns: *mir_es
+
+
+  mir_2020_es:
+    format: csv
+    path: data/raw/mir_2020_es.csv
+    group: older_exam
+    language: es
+    columns: *mir_es
+
+  mir_2021_es:
+    format: csv
+    path: data/raw/mir_2021_es.csv
+    group: older_exam
+    language: es
+    columns: *mir_es
+
+  mir_2023_es:
+    format: csv
+    path: data/raw/mir_2023_es.csv
+    group: older_exam
+    language: es
+    columns: *mir_es
+
+  mir_2025_es:
+    format: csv
+    path: data/raw/mir_2025_es.csv
+    group: new_exam
+    language: es
+    columns: *mir_es
+
 
   # Optional reference benchmark (reproduction of widely reported scores). Only run
   # when requested explicitly, e.g. DATASETS="medqa" bash scripts/submit_all.sh
@@ -105,7 +157,7 @@ evaluation:
     Answer the following multiple-choice question. Reason step by step, then end
     your response with "Answer: X", where X is the letter of the correct option.
   temperature: 0.0
-  max_tokens_direct: 64
+  max_tokens_direct: 256
   max_tokens_thinking: 8192
 
 analysis:
