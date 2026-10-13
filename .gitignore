@@ -1,6 +1,18 @@
+# Ignore data files by default
 data/*
 !data/.gitkeep
+
+# Track the final audited Spanish MIR datasets
+!data/raw/
+data/raw/*
+!data/raw/mir_*_es.csv
+
+# Track the final English MIR datasets
+!data/mir_*_en.csv
+
+# Allow original source files
 !data/external/
+
 results/*
 !results/analysis/
 results_smoke/
