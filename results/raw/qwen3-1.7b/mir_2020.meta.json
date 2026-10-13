@@ -1,0 +1,90 @@
+{
+  "model": "qwen3-1.7b",
+  "model_config": {
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 8192,
+    "tensor_parallel_size": 1,
+    "seed": 0,
+    "thinking": false,
+    "slurm_time": "01:00:00",
+    "llm_kwargs": {},
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "family": "qwen3",
+    "size_b": 1.7,
+    "medical": false,
+    "release": "2025-04-29",
+    "key": "qwen3-1.7b"
+  },
+  "dataset": "mir_2020",
+  "dataset_config": {
+    "format": "csv",
+    "path": "data/mir_2020_en.csv",
+    "group": "older_exam",
+    "language": "en",
+    "columns": {
+      "id": "id",
+      "year": "year",
+      "question": "question_en",
+      "answer": "answer",
+      "options": {
+        "A": "option_a_en",
+        "B": "option_b_en",
+        "C": "option_c_en",
+        "D": "option_d_en"
+      }
+    }
+  },
+  "n_items": 145,
+  "limit": null,
+  "backend": "vllm",
+  "thinking": false,
+  "temperature": 0.0,
+  "max_tokens": 256,
+  "generation_seconds": 0.4382193749770522,
+  "n_gpus": 1,
+  "gpu_seconds": 0.4382193749770522,
+  "latency_seconds": [
+    0.12420362199191004,
+    0.014864571974612772,
+    0.0758040709188208,
+    0.02555563091300428,
+    0.03052068897522986,
+    0.04362014296930283,
+    0.03842873696703464,
+    0.04129125794861466,
+    0.014640113920904696,
+    0.030414269072934985,
+    0.025084204971790314,
+    0.033280130941420794,
+    0.1662905450211838,
+    0.015139639959670603,
+    0.05456857103854418,
+    0.049199015949852765,
+    0.027982475934550166,
+    0.0679396620253101,
+    0.014818372903391719,
+    0.054465400986373425
+  ],
+  "median_latency_seconds": 0.03842873696703464,
+  "model_load_seconds": 30.551642199978232,
+  "started_utc": "2026-10-13T18:44:27.004362+00:00",
+  "environment": {
+    "vllm_version": "0.31.0",
+    "torch_version": "2.13.0+cu130",
+    "gpu_name": "NVIDIA H100",
+    "gpu_count_visible": 1,
+    "hostname": "gcn79.local.snellius.surf.nl"
+  },
+  "evaluation_config": {
+    "system_prompt": "You are a medical expert answering multiple-choice questions.",
+    "instruction_direct": "Answer the following multiple-choice question. Respond with only the letter of the correct option.",
+    "instruction_thinking": "Answer the following multiple-choice question. Reason step by step, then end your response with \"Answer: X\", where X is the letter of the correct option.",
+    "temperature": 0.0,
+    "max_tokens_direct": 256,
+    "max_tokens_thinking": 8192
+  }
+}

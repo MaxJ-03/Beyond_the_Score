@@ -1,0 +1,88 @@
+{
+  "model": "med42-8b",
+  "model_config": {
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 8192,
+    "tensor_parallel_size": 1,
+    "seed": 0,
+    "thinking": false,
+    "slurm_time": "02:00:00",
+    "llm_kwargs": {},
+    "chat_template_kwargs": {},
+    "hf_id": "m42-health/Llama3-Med42-8B",
+    "family": "llama3",
+    "size_b": 8,
+    "medical": true,
+    "release": "2024-08",
+    "key": "med42-8b"
+  },
+  "dataset": "mir_2026_es",
+  "dataset_config": {
+    "format": "csv",
+    "path": "data/raw/mir_2026_es.csv",
+    "group": "new_exam",
+    "language": "es",
+    "columns": {
+      "id": "id",
+      "year": "year",
+      "question": "question",
+      "answer": "answer",
+      "options": {
+        "A": "option_a",
+        "B": "option_b",
+        "C": "option_c",
+        "D": "option_d"
+      }
+    }
+  },
+  "n_items": 170,
+  "limit": null,
+  "backend": "vllm",
+  "thinking": false,
+  "temperature": 0.0,
+  "max_tokens": 256,
+  "generation_seconds": 1.0111590849701315,
+  "n_gpus": 1,
+  "gpu_seconds": 1.0111590849701315,
+  "latency_seconds": [
+    0.09665295702870935,
+    0.03481527103576809,
+    0.08333749894518405,
+    0.03471414209343493,
+    0.03444797405973077,
+    0.034638941986486316,
+    0.034632002003490925,
+    0.03450879408046603,
+    0.03462983202189207,
+    0.18128900707233697,
+    0.03434308501891792,
+    0.03453942306805402,
+    0.03458478196989745,
+    0.09876757301390171,
+    0.03489873104263097,
+    0.03461226203944534,
+    0.03500282997265458,
+    0.06653533398639411,
+    0.03474563197232783,
+    0.033789637964218855
+  ],
+  "median_latency_seconds": 0.03471414209343493,
+  "model_load_seconds": 89.06758315500338,
+  "started_utc": "2026-10-13T19:46:20.730625+00:00",
+  "environment": {
+    "vllm_version": "0.31.0",
+    "torch_version": "2.13.0+cu130",
+    "gpu_name": "NVIDIA H100",
+    "gpu_count_visible": 1,
+    "hostname": "gcn117.local.snellius.surf.nl"
+  },
+  "evaluation_config": {
+    "system_prompt": "You are a medical expert answering multiple-choice questions.",
+    "instruction_direct": "Answer the following multiple-choice question. Respond with only the letter of the correct option.",
+    "instruction_thinking": "Answer the following multiple-choice question. Reason step by step, then end your response with \"Answer: X\", where X is the letter of the correct option.",
+    "temperature": 0.0,
+    "max_tokens_direct": 256,
+    "max_tokens_thinking": 8192
+  }
+}
