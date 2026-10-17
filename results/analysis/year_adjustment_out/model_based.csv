@@ -1,0 +1,10 @@
+model,unseen_from,shift,ci_low,ci_high,significant_drop,largest_drop_ruled_out
+ALL (pooled),,-3.5,-7.9,1.0,False,7.9
+gemma3-27b,2025,-1.4,-7.4,4.5,False,7.4
+gemma3-4b,2025,-2.3,-9.2,4.6,False,9.2
+llama3-8b,2024,-5.0,-11.0,0.9,False,11.0
+med42-8b,2024,-3.4,-9.3,2.5,False,9.3
+medgemma-27b,2025,-6.7,-12.9,-0.6,True,12.9
+medgemma-4b,2025,-6.1,-12.4,0.2,False,12.4
+qwen3-1.7b,2026,2.2,-6.1,10.5,False,6.1
+qwen3-4b,2026,-1.3,-8.8,6.2,False,8.8
