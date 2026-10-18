@@ -355,7 +355,11 @@ bash scripts/submit_all.sh
 
 This submits one job per model (`scripts/evaluate.sbatch`) for every available dataset that
 has no results yet, so it can safely be run again at any time: after adding a dataset, only
-the new dataset is evaluated.
+the new dataset is evaluated. The jobs form a chain: each job starts when the previous one has
+ended, so only one job at a time is checked against the compute budget. The grading job
+(section 7.3) is queued at the end of the chain. A job that is cancelled or hits its time limit
+does not stop the chain, and the datasets it finished are kept; running the script again
+submits what is still missing.
 
 | Variation | Command |
 |---|---|
@@ -363,12 +367,16 @@ the new dataset is evaluated.
 | Include optional models | `INCLUDE_OPTIONAL=1 bash scripts/submit_all.sh` |
 | Rerun everything, overwriting results | `FORCE=1 bash scripts/submit_all.sh` |
 | Change the latency sample (default 20) | `LATENCY_SAMPLE=50 bash scripts/submit_all.sh` |
+| Do not queue the grading job | `JUDGE=0 bash scripts/submit_all.sh` |
+| Submit all jobs at once instead of in a chain | `PARALLEL=1 bash scripts/submit_all.sh` |
 
 ### 7.3 Grading open-ended answers
 
 When the evaluation jobs have finished, one job grades all LiveMedBench and K-QA answers with
-the judge (gpt-oss-120b, `reasoning_effort: low`). It loads the judge once and grades only
-answers without grades, so it can be resubmitted after more models have been evaluated:
+the judge (gpt-oss-120b, `reasoning_effort: low`). `scripts/submit_all.sh` queues this job
+automatically after the last evaluation job. It loads the judge once and grades only answers
+without grades, so it can be resubmitted after more models have been evaluated or after it has
+hit its time limit:
 
 ```bash
 VALIDATE=1 sbatch scripts/judge.sbatch       # first: agreement with physicians (minutes)
@@ -618,7 +626,8 @@ and adds the parameter count), the smoke test with
 | `Disk quota exceeded` | Weights stored in home | Check that `HF_HOME` points to `/scratch-shared/$USER/hf_cache` |
 | CUDA out of memory | Context length too large for the GPU | Lower `max_model_len` for that model |
 | Job stays pending for a long time | GPUs busy | Wait; check with `squeue -u $USER` |
-| Job hits its time limit | Time limit too short | Increase `slurm_time` in `models.yaml` and resubmit |
+| Job hits its time limit | Time limit too short | Rerun `bash scripts/submit_all.sh` (finished datasets are kept); if the same dataset keeps timing out, increase `slurm_time` in `models.yaml` |
+| Job state `CANCELLED by 0` without running | Shared compute budget too low for the requested time | Request less time (`slurm_time`, or `--time` for `judge.sbatch`) and resubmit; contact the course staff if it persists |
 | High `invalid_rate` | Model answers in an unexpected format | Inspect `response` fields; adjust the prompt or the parser and rerun all models |
 | High `truncated_rate` | Token limit too low (mainly with thinking) | Increase `max_tokens_direct`, `max_tokens_thinking` or `max_model_len` |
 | MIR 2025 preparation stops with "STOP" | The PDFs or the extracted text differ from the audited version | Check that the Version 0 PDFs in `data/external/` are unchanged |
@@ -667,11 +676,11 @@ nohup bash scripts/prepare_all.sh > logs/prepare.log 2>&1 &
 
 # Evaluation
 SMOKE=1 sbatch scripts/evaluate.sbatch
-bash scripts/submit_all.sh          # safe to rerun; only missing results are submitted
+VALIDATE=1 sbatch scripts/judge.sbatch   # judge agreement with physicians
+bash scripts/submit_all.sh          # chained jobs, grading at the end; safe to rerun
 squeue -u $USER
 
-# Grading of open-ended answers (after the evaluation jobs)
-VALIDATE=1 sbatch scripts/judge.sbatch
+# Grading only (also queued by submit_all.sh)
 sbatch scripts/judge.sbatch
 
 # Analysis

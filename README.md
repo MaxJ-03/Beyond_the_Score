@@ -22,13 +22,14 @@ hf auth login
 # downloaded are skipped)
 nohup bash scripts/prepare_all.sh > logs/prepare.log 2>&1 &
 
-# Test, then run everything
+# Test, validate the judge, then run everything (jobs run one after another and the
+# grading of the open-ended answers is queued at the end)
 SMOKE=1 sbatch scripts/evaluate.sbatch
+VALIDATE=1 sbatch scripts/judge.sbatch
 bash scripts/submit_all.sh
 
-# Grade the open-ended answers (after the evaluation jobs) and validate the judge
+# Grading only, e.g. after a grading job hit its time limit
 sbatch scripts/judge.sbatch
-VALIDATE=1 sbatch scripts/judge.sbatch
 
 # Analyse
 python src/analyze.py
@@ -49,7 +50,7 @@ configs/judge_prompts.yaml   the official grading prompts of LiveMedBench and K-
 scripts/                     everything run on Snellius
   setup_env.sh                 environment (once)
   prepare_all.sh               datasets, model weights, parameter counts
-  submit_all.sh                one evaluation job per model, missing results only
+  submit_all.sh                chained evaluation jobs (missing results only), then grading
   evaluate.sbatch              the evaluation job (also the smoke test, SMOKE=1)
   judge.sbatch                 the grading job for open-ended answers (VALIDATE=1: judge check)
 src/                         all Python code, one file per pipeline stage

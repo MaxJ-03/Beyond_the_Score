@@ -11,7 +11,7 @@
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=01:00:00
+#SBATCH --time=00:20:00
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --export=ALL
 

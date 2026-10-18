@@ -34,7 +34,7 @@ defaults:
   tensor_parallel_size: 1
   seed: 0
   thinking: false
-  slurm_time: "01:00:00"
+  slurm_time: "00:20:00"
   llm_kwargs: {}
   chat_template_kwargs: {}
 
@@ -70,7 +70,7 @@ models:
     unseen_from: 2025
     training_cutoff: "2024-08"
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
-    slurm_time: "02:00:00"
+    slurm_time: "01:00:00"
 
   # MedGemma (medical fine-tunes of Gemma 3). Both checkpoints require accepting
   # the Health AI Developer Foundations terms on Hugging Face.
@@ -92,7 +92,7 @@ models:
     release: "2025-05-20"
     unseen_from: 2025
     training_cutoff: "2024-08"
-    slurm_time: "02:00:00"
+    slurm_time: "01:00:00"
 
   # Qwen3 (original April 2025 checkpoints, not the later "2507" updates).
   # Thinking is disabled through the chat template for comparability with Gemma.
@@ -136,7 +136,7 @@ models:
     release: "2024-04-18"
     unseen_from: 2024
     training_cutoff: "2023-03"
-    slurm_time: "02:00:00"
+    slurm_time: "00:30:00"
 
   # Med42-v2 (medical fine-tune of Llama 3 8B).
   med42-8b:
@@ -147,7 +147,7 @@ models:
     release: "2024-08"
     unseen_from: 2024
     training_cutoff: "2023-03"
-    slurm_time: "02:00:00"
+    slurm_time: "00:30:00"
 
   # Judge for open-ended answers (src/judge.py): OpenAI's open-weight gpt-oss-120b, a
   # mixture-of-experts model (117B parameters, about 5B active) stored in MXFP4, which fits
@@ -160,4 +160,4 @@ models:
     max_model_len: 16384
     gpu_memory_utilization: 0.92
     chat_template_kwargs: {reasoning_effort: low}
-    slurm_time: "10:00:00"
+    slurm_time: "04:00:00"
