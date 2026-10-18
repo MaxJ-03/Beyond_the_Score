@@ -21,7 +21,7 @@ from config import PROJECT_ROOT, default_datasets, load_datasets_config, load_mo
 include_optional, force, requested = sys.argv[1] == "1", sys.argv[2] == "1", sys.argv[3].split()
 datasets = requested or default_datasets(load_datasets_config())
 for key, cfg in load_models().items():
-    if cfg.get("optional") and not include_optional:
+    if cfg.get("role") == "judge" or (cfg.get("optional") and not include_optional):
         continue
     missing = [d for d in datasets
                if force or not (PROJECT_ROOT / "results" / "raw" / key / f"{d}.jsonl").exists()]

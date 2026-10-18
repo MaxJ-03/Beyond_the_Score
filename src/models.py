@@ -22,7 +22,7 @@ Counts written per model:
     total_in_files    every parameter in the checkpoint
 
 Usage:
-    python src/models.py                      all non-optional models
+    python src/models.py                      all non-optional models and the judge
     python src/models.py --models qwen3-4b gemma3-4b
     python src/models.py --include-optional
     python src/models.py --recount            count all selected models again
@@ -174,7 +174,8 @@ def main():
         raise SystemExit(f"Unknown models {unknown}. Available: {sorted(models)}")
     keys = args.models or [k for k, m in models.items() if args.include_optional or not m.get("optional")]
     ensure_weights(models, keys)
-    ensure_counts(models, keys, recount=args.recount)
+    # The judge is never evaluated, so its parameters are not needed for the cost metrics.
+    ensure_counts(models, [k for k in keys if models[k].get("role") != "judge"], recount=args.recount)
 
 
 if __name__ == "__main__":

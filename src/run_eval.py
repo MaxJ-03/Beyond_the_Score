@@ -1,16 +1,15 @@
-"""Run one model on one or more multiple-choice datasets.
+"""Run one model on one or more datasets.
 
 The model is loaded once and evaluated on every requested dataset. For each question the
-script records the raw response, the parsed answer, correctness and token counts. For each
-dataset it records the wall-clock generation time, which is converted to GPU-seconds in the
-analysis.
+script records the raw response, token counts and, for multiple-choice questions, the parsed
+answer and correctness. Answers to open-ended questions (rubric and statements tasks) are
+stored unparsed and graded afterwards by src/judge.py. For each dataset the script records
+the wall-clock generation time, which is converted to GPU-seconds in the analysis.
 
-The file follows the path of a question through the pipeline:
-    1. data loading      datasets from configs/datasets.yaml into a common item format
-    2. prompts           chat messages for a multiple-choice question
-    3. answer parsing    the chosen option letter from a model response
-    4. backends          vLLM for real runs, a mock backend for tests without a GPU
-    5. main              evaluation loop and output files
+Data loading and prompts are in src/items.py. This file contains:
+    1. answer parsing    the chosen option letter from a multiple-choice response
+    2. backends          vLLM for real runs, a mock backend for tests without a GPU
+    3. main              evaluation loop and output files
 
 Outputs (per model):
     results/raw/<model>/<dataset>.jsonl      one record per question
@@ -29,125 +28,13 @@ import platform
 import random
 import re
 import time
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-import pandas as pd
-
 from config import default_datasets, load_datasets_config, load_models, resolve_path
+from items import build_messages, load_dataset
 
 
-# ---------------------------------------------------------------- 1. data loading
-
-@dataclass
-class Item:
-    item_id: str
-    dataset: str
-    question: str
-    options: dict  # letter -> option text, in display order
-    answer: str  # correct letter
-    year: str = ""
-    extra: dict = field(default_factory=dict)
-
-    @property
-    def n_options(self):
-        return len(self.options)
-
-
-def _validate(items, name):
-    if not items:
-        raise ValueError(f"Dataset '{name}' contains no items.")
-    seen = set()
-    for item in items:
-        if item.item_id in seen:
-            raise ValueError(f"Duplicate item id '{item.item_id}' in dataset '{name}'.")
-        seen.add(item.item_id)
-        if item.answer not in item.options:
-            raise ValueError(
-                f"Item '{item.item_id}' in '{name}': answer '{item.answer}' is not one of "
-                f"the options {list(item.options)}."
-            )
-        if any(not str(text).strip() for text in item.options.values()):
-            raise ValueError(f"Item '{item.item_id}' in '{name}' has an empty option.")
-    return items
-
-
-def _load_jsonl(name, path):
-    items = []
-    with open(path, encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            if not line.strip():
-                continue
-            record = json.loads(line)
-            options = {str(k).strip().upper(): str(v).strip() for k, v in record["options"].items()}
-            items.append(
-                Item(
-                    item_id=str(record.get("id", line_number)),
-                    dataset=name,
-                    question=str(record["question"]).strip(),
-                    options=dict(sorted(options.items())),
-                    answer=str(record["answer"]).strip().upper(),
-                    year=str(record.get("year", "")),
-                )
-            )
-    return items
-
-
-def _load_csv(name, path, columns):
-    df = pd.read_csv(path)
-    option_columns = columns["options"]
-    required = [columns["question"], columns["answer"], *option_columns.values()]
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        raise ValueError(f"Dataset '{name}': missing columns {missing}. Found {list(df.columns)}.")
-    items = []
-    for index, row in df.iterrows():
-        options = {letter: str(row[col]).strip() for letter, col in option_columns.items()}
-        items.append(
-            Item(
-                item_id=str(row[columns["id"]]) if columns.get("id") in df.columns else str(index),
-                dataset=name,
-                question=str(row[columns["question"]]).strip(),
-                options=options,
-                answer=str(row[columns["answer"]]).strip().upper(),
-                year=str(row[columns["year"]]) if columns.get("year") in df.columns else "",
-            )
-        )
-    return items
-
-
-def load_dataset(name, spec, limit=None):
-    """Load one dataset from its registry entry and return a list of validated items."""
-    path = resolve_path(spec["path"])
-    if not path.exists():
-        raise FileNotFoundError(f"Dataset '{name}': file not found at {path}.")
-    if spec["format"] == "jsonl":
-        items = _load_jsonl(name, path)
-    elif spec["format"] == "csv":
-        items = _load_csv(name, path, spec["columns"])
-    else:
-        raise ValueError(f"Dataset '{name}': unsupported format '{spec['format']}'.")
-    items = _validate(items, name)
-    return items[:limit] if limit else items
-
-
-# ---------------------------------------------------------------- 2. prompts
-
-def build_messages(item, eval_cfg, thinking):
-    """Build the chat messages for one question: optional system prompt plus user message."""
-    instruction = eval_cfg["instruction_thinking"] if thinking else eval_cfg["instruction_direct"]
-    options = "\n".join(f"{letter}. {text}" for letter, text in item.options.items())
-    user = f"{instruction}\n\nQuestion: {item.question}\n\nOptions:\n{options}"
-    if not thinking:
-        user += "\n\nAnswer:"
-    messages = []
-    if eval_cfg.get("system_prompt"):
-        messages.append({"role": "system", "content": eval_cfg["system_prompt"]})
-    messages.append({"role": "user", "content": user})
-    return messages
-
-
-# ---------------------------------------------------------------- 3. answer parsing
+# ---------------------------------------------------------------- 1. answer parsing
 
 THINK_BLOCK = re.compile(r"<think>.*?</think>", flags=re.DOTALL | re.IGNORECASE)
 UNCLOSED_THINK = re.compile(r"<think>.*", flags=re.DOTALL | re.IGNORECASE)
@@ -190,7 +77,7 @@ def extract_answer(text, valid_letters):
     return None
 
 
-# ---------------------------------------------------------------- 4. backends
+# ---------------------------------------------------------------- 2. backends
 
 class VLLMBackend:
     """Thin wrapper around vLLM offline inference."""
@@ -256,8 +143,9 @@ class MockBackend:
         for conversation in conversations:
             text = conversation[-1]["content"]
             letters = [line[0] for line in text.splitlines() if len(line) > 2 and line[1] == "."]
+            response = self.rng.choice(letters) if letters else "Mock answer to an open-ended question."
             results.append({
-                "response": self.rng.choice(letters or ["A"]),
+                "response": response,
                 "input_tokens": len(text.split()) * 4 // 3,
                 "output_tokens": 2,
                 "finish_reason": "stop",
@@ -270,7 +158,7 @@ class MockBackend:
         return {"backend": "mock"}
 
 
-# ---------------------------------------------------------------- 5. main
+# ---------------------------------------------------------------- 3. main
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -308,7 +196,6 @@ def main():
     datasets = {key: load_dataset(key, ds_cfg["datasets"][key], args.limit) for key in dataset_keys}
 
     thinking = bool(model_cfg["thinking"])
-    max_tokens = eval_cfg["max_tokens_thinking"] if thinking else eval_cfg["max_tokens_direct"]
 
     backend = VLLMBackend(model_cfg) if args.backend == "vllm" else MockBackend(model_cfg)
     environment = backend.environment()
@@ -318,7 +205,13 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     for key, items in datasets.items():
-        conversations = [build_messages(item, eval_cfg, thinking) for item in items]
+        spec = ds_cfg["datasets"][key]
+        open_ended = spec.get("task", "multiple_choice") != "multiple_choice"
+        if open_ended:
+            max_tokens = eval_cfg["max_tokens_open"]
+        else:
+            max_tokens = eval_cfg["max_tokens_thinking"] if thinking else eval_cfg["max_tokens_direct"]
+        conversations = [build_messages(item, eval_cfg, thinking, spec) for item in items]
         started = datetime.now(timezone.utc).isoformat()
         t0 = time.perf_counter()
         outputs = backend.generate(conversations, eval_cfg["temperature"], max_tokens, model_cfg["seed"])
@@ -327,9 +220,10 @@ def main():
         n_correct = 0
         with open(out_dir / f"{key}.jsonl", "w", encoding="utf-8") as handle:
             for item, out in zip(items, outputs):
-                predicted = extract_answer(out["response"], item.options.keys())
-                correct = predicted == item.answer
-                n_correct += correct
+                # Open-ended answers are graded later by src/judge.py.
+                predicted = None if open_ended else extract_answer(out["response"], item.options.keys())
+                correct = None if open_ended else predicted == item.answer
+                n_correct += bool(correct)
                 handle.write(json.dumps({
                     "model": args.model,
                     "dataset": key,
@@ -376,8 +270,11 @@ def main():
         with open(out_dir / f"{key}.meta.json", "w", encoding="utf-8") as handle:
             json.dump(meta, handle, indent=2, default=str)
 
-        print(f"[{args.model}] {key}: {n_correct}/{len(items)} correct, "
-              f"{elapsed:.1f} s generation time")
+        if open_ended:
+            result = f"{len(items)} answers (graded by src/judge.py)"
+        else:
+            result = f"{n_correct}/{len(items)} correct"
+        print(f"[{args.model}] {key}: {result}, {elapsed:.1f} s generation time")
 
 
 if __name__ == "__main__":

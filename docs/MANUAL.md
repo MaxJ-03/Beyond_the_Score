@@ -24,15 +24,15 @@ quick reference at the end.
 
 ## 1. What the pipeline does
 
-The study measures how accurate open LLMs are on medical multiple-choice questions, how much
-compute each correct answer costs, and whether accuracy on older exam editions is inflated by
-memorization:
+The study measures how well open LLMs answer medical questions, how much compute each
+correct answer costs, whether accuracy on older exam editions is inflated by memorization, and
+whether the most cost-efficient model stays the same across three layers of questions:
 
 | Question type | Dataset | Role in the study |
 |---|---|---|
 | Standard benchmark | MIR 2020 to 2024 | Older editions of the exam, possibly seen in training |
 | Same-type benchmark | MIR 2025 and 2026 | Newest editions, held after most (2025) or all (2026) model cutoffs |
-| Real-world questions | to be decided | Transfer to clinical practice |
+| Real-world questions | CUPCase (multiple choice), LiveMedBench and K-QA (open-ended, English) | Transfer to clinical practice |
 | Reference (optional) | MedQA (USMLE) | Reproduce widely reported scores |
 
 Every MIR edition is evaluated in the original Spanish and in English. English for 2020 to
@@ -40,19 +40,21 @@ Every MIR edition is evaluated in the original Spanish and in English. English f
 Google machine translation.
 
 Models: Gemma 3 1B, 4B and 27B, MedGemma 4B and 27B (text), Llama 3 8B and Med42-v2 8B,
-Qwen3 1.7B and 4B.
+Qwen3 1.7B and 4B. Open-ended answers are graded by a judge model, gpt-oss-120b, from a family
+that is not evaluated.
 
 ```
-Stage 1: preparation                    Stage 2: evaluation              Stage 3: analysis
-  scripts/prepare_all.sh                  scripts/submit_all.sh            python src/analyze.py
-  datasets + models + parameter    ──>    one Slurm job per model    ──>   python src/contamination.py
-  counts (only what is missing)           (only missing results)           accuracy, cost, exam shift,
-                                                                           memorization checks, plots
+Stage 1: preparation             Stage 2: evaluation            Stage 3: analysis
+  scripts/prepare_all.sh           scripts/submit_all.sh          python src/analyze.py
+  datasets + models +       ──>    one Slurm job per model  ──>   python src/compare_layers.py
+  parameter counts                 scripts/judge.sbatch           python src/contamination.py
+  (only what is missing)           grading of open answers        quality, cost, layers, checks
 ```
 
 * **Stage 1** runs on a Snellius login node (internet access, no GPU).
 * **Stage 2** runs as Slurm jobs on Snellius GPU nodes. Each model is loaded once and answers
-  all questions of all available datasets.
+  all questions of all available datasets; afterwards one judge job grades all open-ended
+  answers.
 * **Stage 3** only reads result files and takes seconds to a minute; it also runs on your own
   computer.
 
@@ -61,12 +63,15 @@ The code follows these stages: every file in `src/` is one step, and every file 
 
 | Stage | File (`python src/<file>.py`) | What it does |
 |---|---|---|
-| 1 | `prepare_data` | builds all dataset files and checks the translations (uses `mir_sources`, `mir_corrections`) |
+| 1 | `prepare_data` | builds the MIR dataset files and checks the translations (uses `mir_sources`, `mir_corrections`) |
+| 1 | `prepare_real_world` | builds the CUPCase, LiveMedBench and K-QA files |
 | 1 | `prepare_medqa` | optional MedQA reference set |
-| 1 | `models` | downloads missing model weights and counts parameters |
-| 2 | `run_eval` | loads the datasets, builds the prompts, runs the model and parses the answers |
-| 3 | `analyze` | accuracy, cost metrics, rankings, Pareto frontier, exam shift, plots |
-| 3 | `contamination` | year-difficulty adjustment, unparseable-answer check, MedExpQA positive control |
+| 1 | `models` | downloads missing model weights (including the judge) and counts parameters |
+| 2 | `run_eval` | runs a model on the datasets (questions and prompts from `items`) and parses the answers |
+| 2 | `judge` | grades open-ended answers with the judge model; `--validate` checks it against physicians |
+| 3 | `analyze` | quality, cost metrics, rankings, Pareto frontier, exam shift, plots |
+| 3 | `compare_layers` | standard exam vs new exam vs real world: cost-efficient choice and generalization |
+| 3 | `contamination` | year-difficulty adjustment, unparseable-answer check, MedExpQA positive control, LiveMedBench posting dates |
 
 ## 2. Before you start
 
@@ -222,7 +227,7 @@ nohup bash scripts/prepare_all.sh > logs/prepare.log 2>&1 &
 tail -f logs/prepare.log          # Ctrl+C stops watching, not the preparation
 ```
 
-This runs two steps:
+This runs three steps:
 
 1. **Datasets** (`python src/prepare_data.py`, about a minute):
    * MIR 2020 to 2024 in Spanish, from CareQA on Hugging Face, written to
@@ -237,11 +242,21 @@ This runs two steps:
    * MIR 2026 in Spanish, from `data/external/mir2026_text_primary_es.csv`, written to
      `data/raw/mir_2026_es.csv`
    * a check of all English files, with a spot-check sample, in `data/translation_checks/`
-2. **Models** (`python src/models.py`): downloads the weights of every model that is not
-   yet complete in `/scratch-shared/$USER/hf_cache` (about 140 GB for a first download, which
-   takes about an hour), then counts the parameters of every model missing from
-   `results/param_counts.json`. When everything is in place, this step only reports that and
-   finishes immediately. `SKIP_MODELS=1 bash scripts/prepare_all.sh` runs only the dataset step.
+2. **Real-world datasets** (`python src/prepare_real_world.py`, a few minutes):
+   * CUPCase from Hugging Face, written to `data/cupcase.jsonl`; the four candidate diagnoses
+     are shuffled with a fixed seed
+   * LiveMedBench from Hugging Face: all monthly files merged (later files replace earlier
+     versions of a case), English cases only, written to `data/livemedbench_en.jsonl` with the
+     posting date and rubric of each case
+   * K-QA from a fixed commit of its GitHub repository, written to `data/kqa.jsonl`, plus the
+     physician-labelled statements for the judge validation, `data/kqa_nli_validation.csv`
+   * a report per dataset, `data/<name>.report.json` (counts, sources, date range)
+3. **Models** (`python src/models.py`): downloads the weights of every model, including the
+   judge (about 65 GB), that is not yet complete in `/scratch-shared/$USER/hf_cache` (about
+   200 GB for a first download, which takes one to two hours), then counts the parameters of
+   every evaluated model missing from `results/param_counts.json`. When everything is in place,
+   this step only reports that and finishes immediately. `SKIP_MODELS=1 bash
+   scripts/prepare_all.sh` runs only the dataset steps.
 
 At the end of the dataset step, a summary lists every dataset and its number of questions.
 Expect 145 to 172 questions per edition, with the same number in Spanish and English for
@@ -349,7 +364,34 @@ the new dataset is evaluated.
 | Rerun everything, overwriting results | `FORCE=1 bash scripts/submit_all.sh` |
 | Change the latency sample (default 20) | `LATENCY_SAMPLE=50 bash scripts/submit_all.sh` |
 
-### 7.3 Monitoring jobs
+### 7.3 Grading open-ended answers
+
+When the evaluation jobs have finished, one job grades all LiveMedBench and K-QA answers with
+the judge (gpt-oss-120b, `reasoning_effort: low`). It loads the judge once and grades only
+answers without grades, so it can be resubmitted after more models have been evaluated:
+
+```bash
+VALIDATE=1 sbatch scripts/judge.sbatch       # first: agreement with physicians (minutes)
+sbatch scripts/judge.sbatch                  # then: grade all answers (a few hours)
+```
+
+The judge uses the official grading prompts of each benchmark (`configs/judge_prompts.yaml`)
+and their score formulas:
+
+* **LiveMedBench**: one judge call per rubric criterion ("met" or not). Case score = points of
+  the criteria met / sum of positive points, clipped to 0 to 1; criteria with negative points
+  describe harmful advice and lower the score.
+* **K-QA**: one call per statement. Comprehensiveness = share of must-have statements the answer
+  entails; hallucinations = number of must-have and nice-to-have statements it contradicts.
+
+Grades go to `results/judged/<model>/<dataset>.jsonl`, with every verdict and the end of the
+judge's answer, so a group member can spot-check them. The validation writes
+`results/analysis/judge_validation.csv`: the judge's agreement and Cohen's kappa with the
+physicians' majority label, next to the agreement between the physicians themselves. Check it
+before relying on the grades; if agreement is poor, set `reasoning_effort: medium` for the
+judge in `configs/models.yaml` and grade again with `JUDGE_ARGS="--force"`.
+
+### 7.4 Monitoring jobs
 
 | Task | Command |
 |---|---|
@@ -367,11 +409,12 @@ When all jobs have finished:
 
 ```bash
 python src/analyze.py
+python src/compare_layers.py
 python src/contamination.py
 git add results && git commit -m "Update results" && git push
 ```
 
-`results/raw/` and `results/analysis/` are tracked by Git, so the results can be pulled on any
+`results/raw/`, `results/judged/` and `results/analysis/` are tracked by Git, so the results can be pulled on any
 computer. Pushing from Snellius requires a GitHub token with write access (section 3.5). The
 FLOPs columns need `results/param_counts.json`, which is not tracked: run `analyze` where
 `prepare_all.sh` was run, or copy the file.
@@ -380,13 +423,17 @@ FLOPs columns need `results/param_counts.json`, which is not tracked: run `analy
 
 All files are written to `results/analysis/`.
 
-**`summary.csv`**: one row per model and dataset.
+**`summary.csv`**: one row per model and dataset. Open-ended datasets appear once their
+answers are graded.
 
 | Column | Meaning |
 |---|---|
-| `accuracy`, `accuracy_ci_low`, `accuracy_ci_high` | share correct, with 95% bootstrap confidence interval |
-| `chance_level` | expected accuracy of random guessing (mean of 1/k) |
-| `chance_corrected_acc` | (accuracy - chance) / (1 - chance); 0 means no better than guessing |
+| `task`, `metric` | `multiple_choice` (metric `accuracy`), `rubric` (`rubric_score`) or `statements` (`comprehensiveness`) |
+| `quality`, `quality_ci_low`, `quality_ci_high` | the metric of the dataset, with 95% bootstrap confidence interval |
+| `accuracy`, `accuracy_ci_low`, `accuracy_ci_high` | share correct, with 95% bootstrap confidence interval (multiple choice only) |
+| `hallucinations_per_answer` | contradicted statements per answer (K-QA only) |
+| `chance_level` | expected accuracy of random guessing (mean of 1/k; 0 for open-ended datasets) |
+| `chance_corrected_acc` | (quality - chance) / (1 - chance); 0 means no better than guessing |
 | `invalid_rate` | share of responses without a recognisable answer (counted as wrong) |
 | `truncated_rate` | share of responses cut off at the token limit |
 | `input_tokens_per_question`, `output_tokens_per_question` | mean tokens processed and generated |
@@ -403,7 +450,7 @@ All files are written to `results/analysis/`.
 Peak GPU memory is reported as the memory needed for the weights rather than measured,
 because vLLM reserves a fixed share of the GPU (90%) regardless of the model's actual needs.
 
-**`rankings.csv`**: each model's rank per dataset, by accuracy and by cost-efficiency
+**`rankings.csv`**: each model's rank per dataset, by quality and by cost-efficiency
 (lowest FLOPs per above-chance correct answer ranks first).
 
 **`rank_correlations.csv`**: Spearman correlation between datasets of the cost-efficiency
@@ -424,11 +471,27 @@ with the Pareto frontier as a solid line and the chance level as a dashed line.
 **Translation effect**: compare `accuracy` for `mir_<year>` and `mir_<year>_es` per model. A
 large difference means translation affects the results, which should be reported.
 
-### 8.2 Output files of `src/contamination.py`
+### 8.2 Output files of `src/compare_layers.py`
 
-The three checks use the Spanish answers in `results/raw/` and write to
-`results/analysis/contamination/`. Shifts are in percentage points; negative means lower
-accuracy on unseen exams, which is what memorization predicts.
+The three layers are the older MIR editions, the newest MIR editions and each real-world
+dataset, all in English so that only the type of question differs (`analysis.layers`). Run it
+after `analyze.py`. Files in `results/analysis/`:
+
+| File | Content |
+|---|---|
+| `layer_summary.csv` | per model and layer: quality, chance-corrected quality, FLOPs per question, FLOPs per quality point, rank by quality and by cost-efficiency, the most cost-efficient model, Pareto frontier |
+| `layer_agreement.csv` | per pair of layers: Spearman correlation of the quality and cost-efficiency rankings, the most cost-efficient model in each layer, and whether the choice is the same |
+| `generalization.csv` | per model: retention = chance-corrected quality on a real-world layer / chance-corrected quality on the new exam (empty when the new-exam value is near chance), and the accuracy drop for CUPCase; per family: retention of each smaller model minus that of the largest, with bootstrap 95% CIs |
+
+Retention compares layers with different metrics on one scale; a value below 1 means the model
+keeps less of its new-exam performance on real-world questions. The family rows answer whether
+small models lose more than large models of the same family.
+
+### 8.3 Output files of `src/contamination.py`
+
+The first three checks use the Spanish MIR answers in `results/raw/`, the fourth the
+LiveMedBench grades; all write to `results/analysis/contamination/`. Shifts are in percentage
+points; negative means lower quality on unseen questions, which is what memorization predicts.
 
 | File | Content |
 |---|---|
@@ -439,6 +502,7 @@ accuracy on unseen exams, which is what memorization predicts.
 | `unparseable_by_year.csv`, `unparseable_reasons.csv`, `unparseable_answers.csv` | how often answers had no option letter, per year and why |
 | `shift_with_without.csv` | the year-adjusted shift with all answers and with parseable answers only |
 | `mir_overlap.csv`, `matched_questions.csv` | positive control: MedGemma's lead over Gemma 3 on MIR questions in its MedExpQA training data versus other MIR questions of the same years |
+| `livemedbench_cutoff.csv` | the same idea on real-world data: effect of a LiveMedBench case being posted after the model's `training_cutoff` month, with case effects removing case difficulty (`score ~ model + case + unseen`) |
 
 The difficulty adjustment works because the training cutoffs differ between models: within
 the same exam year, models that could have seen the exam are compared with models that could
@@ -453,7 +517,7 @@ Options:
 | Sensitivity check with a different cutoff | `python src/contamination.py --unseen-from qwen3-1.7b=2025 qwen3-4b=2025 --out results/analysis/contamination_qwen2025` |
 | MedExpQA from local files (no download) | `python src/contamination.py --medexpqa-dir <folder>` |
 
-### 8.3 Interpreting with care
+### 8.4 Interpreting with care
 
 * With about 170 questions per MIR year, confidence intervals are roughly ±7 percentage
   points. Treat smaller differences as inconclusive.
@@ -462,6 +526,8 @@ Options:
   compare it with the human-based check.
 * Check `invalid_rate` before comparing models; a model that answers in an unexpected
   format loses accuracy for reasons unrelated to medical knowledge.
+* Judge scores are only as good as the judge: report `judge_validation.csv` with them, and
+  compare models within a dataset rather than scores across datasets.
 
 ## 9. Configuration reference
 
@@ -474,6 +540,8 @@ Settings under `defaults` apply to all models unless a model overrides them.
 | `hf_id` | Hugging Face model identifier |
 | `family`, `size_b`, `medical`, `release` | metadata used in the analysis and the paper |
 | `unseen_from` | first MIR exam year after the training cutoff (per-model split) |
+| `training_cutoff` | last month of training data, compared with LiveMedBench posting dates |
+| `role` | `judge` for the grading model: downloaded, never evaluated |
 | `dtype` | numeric precision (bfloat16) |
 | `max_model_len` | maximum tokens (prompt plus answer) per question |
 | `gpu_memory_utilization` | share of GPU memory vLLM may use |
@@ -494,36 +562,41 @@ Settings under `defaults` apply to all models unless a model overrides them.
 | | `language` | `en` or `es`; exam shifts are computed per language |
 | | `columns` | for CSV files: which column holds the id, year, question, options and answer |
 | | `optional` | if true, only evaluated when requested with `DATASETS=...` |
+| | `task` | `multiple_choice` (default), `rubric` or `statements` |
+| | `instruction` | for open-ended datasets: the instruction placed before the question |
 | `default_datasets` | | `auto`: every non-optional dataset whose input file exists |
 | `evaluation` | `system_prompt`, `instruction_direct`, `instruction_thinking` | prompt texts |
 | | `temperature` | 0 means always the most likely answer |
-| | `max_tokens_direct`, `max_tokens_thinking` | answer length limits |
+| | `max_tokens_direct`, `max_tokens_thinking`, `max_tokens_open` | answer length limits |
+| `judge` | `model`, `temperature`, `max_tokens` | judge model key and its generation settings |
+| | `validation_file` | physician-labelled statements for `judge.py --validate` |
 | `analysis` | `flops_param_count` | `lm_total` or `lm_non_embedding` |
 | | `bootstrap_samples`, `bootstrap_seed` | settings for confidence intervals |
 | | `common_split` | seen and unseen exam years shared by all models |
 | | `exclude_from_regression` | models left out of the year-difficulty regression (near chance) |
 | | `human_difficulty` | file with the human reference accuracy per year |
+| | `layers` | language and dataset groups of the layers in `compare_layers.py` |
 
 After changing prompts or generation settings, rerun the smoke test and then all models, so
 every model is evaluated with identical settings.
 
 ## 10. Extending the study
 
-### 10.1 Adding the real-world dataset
+### 10.1 Adding a dataset
 
-1. Convert it to jsonl, one question per line:
+1. Convert it to jsonl, one question per line. Multiple choice:
 
    ```json
    {"id": "rw-001", "year": "2026", "question": "...", "options": {"A": "...", "B": "...", "C": "...", "D": "..."}, "answer": "C"}
    ```
 
-2. Save it as `data/real_world.jsonl`.
-3. In `configs/datasets.yaml`, uncomment the `real_world` entry.
-4. Run `bash scripts/submit_all.sh`; the new dataset is detected automatically and only it is
-   evaluated.
-
-The pipeline handles multiple-choice questions only. Datasets with free-text answers would
-need an additional grading step, which is not part of the pipeline.
+   Open-ended datasets use the fields of the `rubric` task (`request`, `rubric` with
+   `criterion` and `points`) or of the `statements` task (`must_have`, `nice_to_have`); see
+   `src/prepare_real_world.py`.
+2. Register it in `configs/datasets.yaml` with `group`, `language` and, if open-ended, `task`
+   and `instruction`.
+3. Run `bash scripts/submit_all.sh`; the new dataset is detected automatically and only it is
+   evaluated. Open-ended answers are then graded with `sbatch scripts/judge.sbatch`.
 
 ### 10.2 Adding a model
 
@@ -550,6 +623,8 @@ and adds the parameter count), the smoke test with
 | High `truncated_rate` | Token limit too low (mainly with thinking) | Increase `max_tokens_direct`, `max_tokens_thinking` or `max_model_len` |
 | MIR 2025 preparation stops with "STOP" | The PDFs or the extracted text differ from the audited version | Check that the Version 0 PDFs in `data/external/` are unchanged |
 | FLOPs columns empty in `summary.csv` | `results/param_counts.json` missing | Run `python src/models.py` or copy the file from Snellius |
+| Judge job runs out of GPU memory | Batch too large for gpt-oss-120b on one GPU | Add `llm_kwargs: {max_num_batched_tokens: 2048}` to the judge in `models.yaml` |
+| Open-ended dataset missing from `summary.csv` | Answers not graded yet | `sbatch scripts/judge.sbatch` |
 
 ## 12. Reproducibility checklist for the paper
 
@@ -568,9 +643,13 @@ Record and report:
 * the parameter counts used for FLOPs (`results/param_counts.json`) and the choice of
   `lm_total` or `lm_non_embedding`
 * the prompts (`configs/datasets.yaml`)
+* real-world sources and versions (`data/<name>.report.json`: CUPCase test split, the
+  LiveMedBench revision and date range, the K-QA commit) and the `training_cutoff` months
+* the judge (gpt-oss-120b, reasoning effort, temperature), its prompts
+  (`configs/judge_prompts.yaml`) and its agreement with physicians (`judge_validation.csv`)
 
 Publish the code, the configuration files, the item identifiers and the raw outputs in
-`results/raw/`.
+`results/raw/` and `results/judged/`.
 
 ## 13. Quick reference
 
@@ -591,8 +670,13 @@ SMOKE=1 sbatch scripts/evaluate.sbatch
 bash scripts/submit_all.sh          # safe to rerun; only missing results are submitted
 squeue -u $USER
 
+# Grading of open-ended answers (after the evaluation jobs)
+VALIDATE=1 sbatch scripts/judge.sbatch
+sbatch scripts/judge.sbatch
+
 # Analysis
 python src/analyze.py
+python src/compare_layers.py
 python src/contamination.py
 git add results && git commit -m "Update results" && git push
 ```

@@ -20,6 +20,12 @@
 #   Qwen3:                no published cutoff; the release (29 April 2025) is used, so only
 #                         2026 is unseen (a sensitivity check with 2025 is possible with
 #                         python src/contamination.py --unseen-from qwen3-4b=2025)
+#
+# training_cutoff is the last month of training data (for Qwen3 the release month). It is
+# compared with the posting date of each LiveMedBench case in src/contamination.py.
+#
+# The judge (role: judge) grades open-ended answers in src/judge.py; it is downloaded by
+# src/models.py but never evaluated, and scripts/submit_all.sh skips it.
 
 defaults:
   dtype: bfloat16
@@ -43,6 +49,7 @@ models:
     medical: false
     release: "2025-03-12"
     unseen_from: 2025
+    training_cutoff: "2024-08"
 
   gemma3-4b:
     hf_id: google/gemma-3-4b-it
@@ -51,6 +58,7 @@ models:
     medical: false
     release: "2025-03-12"
     unseen_from: 2025
+    training_cutoff: "2024-08"
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
 
   gemma3-27b:
@@ -60,6 +68,7 @@ models:
     medical: false
     release: "2025-03-12"
     unseen_from: 2025
+    training_cutoff: "2024-08"
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
     slurm_time: "02:00:00"
 
@@ -72,6 +81,7 @@ models:
     medical: true
     release: "2025-05-20"
     unseen_from: 2025
+    training_cutoff: "2024-08"
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
 
   medgemma-27b:
@@ -81,6 +91,7 @@ models:
     medical: true
     release: "2025-05-20"
     unseen_from: 2025
+    training_cutoff: "2024-08"
     slurm_time: "02:00:00"
 
   # Qwen3 (original April 2025 checkpoints, not the later "2507" updates).
@@ -92,6 +103,7 @@ models:
     medical: false
     release: "2025-04-29"
     unseen_from: 2026
+    training_cutoff: "2025-04"
     chat_template_kwargs: {enable_thinking: false}
 
   qwen3-4b:
@@ -101,6 +113,7 @@ models:
     medical: false
     release: "2025-04-29"
     unseen_from: 2026
+    training_cutoff: "2025-04"
     chat_template_kwargs: {enable_thinking: false}
 
   # Optional: medical fine-tune of the Qwen family. Fill in the exact Hugging Face
@@ -122,6 +135,7 @@ models:
     medical: false
     release: "2024-04-18"
     unseen_from: 2024
+    training_cutoff: "2023-03"
     slurm_time: "02:00:00"
 
   # Med42-v2 (medical fine-tune of Llama 3 8B).
@@ -132,4 +146,18 @@ models:
     medical: true
     release: "2024-08"
     unseen_from: 2024
+    training_cutoff: "2023-03"
     slurm_time: "02:00:00"
+
+  # Judge for open-ended answers (src/judge.py): OpenAI's open-weight gpt-oss-120b, a
+  # mixture-of-experts model (117B parameters, about 5B active) stored in MXFP4, which fits
+  # on one H100. It belongs to none of the evaluated families. reasoning_effort is passed to
+  # its chat template.
+  gpt-oss-120b:
+    hf_id: openai/gpt-oss-120b
+    family: gpt-oss
+    role: judge
+    max_model_len: 16384
+    gpu_memory_utilization: 0.92
+    chat_template_kwargs: {reasoning_effort: low}
+    slurm_time: "10:00:00"

@@ -1,8 +1,13 @@
-"""Aggregate raw evaluation results into accuracy and cost metrics.
+"""Aggregate raw evaluation results into quality and cost metrics.
 
 Metrics per model and dataset:
-    accuracy                 share of questions answered correctly (95% bootstrap CI)
-    chance_corrected_acc     (accuracy - c) / (1 - c), with c the mean of 1/k over items
+    quality                  accuracy for multiple-choice datasets; for open-ended datasets
+                             the mean judge score from results/judged/ (rubric score or
+                             comprehensiveness, see the metric column), with 95% bootstrap CI
+    accuracy                 share of questions answered correctly (multiple choice only)
+    hallucinations_per_answer  contradicted statements per answer (statements task only)
+    chance_corrected_acc     (quality - c) / (1 - c), with c the mean of 1/k over items for
+                             multiple choice and 0 for open-ended datasets
     invalid_rate             share of responses without a parseable answer
     flops_per_question       2 * N * (input tokens + output tokens), averaged over items
     gpu_seconds_per_question measured generation time times number of GPUs, per item
@@ -11,7 +16,7 @@ Metrics per model and dataset:
                              (undefined when chance_corrected_acc <= 0)
 
 Comparisons:
-    rankings.csv             rank of each model per dataset, by accuracy and by cost-efficiency
+    rankings.csv             rank of each model per dataset, by quality and by cost-efficiency
     rank_correlations.csv    Spearman correlation of cost-efficiency rankings between datasets
     exam_shift.csv           accuracy on unseen minus seen exam years, per model and language,
                              for two splits of the years:
@@ -19,7 +24,8 @@ Comparisons:
                                           in configs/datasets.yaml)
                                per_model  unseen from the first exam after the model's training
                                           cutoff (unseen_from in configs/models.yaml)
-    on_pareto_frontier       models for which no other model is both cheaper and more accurate
+    on_pareto_frontier       models for which no other model is both cheaper and better
+Open-ended datasets appear once their answers are graded by src/judge.py.
 
 Usage:
     python src/analyze.py --results results
@@ -44,15 +50,27 @@ def parse_args():
 
 
 def load_raw(results_dir):
+    """All answers with a quality value per item: correctness, or the judge score if graded."""
     records, metas = [], []
     for path in sorted((results_dir / "raw").glob("*/*.jsonl")):
-        records.append(pd.read_json(path, lines=True))
+        records.append(pd.read_json(path, lines=True, dtype={"item_id": str}))
         meta_path = path.with_suffix(".meta.json")
         if meta_path.exists():
             metas.append(json.loads(meta_path.read_text(encoding="utf-8")))
     if not records:
         raise SystemExit(f"No result files found under {results_dir / 'raw'}.")
-    return pd.concat(records, ignore_index=True), metas
+    df = pd.concat(records, ignore_index=True)
+    judged = [pd.read_json(p, lines=True, dtype={"item_id": str})
+              for p in sorted((results_dir / "judged").glob("*/*.jsonl"))]
+    if judged:
+        scores = pd.concat(judged, ignore_index=True).reindex(
+            columns=["model", "dataset", "item_id", "score", "hallucinations"])
+        df = df.merge(scores, on=["model", "dataset", "item_id"], how="left")
+    else:
+        df["score"], df["hallucinations"] = np.nan, np.nan
+    correct = df["correct"].map({True: 1.0, False: 0.0})
+    df["quality"] = correct.where(correct.notna(), df["score"])
+    return df, metas
 
 
 def bootstrap_ci(values, samples, seed):
@@ -62,17 +80,25 @@ def bootstrap_ci(values, samples, seed):
     return np.percentile(means, [2.5, 97.5])
 
 
+METRICS = {"multiple_choice": "accuracy", "rubric": "rubric_score", "statements": "comprehensiveness"}
+
+
 def summarize(df, metas, param_counts, models, ds_cfg):
     analysis = ds_cfg["analysis"]
     count_key = analysis["flops_param_count"]
     meta_index = {(m["model"], m["dataset"]): m for m in metas}
-    rows = []
+    rows, not_graded = [], []
     for (model, dataset), group in df.groupby(["model", "dataset"]):
+        task = ds_cfg["datasets"].get(dataset, {}).get("task", "multiple_choice")
+        if group["quality"].isna().any():
+            not_graded.append(f"{model}/{dataset}")
+            continue
+        multiple_choice = task == "multiple_choice"
         n = len(group)
-        accuracy = group["correct"].mean()
-        low, high = bootstrap_ci(group["correct"], analysis["bootstrap_samples"], analysis["bootstrap_seed"])
-        chance = (1.0 / group["n_options"]).mean()
-        cca = (accuracy - chance) / (1.0 - chance)
+        quality = group["quality"].mean()
+        low, high = bootstrap_ci(group["quality"], analysis["bootstrap_samples"], analysis["bootstrap_seed"])
+        chance = (1.0 / group["n_options"]).mean() if multiple_choice else 0.0
+        cca = (quality - chance) / (1.0 - chance)
 
         n_params = param_counts.get(model, {}).get(count_key)
         tokens = group["input_tokens"] + group["output_tokens"]
@@ -90,12 +116,18 @@ def summarize(df, metas, param_counts, models, ds_cfg):
             "size_b": models.get(model, {}).get("size_b", np.nan),
             "medical": models.get(model, {}).get("medical", False),
             "n_items": n,
-            "accuracy": accuracy,
-            "accuracy_ci_low": low,
-            "accuracy_ci_high": high,
+            "task": task,
+            "metric": METRICS[task],
+            "quality": quality,
+            "quality_ci_low": low,
+            "quality_ci_high": high,
+            "accuracy": quality if multiple_choice else np.nan,
+            "accuracy_ci_low": low if multiple_choice else np.nan,
+            "accuracy_ci_high": high if multiple_choice else np.nan,
+            "hallucinations_per_answer": group["hallucinations"].mean() if task == "statements" else np.nan,
             "chance_level": chance,
             "chance_corrected_acc": cca,
-            "invalid_rate": group["predicted"].isna().mean(),
+            "invalid_rate": group["predicted"].isna().mean() if multiple_choice else np.nan,
             "truncated_rate": (group["finish_reason"] == "length").mean(),
             "input_tokens_per_question": group["input_tokens"].mean(),
             "output_tokens_per_question": group["output_tokens"].mean(),
@@ -110,21 +142,23 @@ def summarize(df, metas, param_counts, models, ds_cfg):
             "weights_memory_gb": 2 * param_counts.get(model, {}).get("total_in_files", np.nan) / 1e9,
             "gpu_name": meta.get("environment", {}).get("gpu_name", ""),
         })
+    if not_graded:
+        print(f"Not yet graded by src/judge.py, left out: {', '.join(not_graded)}")
     summary = pd.DataFrame(rows).sort_values(["dataset", "model"]).reset_index(drop=True)
     summary["on_pareto_frontier"] = False
     for _, group in summary.groupby("dataset"):
-        best_accuracy = -np.inf
-        for index, row in group.sort_values(["flops_per_question", "accuracy"],
+        best_quality = -np.inf
+        for index, row in group.sort_values(["flops_per_question", "quality"],
                                             ascending=[True, False]).iterrows():
-            if pd.notna(row["flops_per_question"]) and row["accuracy"] > best_accuracy:
+            if pd.notna(row["flops_per_question"]) and row["quality"] > best_quality:
                 summary.loc[index, "on_pareto_frontier"] = True
-                best_accuracy = row["accuracy"]
+                best_quality = row["quality"]
     return summary
 
 
 def rankings(summary):
-    ranked = summary[["model", "dataset", "accuracy", "flops_per_above_chance_correct"]].copy()
-    ranked["rank_accuracy"] = ranked.groupby("dataset")["accuracy"].rank(ascending=False, method="min")
+    ranked = summary[["model", "dataset", "metric", "quality", "flops_per_above_chance_correct"]].copy()
+    ranked["rank_quality"] = ranked.groupby("dataset")["quality"].rank(ascending=False, method="min")
     ranked["rank_cost_efficiency"] = ranked.groupby("dataset")["flops_per_above_chance_correct"].rank(
         ascending=True, method="min", na_option="bottom")
     return ranked
@@ -187,22 +221,24 @@ def plot_accuracy_vs_cost(summary, out_dir):
         if group["flops_per_question"].isna().all():
             continue
         fig, ax = plt.subplots(figsize=(6, 4))
+        metric = group["metric"].iloc[0].replace("_", " ").capitalize()
         for _, row in group.iterrows():
-            ax.errorbar(row["flops_per_question"], row["accuracy"],
-                        yerr=[[row["accuracy"] - row["accuracy_ci_low"]],
-                              [row["accuracy_ci_high"] - row["accuracy"]]],
+            ax.errorbar(row["flops_per_question"], row["quality"],
+                        yerr=[[row["quality"] - row["quality_ci_low"]],
+                              [row["quality_ci_high"] - row["quality"]]],
                         fmt="o", capsize=3)
-            ax.annotate(row["model"], (row["flops_per_question"], row["accuracy"]),
+            ax.annotate(row["model"], (row["flops_per_question"], row["quality"]),
                         textcoords="offset points", xytext=(5, 5), fontsize=8)
         frontier = group[group["on_pareto_frontier"]].sort_values("flops_per_question")
-        ax.step(frontier["flops_per_question"], frontier["accuracy"], where="post",
+        ax.step(frontier["flops_per_question"], frontier["quality"], where="post",
                 linewidth=1, color="black", label="Pareto frontier")
-        ax.axhline(group["chance_level"].iloc[0], linestyle="--", linewidth=1, color="grey", label="chance")
+        if group["chance_level"].iloc[0] > 0:
+            ax.axhline(group["chance_level"].iloc[0], linestyle="--", linewidth=1, color="grey", label="chance")
         ax.legend(fontsize=8, loc="lower right")
         ax.set_xscale("log")
         ax.set_xlabel("FLOPs per question (log scale)")
-        ax.set_ylabel("Accuracy")
-        ax.set_title(f"Accuracy versus inference cost: {dataset}")
+        ax.set_ylabel(metric)
+        ax.set_title(f"{metric} versus inference cost: {dataset}")
         fig.tight_layout()
         fig.savefig(out_dir / f"accuracy_vs_flops_{dataset}.png", dpi=200)
         plt.close(fig)
@@ -237,7 +273,7 @@ def main():
         plot_accuracy_vs_cost(summary, out_dir)
 
     pd.set_option("display.width", 160)
-    print(summary[["model", "dataset", "n_items", "accuracy", "chance_corrected_acc", "invalid_rate",
+    print(summary[["model", "dataset", "n_items", "metric", "quality", "chance_corrected_acc", "invalid_rate",
                    "flops_per_question", "gpu_seconds_per_question"]].to_string(index=False))
     if not shift.empty:
         print("\nAccuracy shift from seen to unseen exam years:")

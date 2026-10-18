@@ -1,7 +1,7 @@
-"""Memorization checks on the MIR results.
+"""Memorization checks on the MIR and LiveMedBench results.
 
-All three checks use the existing Spanish answers in results/raw/<model>/mir_<year>_es.jsonl;
-no GPU and no new model runs are needed.
+The first three checks use the Spanish MIR answers in results/raw/<model>/mir_<year>_es.jsonl,
+the fourth the LiveMedBench judge scores; no GPU and no new model runs are needed.
 
     year      year-difficulty adjustment (main contamination result). "Unseen" exam years
               start at each model's unseen_from year in configs/models.yaml (the first exam
@@ -19,6 +19,12 @@ no GPU and no new model runs are needed.
               train split is part of MedGemma's training data. If memorization of these
               questions mattered, MedGemma's lead over its base model Gemma 3 would be larger
               on exactly those questions than on the other MIR questions of the same years.
+    livemedbench
+              the same idea on real-world data: each LiveMedBench case has a posting date,
+              which is compared with each model's training_cutoff month. A regression with
+              model and case effects separates the effect of a case being posted after the
+              cutoff from the difficulty of the case:  score ~ model + case + unseen
+              (uses the judge scores in results/judged/<model>/livemedbench.jsonl).
 
 Shifts are in percentage points; negative means lower accuracy on unseen exams, which is
 what contamination predicts.
@@ -34,10 +40,11 @@ Outputs, written to results/analysis/contamination/:
     shift_with_without.csv    year-adjusted shift with all answers and with parseable answers only
     mir_overlap.csv           positive control result per model size (bootstrap 95% CI)
     matched_questions.csv     MIR questions matched to MedExpQA questions
+    livemedbench_cutoff.csv   unseen effect on LiveMedBench rubric scores, pooled and per model
 
 Usage:
-    python src/contamination.py                                  all three checks
-    python src/contamination.py --checks year unparseable
+    python src/contamination.py                                  all four checks
+    python src/contamination.py --checks year unparseable livemedbench
     python src/contamination.py --unseen-from qwen3-1.7b=2025 qwen3-4b=2025 --out <folder>
     python src/contamination.py --medexpqa-dir <folder with the MedExpQA jsonl files>
 """
@@ -79,8 +86,8 @@ def load_answers(results_dir, unseen_from):
     return d
 
 
-def fit_unseen_effect(data, model=None):
-    """Regress correctness on model and year effects plus an unseen indicator.
+def fit_unseen_effect(data, model=None, outcome="correct", fixed="year"):
+    """Regress the outcome on model and year (or case) effects plus an unseen indicator.
 
     Without a model, one pooled unseen effect is estimated. With a model, that model gets its
     own unseen indicator and all other models share a second one. Standard errors are
@@ -95,7 +102,7 @@ def fit_unseen_effect(data, model=None):
         data["unseen_other"] = data["unseen"] * (data["model"] != model)
         term, extra = "unseen_m", " + unseen_other"
     groups = pd.factorize(data["item_id"])[0]
-    fit = smf.ols(f"correct ~ C(model) + C(year) + {term}{extra}", data=data).fit(
+    fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
         cov_type="cluster", cov_kwds={"groups": groups})
     low, high = fit.conf_int().loc[term]
     return fit, 100 * fit.params[term], 100 * low, 100 * high
@@ -309,12 +316,40 @@ def overlap_check(d, medexpqa_dir, threshold, out):
           "(memorization); about zero means no sign that training on them helped.")
 
 
+# ---------------------------------------------------------------- check 4: LiveMedBench posting dates
+
+def livemedbench_check(results_dir, cutoffs, out):
+    files = sorted((results_dir / "judged").glob("*/livemedbench.jsonl"))
+    if not files:
+        print("No graded LiveMedBench answers yet (run src/judge.py); check skipped.")
+        return
+    d = pd.concat([pd.read_json(f, lines=True, dtype={"item_id": str}) for f in files], ignore_index=True)
+    dates = pd.read_json(PROJECT_ROOT / "data" / "livemedbench_en.jsonl", lines=True, dtype={"id": str},
+                         convert_dates=False)
+    d["month"] = d["item_id"].map(dates.set_index("id")["date"]).str[:7]
+    d = d[d["model"].isin(cutoffs)].dropna(subset=["month"]).copy()
+    d["unseen"] = (d["month"] > d["model"].map(cutoffs)).astype(int)
+    counts = d.groupby("model")["unseen"].agg(n_unseen="sum", n_cases="size")
+    _, b, lo, hi = fit_unseen_effect(d, outcome="score", fixed="item_id")
+    rows = [{"model": "ALL (pooled)", "training_cutoff": "", "shift": b, "ci_low": lo, "ci_high": hi}]
+    for m in sorted(d["model"].unique()):
+        if counts.loc[m, "n_unseen"] in (0, counts.loc[m, "n_cases"]):
+            rows.append({"model": m, "training_cutoff": cutoffs[m], "note": "all cases on one side of the cutoff"})
+            continue
+        _, b, lo, hi = fit_unseen_effect(d, m, outcome="score", fixed="item_id")
+        rows.append({"model": m, "training_cutoff": cutoffs[m], "shift": b, "ci_low": lo, "ci_high": hi})
+    table = pd.DataFrame(rows).merge(counts.reset_index(), on="model", how="left").round(1)
+    table.to_csv(out / "livemedbench_cutoff.csv", index=False)
+    print("Unseen effect on LiveMedBench rubric scores (points on a 0-100 scale, 95% CI):")
+    print(table.to_string(index=False))
+
+
 # ---------------------------------------------------------------- main
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--checks", nargs="+", choices=["year", "unparseable", "overlap"],
-                        default=["year", "unparseable", "overlap"])
+    parser.add_argument("--checks", nargs="+", choices=["year", "unparseable", "overlap", "livemedbench"],
+                        default=["year", "unparseable", "overlap", "livemedbench"])
     parser.add_argument("--results", default="results", help="Results directory used by run_eval.")
     parser.add_argument("--out", default="results/analysis/contamination", help="Output directory.")
     parser.add_argument("--unseen-from", nargs="+", default=[], metavar="MODEL=YEAR",
@@ -350,6 +385,10 @@ def main():
     if "overlap" in args.checks:
         print("\n=== Check 3: MedExpQA positive control ===")
         overlap_check(d, args.medexpqa_dir, args.threshold, out)
+    if "livemedbench" in args.checks:
+        print("\n=== Check 4: LiveMedBench posting dates ===")
+        cutoffs = {k: m["training_cutoff"] for k, m in load_models().items() if m.get("training_cutoff")}
+        livemedbench_check(resolve_path(args.results), cutoffs, out)
     print(f"\nWrote results to {out}")
 
 

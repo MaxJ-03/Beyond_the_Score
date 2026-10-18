@@ -7,8 +7,12 @@ data/*
 data/raw/*
 !data/raw/mir_*_es.csv
 
-# Track the final English MIR datasets
+# Track the final English MIR datasets and the real-world datasets
 !data/mir_*_en.csv
+!data/cupcase.jsonl
+!data/livemedbench_en.jsonl
+!data/kqa.jsonl
+!data/kqa_nli_validation.csv
 
 # Allow original source files
 !data/external/
@@ -23,3 +27,4 @@ requirements.lock.txt
 .venv/
 venv/
 !results/raw/
+!results/judged/
