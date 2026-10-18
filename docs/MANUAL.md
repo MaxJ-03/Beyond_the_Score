@@ -64,7 +64,7 @@ You need:
 * A Hugging Face access token (huggingface.co, Settings, Access Tokens, type "Read").
 * The scraped MIR 2026 files in `data/external/` (MIR 2026 is not on Hugging Face; see
   section 5): the original Spanish `mir2026_text_primary_es.csv` (included in the project)
-  and the translated `mir_2026_en_mlt.csv` (add it to the repository).
+  and the translated `mir_2026_en_mlt.csv` (both included in the project).
 
 ## 3. Connecting to Snellius
 
@@ -187,7 +187,9 @@ is tracked by Git, so files added on your computer reach Snellius with `git pull
 |---|---|---|
 | `mir2026_text_primary_es.csv` | MIR 2026, original Spanish questions and answers (170 questions) | included |
 | `mir2026_text_primary_es.jsonl` | the same in JSON Lines format (not used by the pipeline; kept for reference) | included |
-| `mir_2026_en_mlt.csv` | MIR 2026, the same questions with the English translation | **add this file** |
+| `mir_2026_en_mlt.csv` | MIR 2026, the same questions with the English translation | included |
+| `mir2025_questions_v0.pdf`, `mir2025_answers_definitive_v0.pdf` | MIR 2025, official Version 0 booklet and definitive answer key | included |
+| `mir_2025_en_mlt.csv` | MIR 2025, English translation of the selected questions (same procedure as 2026) | included |
 
 MIR 2022 and 2024 need no files here: they are downloaded from CareQA on Hugging Face
 (Spanish and English) by the preparation step.
@@ -210,6 +212,10 @@ This runs two steps:
      Spanish text in parallel columns
    * MIR 2026 in Spanish, from `data/external/mir2026_text_primary_es.csv`, written to
      `data/raw/mir_2026_es.csv`
+   * MIR 2025 in Spanish, from the official PDFs in `data/external/`, written to
+     `data/raw/mir_2025_es.csv` (`scripts/prepare_mir2025.py`)
+   * MIR 2025 in English, from `data/external/mir_2025_en_mlt.csv`, written to
+     `data/mir_2025_en.csv` (`scripts/prepare_mir2025_en.py`)
    * MIR 2026 in English, from `data/external/mir_2026_en_mlt.csv`, written to
      `data/mir_2026_en.csv` (`scripts/prepare_mir2026_en.py`)
    * a validation of all English files, with a spot-check sample, in `data/translation_checks/`

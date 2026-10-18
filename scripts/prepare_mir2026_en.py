@@ -5,7 +5,8 @@ The output has exactly the same format as the English CareQA files of 2022 and 2
     option_a_es, option_a_en, ..., option_d_es, option_d_en
 
 It contains exactly the questions selected in data/raw/mir_2026_es.csv (same ids, same
-answers), with the English text taken from the translated file. Run it after the Spanish
+answers), with the English text taken from the translated file. Zero-width spaces introduced
+by the machine translation are removed. Run it after the Spanish
 2026 file has been prepared; scripts/prepare_data.py does this automatically.
 
 Usage:
@@ -27,6 +28,11 @@ DEFAULT_TRANSLATION = "data/external/mir_2026_en_mlt.csv"
 LETTERS = ["a", "b", "c", "d"]
 ENGLISH_COLUMNS = ["question_id", "question_en", "option_1_en", "option_2_en", "option_3_en", "option_4_en",
                    "correct_answer"]
+
+
+def clean_text(value):
+    """Strip the text and remove zero-width spaces left by the machine translation."""
+    return str(value).replace("\u200b", "").strip()
 
 
 def answer_letter(value):
@@ -67,10 +73,10 @@ def build(translation_path):
         answer_mismatches += answer_letter(en["correct_answer"]) != row["answer"]
         record = {"id": row["id"], "year": 2026, "answer": row["answer"],
                   "translation_mode": "scraped_translation",
-                  "question_es": row["question"], "question_en": str(en["question_en"]).strip()}
+                  "question_es": row["question"], "question_en": clean_text(en["question_en"])}
         for letter, number_option in zip(LETTERS, range(1, 5)):
             record[f"option_{letter}_es"] = row[f"option_{letter}"]
-            record[f"option_{letter}_en"] = str(en[f"option_{number_option}_en"]).strip()
+            record[f"option_{letter}_en"] = clean_text(en[f"option_{number_option}_en"])
         empty_fields += sum(not str(record[k]).strip() or str(record[k]) == "nan"
                             for k in record if k.endswith("_en"))
         rows.append(record)

@@ -33,19 +33,24 @@ In every new session, activate the environment first with `source ~/venvs/medeva
 
 | Dataset key | Content | Source |
 |---|---|---|
-| `mir_2022_es`, `mir_2024_es` | Original Spanish | CareQA (Hugging Face, from the official exam booklets) |
-| `mir_2022`, `mir_2024` | English | CareQA's official English version (GPT-4 translation, validated by human evaluators) |
+| `mir_2020_es` to `mir_2024_es` | Original Spanish | CareQA (Hugging Face, from the official exam booklets) |
+| `mir_2020` to `mir_2024` | English | CareQA's official English version (GPT-4 translation, validated by human evaluators) |
+| `mir_2025_es` | Original Spanish | Official Version 0 booklet and definitive answer key in `data/external/` |
+| `mir_2025` | English | 2025 translation in `data/external/` (Google machine translation, same procedure as 2026) |
 | `mir_2026_es` | Original Spanish | Scraped 2026 file in `data/external/` |
 | `mir_2026` | English | Scraped 2026 translation in `data/external/` (Google machine translation) |
 | `medqa` | Optional reference | `scripts/prepare_medqa.py`; run only on request |
 
-All years use the same selection: the 200 main questions, without reserve, image-based or
-annulled questions. The 2026 source files live in `data/external/` (tracked by Git):
+All years use the same selection: the main questions (175 for 2020 and 2021, 200 from 2022
+on), without reserve, image-based or annulled questions. The source files for 2025 and 2026
+live in `data/external/` (tracked by Git):
 
 | File | Content |
 |---|---|
-| `mir2026_text_primary_es.csv` (and `.jsonl`) | original Spanish questions and answers (included) |
-| `mir_2026_en_mlt.csv` | the same questions with the English translation (add this file) |
+| `mir2025_questions_v0.pdf`, `mir2025_answers_definitive_v0.pdf` | official 2025 booklet and answer key |
+| `mir_2025_en_mlt.csv` | English translation of the selected 2025 questions |
+| `mir2026_text_primary_es.csv` (and `.jsonl`) | original Spanish 2026 questions and answers |
+| `mir_2026_en_mlt.csv` | the same 2026 questions with the English translation |
 
 Every English file has the same format and contains exactly the questions of its Spanish
 counterpart, with the Spanish text in parallel columns.

@@ -64,6 +64,13 @@ datasets:
     language: en
     columns: *mir_en
 
+  mir_2025:
+    format: csv
+    path: data/mir_2025_en.csv
+    group: new_exam
+    language: en
+    columns: *mir_en
+
 
   # Original Spanish questions, read directly from the source files in data/raw/,
   # so that they can be evaluated independently of the translation.

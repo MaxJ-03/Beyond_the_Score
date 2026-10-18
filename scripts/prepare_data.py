@@ -4,6 +4,8 @@ What it produces:
     data/raw/mir_2020_es.csv through mir_2024_es.csv    Spanish, from CareQA
     data/mir_2020_en.csv through mir_2024_en.csv        CareQA English translations
     data/raw/mir_2025_es.csv                             Spanish, from audited Version 0 PDFs
+    data/mir_2025_en.csv                                 English, from the scraped translation
+                                                         data/external/mir_2025_en_mlt.csv
     data/raw/mir_2026_es.csv                             original Spanish, from the scraped
                                                          file data/external/mir2026_text_primary_es.csv
     data/mir_2026_en.csv                                 English, from the scraped translation
@@ -38,6 +40,7 @@ def _load_script(name):
 
 
 download_mir = _load_script("download_mir")
+prepare_mir2025_en = _load_script("prepare_mir2025_en")
 prepare_mir2026_en = _load_script("prepare_mir2026_en")
 audited_fixes = _load_script("audited_mir_corrections")
 
@@ -57,6 +60,8 @@ ASEN_COLUMNS = {
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--years", nargs="+", type=int, default=[2020, 2021, 2022, 2023, 2024], help="CareQA years.")
+    parser.add_argument("--mir2025-en", default="data/external/mir_2025_en_mlt.csv",
+                        help="MIR 2025 file with the English translation.")
     parser.add_argument("--mir2026-es", default="data/external/mir2026_text_primary_es.csv",
                         help="Scraped MIR 2026 file with the original Spanish questions.")
     parser.add_argument("--mir2026-en", default="data/external/mir_2026_en_mlt.csv",
@@ -197,6 +202,9 @@ def main():
     (DATA / "raw").mkdir(parents=True, exist_ok=True)
     prepare_careqa(args.years, args.max_question)
     _load_script("prepare_mir2025").main()
+    if (DATA / "raw" / "mir_2025_es.csv").exists():
+        print("\n--- MIR 2025 (English, scraped translation) ---")
+        prepare_mir2025_en.build(args.mir2025_en)
     prepare_2026(args.mir2026_es, args.max_question)
     if (DATA / "raw" / "mir_2026_es.csv").exists():
         print("\n--- MIR 2026 (English, scraped translation) ---")
