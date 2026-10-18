@@ -10,6 +10,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --time=10:00:00
 #SBATCH --output=logs/%x_%j.out
+#SBATCH --export=ALL
 
 set -euo pipefail
 PYTHON_MODULE=${PYTHON_MODULE:-Python/3.12.3-GCCcore-13.3.0}

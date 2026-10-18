@@ -13,6 +13,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --time=01:00:00
 #SBATCH --output=logs/%x_%j.out
+#SBATCH --export=ALL
 
 set -euo pipefail
 
