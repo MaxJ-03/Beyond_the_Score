@@ -41,19 +41,42 @@ if [[ ! -s logs/submit_list.txt ]]; then
     exit 0
 fi
 
-previous=""
-while read -r key time datasets; do
-    dependency=()
+# Jobs of this project that are still pending or running. Models that already have a queued
+# job are skipped, and new jobs are appended to the end of the existing chain, so the script can
+# be rerun safely while earlier jobs are still in the queue.
+queued=$(squeue -u "$USER" -h -o "%i %j" | awk '$2 ~ /^medeval/' | sort -n)
+previous=$(awk 'END {print $1}' <<< "$queued")
+
+submit() {
+    local name=$1 job_id
+    shift
     if [[ -n "$previous" && "${PARALLEL:-0}" != "1" ]]; then
-        dependency=(--dependency="afterany:$previous")
+        set -- --dependency="afterany:$previous" "$@"
     fi
-    job_id=$(sbatch --parsable --job-name="medeval_${key}" --time="$time" ${dependency[@]+"${dependency[@]}"} \
+    if ! job_id=$(sbatch --parsable --job-name="$name" "$@"); then
+        echo "Submission of $name failed. Jobs submitted so far stay queued; rerun this script" \
+            "later to submit the rest." >&2
+        exit 1
+    fi
+    echo "$job_id"
+}
+
+while read -r key time datasets; do
+    if grep -qx "[0-9]* medeval_${key}" <<< "$queued"; then
+        echo "Skipped $key: a job for this model is already queued"
+        continue
+    fi
+    job_id=$(submit "medeval_${key}" --time="$time" \
         --export=ALL,MODEL_KEY="$key",DATASETS="${datasets//,/ }" scripts/evaluate.sbatch)
     echo "Submitted $key (time limit $time) for [${datasets//,/ }] as job $job_id"
     previous=$job_id
 done < logs/submit_list.txt
 
 if [[ "${JUDGE:-1}" == "1" ]]; then
-    job_id=$(sbatch --parsable --dependency="afterany:$previous" scripts/judge.sbatch)
-    echo "Submitted the grading job as job $job_id (starts after job $previous)"
+    if grep -qx "[0-9]* medeval_judge" <<< "$queued"; then
+        echo "Skipped the grading job: it is already queued"
+    else
+        job_id=$(submit medeval_judge scripts/judge.sbatch)
+        echo "Submitted the grading job as job $job_id (starts after the evaluation jobs)"
+    fi
 fi

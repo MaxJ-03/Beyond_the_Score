@@ -359,7 +359,9 @@ the new dataset is evaluated. The jobs form a chain: each job starts when the pr
 ended, so only one job at a time is checked against the compute budget. The grading job
 (section 7.3) is queued at the end of the chain. A job that is cancelled or hits its time limit
 does not stop the chain, and the datasets it finished are kept; running the script again
-submits what is still missing.
+submits what is still missing. Models that already have a job in the queue are skipped, and new
+jobs are added to the end of the existing chain, so the script can also be rerun while jobs
+are still pending (for example after a submission was refused).
 
 | Variation | Command |
 |---|---|
