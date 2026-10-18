@@ -4,6 +4,8 @@ The Ministry Version-0 booklets are the authority. CareQA and the independent
 MIR-2026 scraper occasionally break numbers/ranges across line boundaries.
 Apply corrections in memory BEFORE deriving the reproducible evaluation CSVs.
 Do not modify upstream downloaded source files or correct answer letters.
+
+Used by src/prepare_data.py; not run on its own.
 """
 
 

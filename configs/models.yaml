@@ -2,15 +2,24 @@
 #
 # All models run on a single NVIDIA H100 (94 GB) so that measured GPU time is
 # comparable across models. Parameter counts for the FLOPs metric are not set here:
-# they are computed from the downloaded weights by scripts/count_params.py.
+# they are computed from the downloaded weights by python src/models.py.
 #
 # Main comparisons:
 #   size:                 gemma3-4b vs gemma3-27b (and gemma3-1b)
-#   medical fine-tuning:  gemma3-4b vs medgemma-4b, gemma3-27b vs medgemma-27b
+#   medical fine-tuning:  gemma3-4b vs medgemma-4b, gemma3-27b vs medgemma-27b,
+#                         llama3-8b vs med42-8b
 #   independent family:   qwen3-1.7b and qwen3-4b
 #
-# Release dates are recorded for the exposure analysis; verify them against the
-# official model cards before reporting.
+# unseen_from is the first MIR exam year the model cannot have seen in training. The MIR is
+# held in January, so it is the first exam after the training cutoff. It defines the
+# per-model split of exam years in src/analyze.py (exam_shift.csv) and src/contamination.py.
+#   Gemma 3 and MedGemma: cutoff August 2024 (Gemma 3 model card); MedGemma's additional
+#                         medical training data has no published cutoff
+#   Llama 3 8B and Med42: cutoff March 2023 (Llama 3 model card); Med42's additional clinical
+#                         training data has no published cutoff
+#   Qwen3:                no published cutoff; the release (29 April 2025) is used, so only
+#                         2026 is unseen (a sensitivity check with 2025 is possible with
+#                         python src/contamination.py --unseen-from qwen3-4b=2025)
 
 defaults:
   dtype: bfloat16
@@ -33,6 +42,7 @@ models:
     size_b: 1
     medical: false
     release: "2025-03-12"
+    unseen_from: 2025
 
   gemma3-4b:
     hf_id: google/gemma-3-4b-it
@@ -40,6 +50,7 @@ models:
     size_b: 4
     medical: false
     release: "2025-03-12"
+    unseen_from: 2025
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
 
   gemma3-27b:
@@ -48,6 +59,7 @@ models:
     size_b: 27
     medical: false
     release: "2025-03-12"
+    unseen_from: 2025
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
     slurm_time: "02:00:00"
 
@@ -59,6 +71,7 @@ models:
     size_b: 4
     medical: true
     release: "2025-05-20"
+    unseen_from: 2025
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
 
   medgemma-27b:
@@ -67,6 +80,7 @@ models:
     size_b: 27
     medical: true
     release: "2025-05-20"
+    unseen_from: 2025
     slurm_time: "02:00:00"
 
   # Qwen3 (original April 2025 checkpoints, not the later "2507" updates).
@@ -77,6 +91,7 @@ models:
     size_b: 1.7
     medical: false
     release: "2025-04-29"
+    unseen_from: 2026
     chat_template_kwargs: {enable_thinking: false}
 
   qwen3-4b:
@@ -85,6 +100,7 @@ models:
     size_b: 4
     medical: false
     release: "2025-04-29"
+    unseen_from: 2026
     chat_template_kwargs: {enable_thinking: false}
 
   # Optional: medical fine-tune of the Qwen family. Fill in the exact Hugging Face
@@ -95,36 +111,25 @@ models:
   #   size_b: 8
   #   medical: true
   #   release: "<release date>"
+  #   unseen_from: <first MIR year after the training cutoff>
   #   optional: true
 
-  # Optional variant with thinking enabled, to measure the cost of reasoning.
-  qwen3-4b-think:
-    hf_id: Qwen/Qwen3-4B
-    family: qwen3
-    size_b: 4
-    medical: false
-    release: "2025-04-29"
-    thinking: true
-    max_model_len: 16384
-    chat_template_kwargs: {enable_thinking: true}
-    slurm_time: "06:00:00"
-    optional: true
-
-  # Llama 3 — base model
+  # Llama 3 (general purpose).
   llama3-8b:
     hf_id: meta-llama/Meta-Llama-3-8B-Instruct
     family: llama3
     size_b: 8
     medical: false
     release: "2024-04-18"
+    unseen_from: 2024
     slurm_time: "02:00:00"
 
-  # Med42-v2 — medically specialized Llama 3
+  # Med42-v2 (medical fine-tune of Llama 3 8B).
   med42-8b:
     hf_id: m42-health/Llama3-Med42-8B
     family: llama3
     size_b: 8
     medical: true
     release: "2024-08"
+    unseen_from: 2024
     slurm_time: "02:00:00"
-

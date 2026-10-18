@@ -8,7 +8,7 @@ Column names can be overridden if detection fails. The detected layout and the f
 converted item are printed so the conversion can be checked.
 
 Usage:
-    python scripts/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl
+    python src/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl
 """
 
 import argparse

@@ -15,7 +15,8 @@ mkdir -p logs
 
 python - "${INCLUDE_OPTIONAL:-0}" "${FORCE:-0}" "${DATASETS:-}" <<'PY' > logs/submit_list.txt
 import sys
-from medeval.config import PROJECT_ROOT, default_datasets, load_datasets_config, load_models
+sys.path.insert(0, "src")
+from config import PROJECT_ROOT, default_datasets, load_datasets_config, load_models
 
 include_optional, force, requested = sys.argv[1] == "1", sys.argv[2] == "1", sys.argv[3].split()
 datasets = requested or default_datasets(load_datasets_config())
@@ -35,6 +36,6 @@ fi
 
 while read -r key time datasets; do
     job_id=$(sbatch --parsable --job-name="medeval_${key}" --time="$time" \
-        --export=ALL,MODEL_KEY="$key",DATASETS="${datasets//,/ }" slurm/eval_model.sbatch)
+        --export=ALL,MODEL_KEY="$key",DATASETS="${datasets//,/ }" scripts/evaluate.sbatch)
     echo "Submitted $key for [${datasets//,/ }] as job $job_id"
 done < logs/submit_list.txt

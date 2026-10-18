@@ -1,9 +1,12 @@
+# Dependencies for data preparation and analysis (any computer):
+#   pip install -r requirements.txt
+# The GPU jobs on Snellius additionally need vLLM; scripts/setup_env.sh installs both.
 # Exact installed versions are recorded in requirements.lock.txt by scripts/setup_env.sh.
-vllm
 pandas
 numpy
 pyyaml
 matplotlib
-huggingface_hub
-datasets
-safetensors
+statsmodels       # src/contamination.py
+pdfplumber        # MIR 2025 from the official PDFs
+datasets          # CareQA and MedQA downloads
+huggingface_hub   # model downloads and MedExpQA

@@ -13,12 +13,16 @@ Metrics per model and dataset:
 Comparisons:
     rankings.csv             rank of each model per dataset, by accuracy and by cost-efficiency
     rank_correlations.csv    Spearman correlation of cost-efficiency rankings between datasets
-    exam_shift.csv           accuracy on the new exam minus accuracy on older editions, per model
-                             and language
+    exam_shift.csv           accuracy on unseen minus seen exam years, per model and language,
+                             for two splits of the years:
+                               common     the same years for every model (analysis.common_split
+                                          in configs/datasets.yaml)
+                               per_model  unseen from the first exam after the model's training
+                                          cutoff (unseen_from in configs/models.yaml)
     on_pareto_frontier       models for which no other model is both cheaper and more accurate
 
 Usage:
-    python -m medeval.analyze --results results
+    python src/analyze.py --results results
 """
 
 import argparse
@@ -27,7 +31,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from .config import load_datasets_config, load_models, resolve_path
+from config import load_datasets_config, load_models, resolve_path
 
 
 def parse_args():
@@ -131,34 +135,46 @@ def rank_correlations(ranked):
     return pivot.corr(method="spearman")
 
 
-def exam_shift(df, ds_cfg, samples, seed):
-    """Accuracy on the new exam edition minus accuracy on older editions, per model and language."""
+def exam_shift(df, ds_cfg, models, samples, seed):
+    """Accuracy on unseen minus seen MIR exam years, per model, language and split of the years."""
     specs = ds_cfg["datasets"]
+    common = ds_cfg["analysis"]["common_split"]
+    exam = df[df["dataset"].map(lambda d: specs.get(d, {}).get("group") in ("older_exam", "new_exam"))].copy()
+    exam["year"] = pd.to_numeric(exam["year"], errors="coerce")
+    exam = exam.dropna(subset=["year"])
+    exam["language"] = exam["dataset"].map(lambda d: specs[d].get("language", ""))
+
     rng = np.random.default_rng(seed)
     rows = []
-    languages = sorted({spec.get("language", "") for spec in specs.values()})
-    for language in languages:
-        older = [k for k, v in specs.items() if v.get("group") == "older_exam" and v.get("language", "") == language]
-        newer = [k for k, v in specs.items() if v.get("group") == "new_exam" and v.get("language", "") == language]
-        for model, group in df.groupby("model"):
-            old_vals = group.loc[group["dataset"].isin(older), "correct"].to_numpy(dtype=float)
-            new_vals = group.loc[group["dataset"].isin(newer), "correct"].to_numpy(dtype=float)
-            if len(old_vals) == 0 or len(new_vals) == 0:
+    for (model, language), group in exam.groupby(["model", "language"]):
+        splits = {"common": (group["year"].isin(common["seen_years"]), group["year"].isin(common["unseen_years"]))}
+        unseen_from = models.get(model, {}).get("unseen_from")
+        if unseen_from:
+            splits["per_model"] = (group["year"] < unseen_from, group["year"] >= unseen_from)
+        for split, (seen_mask, unseen_mask) in splits.items():
+            seen, unseen = group[seen_mask], group[unseen_mask]
+            if seen.empty or unseen.empty:
                 continue
+            old_vals = seen["correct"].to_numpy(dtype=float)
+            new_vals = unseen["correct"].to_numpy(dtype=float)
             diffs = (rng.choice(new_vals, (samples, len(new_vals))).mean(axis=1)
                      - rng.choice(old_vals, (samples, len(old_vals))).mean(axis=1))
             rows.append({
+                "split": split,
                 "model": model,
                 "language": language,
-                "accuracy_older_editions": old_vals.mean(),
-                "accuracy_new_edition": new_vals.mean(),
-                "difference_new_minus_old": new_vals.mean() - old_vals.mean(),
+                "seen_years": f"{int(seen['year'].min())}-{int(seen['year'].max())}",
+                "unseen_years": f"{int(unseen['year'].min())}-{int(unseen['year'].max())}",
+                "accuracy_seen": old_vals.mean(),
+                "accuracy_unseen": new_vals.mean(),
+                "difference_unseen_minus_seen": new_vals.mean() - old_vals.mean(),
                 "ci_low": np.percentile(diffs, 2.5),
                 "ci_high": np.percentile(diffs, 97.5),
-                "n_old": len(old_vals),
-                "n_new": len(new_vals),
+                "n_seen": len(old_vals),
+                "n_unseen": len(new_vals),
             })
-    return pd.DataFrame(rows)
+    shift = pd.DataFrame(rows)
+    return shift.sort_values(["split", "language", "model"]).reset_index(drop=True) if rows else shift
 
 
 def plot_accuracy_vs_cost(summary, out_dir):
@@ -202,13 +218,14 @@ def main():
     param_counts = json.loads(param_path.read_text()) if param_path.exists() else {}
     if not param_counts:
         print(f"Warning: no parameter counts found at {param_path}; FLOPs will be missing. "
-              "Run scripts/count_params.py first.")
+              "Run python src/models.py first.")
 
     df, metas = load_raw(results_dir)
     summary = summarize(df, metas, param_counts, models, ds_cfg)
     ranked = rankings(summary)
     correlations = rank_correlations(ranked)
-    shift = exam_shift(df, ds_cfg, ds_cfg["analysis"]["bootstrap_samples"], ds_cfg["analysis"]["bootstrap_seed"])
+    shift = exam_shift(df, ds_cfg, models, ds_cfg["analysis"]["bootstrap_samples"],
+                       ds_cfg["analysis"]["bootstrap_seed"])
 
     out_dir = results_dir / "analysis"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -223,7 +240,7 @@ def main():
     print(summary[["model", "dataset", "n_items", "accuracy", "chance_corrected_acc", "invalid_rate",
                    "flops_per_question", "gpu_seconds_per_question"]].to_string(index=False))
     if not shift.empty:
-        print("\nAccuracy shift from older to new exam editions:")
+        print("\nAccuracy shift from seen to unseen exam years:")
         print(shift.to_string(index=False))
     print(f"\nWrote analysis files to {out_dir}")
 

@@ -6,11 +6,14 @@
 #          (options is a mapping from letter to text, answer is a letter)
 #   csv:   one row per question; the columns block maps the CSV columns to fields
 #
-# The group label drives the analysis:
+# The group label describes the role of a dataset (reported in summary.csv):
 #   older_exam = older MIR editions, used as the standard benchmark (possibly seen in training)
-#   new_exam   = newest MIR edition, released after all evaluated models
+#   new_exam   = newest MIR editions (2025 and 2026), held after most or all model cutoffs
 #   real_world = questions from clinical practice (to be added)
 #   reference  = additional benchmark, not part of the main comparison
+# Which exam years count as seen or unseen in the exam-shift and contamination analyses is
+# set by the exam year, not by the group: see analysis.common_split below and unseen_from in
+# configs/models.yaml.
 #
 # The *_es entries evaluate the original Spanish questions from data/raw/, which also
 # allows running before the translation is done. The instructions stay in English, so
@@ -174,3 +177,17 @@ analysis:
   flops_param_count: lm_total
   bootstrap_samples: 2000
   bootstrap_seed: 0
+  # Common split of exam years for exam_shift.csv, identical for every model: the older
+  # editions (2020 to 2024) against the newest editions (2025 and 2026). It is not exact for
+  # every model: Llama 3 and Med42 cannot have seen 2024 (cutoff March 2023), and Qwen3 was
+  # released after the 2025 exam. The per-model split (unseen_from in configs/models.yaml)
+  # follows each model's cutoff.
+  common_split:
+    seen_years: [2020, 2021, 2022, 2023, 2024]
+    unseen_years: [2025, 2026]
+  # Models left out of the year-difficulty regression in src/contamination.py, because their
+  # accuracy is near chance and carries no signal.
+  exclude_from_regression: [gemma3-1b]
+  # Human reference accuracy per exam year (top 10% of candidates), used as a check on the
+  # year-difficulty adjustment. Columns: year, top_equivalent_accuracy (a fraction, e.g. 0.816).
+  human_difficulty: data/external/mir_human_difficulty_2020_2026.csv
