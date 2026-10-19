@@ -1,0 +1,70 @@
+# Settings of the contamination tests (src/sanitize.py) and their summary (src/sanitize_summary.py).
+#
+# The tests are adapted from LLMSanitize (Ravaut et al., 2024, github.com/ntunlp/LLMSanitize):
+#   completion  the model continues the first half of each question; the continuation is
+#               compared with the real second half
+#   mink        Min-K% Prob (Shi et al., 2023): mean log-probability of the k% least likely
+#               tokens of the question
+# Both tests read the raw question text, without chat template or instruction, because
+# memorization concerns the original text. Models and datasets come from configs/models.yaml
+# and configs/datasets.yaml; nothing is named here.
+
+# Datasets: every non-optional dataset of these groups (configs/datasets.yaml) whose input file
+# exists, i.e. all MIR editions in Spanish and English.
+dataset_groups: [older_exam, new_exam]
+
+# Models: every model in configs/models.yaml except the judge (role: judge) and optional models.
+
+text:
+  # How a question is written out. The default follows the official MIR booklet: the stem,
+  # then the four options on separate lines, numbered 1 to 4. The answer is never included
+  # (the booklet does not contain it).
+  #   numbers  "1. <option>"   (booklet)
+  #   letters  "A. <option>"   (as in the accuracy prompts and the CareQA viewer)
+  #   none     "<option>"
+  option_labels: numbers
+  # false scores the stem only. With true, Min-K% is also stored for the stem alone
+  # (stem_* columns), which does not depend on how the options are written.
+  include_options: true
+  # Put the booklet question number before the stem ("26. ¿Cuál de ...").
+  include_question_number: false
+
+completion:
+  # The question is split after this share of its whitespace-separated words.
+  split_ratio: 0.5
+  # The model may generate as many tokens as the real second half has, up to this cap.
+  max_new_tokens_cap: 512
+  # Continuations with a normalized Levenshtein similarity (characters) at or above this
+  # value are flagged as near verbatim.
+  near_verbatim_threshold: 0.9
+
+mink:
+  # k values stored per question; the summary reports primary_k. The other values are those
+  # of LLMSanitize and cost nothing extra (all come from the same log-probabilities).
+  k_values: [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+  primary_k: 0.2
+
+# Seed of the vLLM sampling parameters (decoding is greedy, so it only matters if the
+# temperature is changed) and of the bootstrap in the summary. The engine seed is the model
+# seed in configs/models.yaml, as in the accuracy evaluation.
+seed: 0
+
+# Date each MIR exam was held; the questions are public from that day on. Used for the strict
+# seen/unseen label (see src/sanitize_metrics.py, seen_labels); the main label is unseen_from
+# in configs/models.yaml. Sources:
+#   2020, 2021  isanidad.com (2021 was moved to March because of COVID-19)
+#   2022, 2023  one secondary listing only, not verified; no label depends on the exact day
+#   2024        Infobae, Sindicato Médico Andaluz
+#   2025        exam_held in src/mir_sources.py (official Version 0 booklet)
+#   2026        Redacción Médica, Infobae
+exam_dates:
+  2020: "2020-01-25"
+  2021: "2021-03-27"
+  2022: "2022-01-29"
+  2023: "2023-01-28"
+  2024: "2024-01-20"
+  2025: "2025-01-25"
+  2026: "2026-01-24"
+
+summary:
+  bootstrap_samples: 2000

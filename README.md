@@ -36,6 +36,12 @@ python src/check_results.py
 python src/analyze.py
 python src/compare_layers.py
 python src/contamination.py
+
+# Contamination tests on the raw question text (completion and Min-K% Prob): smoke test,
+# then all models, then the summary
+SMOKE=1 sbatch scripts/sanitize.sbatch
+bash scripts/submit_sanitize.sh
+python src/sanitize_summary.py
 ```
 
 In every new session, activate the environment first with `source ~/venvs/medeval/bin/activate`.
@@ -48,12 +54,15 @@ preparation and analysis (all dependencies except vLLM, which only the GPU jobs 
 configs/models.yaml          models, cutoffs and the judge
 configs/datasets.yaml        datasets, prompts, generation, judge and analysis settings
 configs/judge_prompts.yaml   the official grading prompts of LiveMedBench and K-QA
+configs/sanitize.yaml        settings of the contamination tests (text format, k, split, exam dates)
 scripts/                     everything run on Snellius
   setup_env.sh                 environment (once)
   prepare_all.sh               datasets, model weights, parameter counts
   submit_all.sh                chained evaluation jobs (missing results only), then grading
   evaluate.sbatch              the evaluation job (also the smoke test, SMOKE=1)
   judge.sbatch                 the grading job for open-ended answers (VALIDATE=1: judge check)
+  submit_sanitize.sh           chained contamination-test jobs (missing outputs only)
+  sanitize.sbatch              the contamination-test job (also the smoke test, SMOKE=1)
 src/                         all Python code, one file per pipeline stage
   config.py                    reading the configuration files
   prepare_data.py              builds the MIR dataset files and checks the translations
@@ -71,11 +80,18 @@ src/                         all Python code, one file per pipeline stage
   compare_layers.py            standard exam vs new exam vs real world
   contamination.py             year-difficulty adjustment, unparseable check, positive control,
                                LiveMedBench posting dates
+  sanitize.py                  contamination tests on the raw question text: completion and
+                               Min-K% Prob (adapted from LLMSanitize), optional LoRA adapter
+  sanitize_metrics.py          question text, scores and seen/unseen labels of these tests
+  vllm_scoring.py              all vLLM-specific calls of these tests (written for vLLM 0.31)
+  sanitize_summary.py          seen against unseen editions: bootstrap CIs, ROC-AUC, plot
+tests/                       python -m pytest tests/ (GPU smoke test skipped without a GPU)
 docs/MANUAL.md               full user manual
 data/external/               files from outside the pipeline (tracked by Git)
 data/raw/, data/             prepared datasets (tracked by Git)
 results/raw/                 model answers (tracked by Git)
 results/judged/              judge grades of open-ended answers (tracked by Git)
+results/sanitize/            contamination-test scores per question (tracked by Git)
 results/analysis/            analysis outputs (tracked by Git)
 ```
 

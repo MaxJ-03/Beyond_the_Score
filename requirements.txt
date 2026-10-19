@@ -10,3 +10,5 @@ statsmodels       # src/contamination.py
 pdfplumber        # MIR 2025 from the official PDFs
 datasets          # CareQA and MedQA downloads
 huggingface_hub   # model downloads and MedExpQA
+rapidfuzz         # src/sanitize_metrics.py (edit distances; a slower pure Python fallback exists)
+pytest            # tests/
