@@ -117,12 +117,14 @@ class VLLMBackend:
         )
         self.load_seconds = time.perf_counter() - start
         self.chat_template_kwargs = model_cfg["chat_template_kwargs"]
+        self.sampling_kwargs = model_cfg.get("sampling_kwargs", {})
         self.n_gpus = model_cfg["tensor_parallel_size"]
 
     def generate(self, conversations, temperature, max_tokens, seed):
         from vllm import SamplingParams
 
-        params = SamplingParams(temperature=temperature, max_tokens=max_tokens, seed=seed)
+        params = SamplingParams(temperature=temperature, max_tokens=max_tokens, seed=seed,
+                                **self.sampling_kwargs)
         kwargs = {"use_tqdm": True}
         if self.chat_template_kwargs:
             kwargs["chat_template_kwargs"] = self.chat_template_kwargs

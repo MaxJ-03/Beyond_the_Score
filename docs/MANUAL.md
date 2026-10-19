@@ -566,6 +566,7 @@ Settings under `defaults` apply to all models unless a model overrides them.
 | `thinking` | whether reasoning before the answer is allowed |
 | `chat_template_kwargs` | options passed to the chat template, e.g. Qwen3's `enable_thinking` |
 | `llm_kwargs` | extra vLLM options, e.g. disabling image inputs for Gemma 3 |
+| `sampling_kwargs` | extra vLLM sampling options, e.g. `bad_words` to keep MedGemma 27B from starting a reasoning section |
 | `slurm_time` | time limit of the evaluation job |
 | `optional` | if true, only submitted with `INCLUDE_OPTIONAL=1` |
 

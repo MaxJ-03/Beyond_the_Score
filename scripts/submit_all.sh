@@ -2,7 +2,8 @@
 # Submit evaluation jobs for every model, but only for the datasets that do not have
 # results yet. Rerunning this script after adding a dataset therefore only evaluates
 # the new dataset. Results with answers that were cut off at a lower token limit than the
-# current one in configs/datasets.yaml are outdated and are submitted again as well.
+# current one in configs/datasets.yaml, and results generated with other sampling_kwargs than
+# the current ones in configs/models.yaml, are outdated and are submitted again as well.
 #
 # The jobs run one after another: each job starts when the previous one has ended, so only
 # one job at a time is checked against the compute budget. A grading job (scripts/judge.sbatch)
@@ -35,17 +36,21 @@ eval_cfg = ds_cfg["evaluation"]
 datasets = requested or default_datasets(ds_cfg)
 
 
-def needs_run(model, dataset, thinking):
-    """True if the result is missing, or was cut off at a lower token limit than the current one."""
+def needs_run(model, dataset, cfg):
+    """True if the result is missing or outdated (see the comment at the top of this script)."""
     results = PROJECT_ROOT / "results" / "raw" / model / f"{dataset}.jsonl"
     meta = results.with_suffix(".meta.json")
     if force or not results.exists() or not meta.exists():
         return True
+    meta = json.loads(meta.read_text(encoding="utf-8"))
+    if meta.get("model_config", {}).get("sampling_kwargs", {}) != cfg.get("sampling_kwargs", {}):
+        return True
+    thinking = cfg.get("thinking", False)
     if ds_cfg["datasets"][dataset].get("task", "multiple_choice") != "multiple_choice":
         limit = eval_cfg["max_tokens_open"]
     else:
         limit = eval_cfg["max_tokens_thinking"] if thinking else eval_cfg["max_tokens_direct"]
-    if json.loads(meta.read_text(encoding="utf-8")).get("max_tokens", limit) >= limit:
+    if meta.get("max_tokens", limit) >= limit:
         return False
     with open(results, encoding="utf-8") as handle:
         return any(json.loads(line).get("finish_reason") == "length" for line in handle)
@@ -56,7 +61,7 @@ for key, cfg in load_models().items():
         continue
     if models and key not in models:
         continue
-    rerun = [d for d in datasets if needs_run(key, d, cfg.get("thinking", False))]
+    rerun = [d for d in datasets if needs_run(key, d, cfg)]
     if rerun:
         print(key, cfg["slurm_time"], ",".join(rerun))
 PY

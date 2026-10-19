@@ -37,6 +37,8 @@ defaults:
   slurm_time: "00:20:00"
   llm_kwargs: {}
   chat_template_kwargs: {}
+  # Extra vLLM sampling options, e.g. bad_words to forbid a token sequence.
+  sampling_kwargs: {}
 
 models:
   # Gemma 3 (general purpose). The 4B and 27B instruction-tuned checkpoints are
@@ -93,6 +95,10 @@ models:
     unseen_from: 2025
     training_cutoff: "2024-08"
     slurm_time: "01:00:00"
+    # MedGemma 27B starts a reasoning section (opened by <unused94>) in about a third of its
+    # English answers although the prompt asks for the answer only. The opening token is
+    # forbidden so that it answers directly, like all other models (thinking is off for all).
+    sampling_kwargs: {bad_words: ["<unused94>"]}
 
   # Qwen3 (original April 2025 checkpoints, not the later "2507" updates).
   # Thinking is disabled through the chat template for comparability with Gemma.

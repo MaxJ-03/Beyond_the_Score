@@ -25,6 +25,10 @@ def load_models():
             **defaults.get("chat_template_kwargs", {}),
             **settings.get("chat_template_kwargs", {}),
         }
+        merged["sampling_kwargs"] = {
+            **defaults.get("sampling_kwargs", {}),
+            **settings.get("sampling_kwargs", {}),
+        }
         models[key] = merged
     return models
 
