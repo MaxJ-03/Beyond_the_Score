@@ -28,3 +28,5 @@ requirements.lock.txt
 venv/
 !results/raw/
 !results/judged/
+!results/sanitize/
+results/sanitize/**/*.tmp
