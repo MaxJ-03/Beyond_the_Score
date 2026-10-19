@@ -7,7 +7,7 @@
     "tensor_parallel_size": 1,
     "seed": 0,
     "thinking": false,
-    "slurm_time": "01:00:00",
+    "slurm_time": "00:20:00",
     "llm_kwargs": {},
     "chat_template_kwargs": {
       "enable_thinking": false
@@ -17,6 +17,8 @@
     "size_b": 1.7,
     "medical": false,
     "release": "2025-04-29",
+    "unseen_from": 2026,
+    "training_cutoff": "2025-04",
     "key": "qwen3-1.7b"
   },
   "dataset": "mir_2026",
@@ -44,40 +46,40 @@
   "thinking": false,
   "temperature": 0.0,
   "max_tokens": 256,
-  "generation_seconds": 0.4545605769380927,
+  "generation_seconds": 0.5372117459774017,
   "n_gpus": 1,
-  "gpu_seconds": 0.4545605769380927,
+  "gpu_seconds": 0.5372117459774017,
   "latency_seconds": [
-    0.03055515803862363,
-    0.051794979022815824,
-    0.02524654392618686,
-    0.030422920011915267,
-    0.08128685399424285,
-    0.0308679670561105,
-    0.035914944019168615,
-    0.04931385500822216,
-    0.04643743403721601,
-    0.06308360490947962,
-    0.0653298000106588,
-    0.014860461931675673,
-    0.11051765200681984,
-    0.03618511196691543,
-    0.0574108719592914,
-    0.014863381977193058,
-    0.051818119012750685,
-    0.025281073059886694,
-    0.07856612303294241,
-    0.06548782903701067
+    0.031095118960365653,
+    0.05286331381648779,
+    0.025602362118661404,
+    0.03106279904022813,
+    0.08006334607489407,
+    0.031197699951007962,
+    0.03689743601717055,
+    0.0498653210233897,
+    0.04716844600625336,
+    0.06414765794761479,
+    0.06651639495976269,
+    0.014834263129159808,
+    0.11265115696005523,
+    0.036798467161133885,
+    0.05824741185642779,
+    0.014685354894027114,
+    0.052651714999228716,
+    0.025511882035061717,
+    0.07995687588118017,
+    0.06660842383280396
   ],
-  "median_latency_seconds": 0.04931385500822216,
-  "model_load_seconds": 30.551642199978232,
-  "started_utc": "2026-10-13T18:44:25.580523+00:00",
+  "median_latency_seconds": 0.0498653210233897,
+  "model_load_seconds": 29.160880838986486,
+  "started_utc": "2026-10-18T21:49:18.310521+00:00",
   "environment": {
     "vllm_version": "0.31.0",
     "torch_version": "2.13.0+cu130",
     "gpu_name": "NVIDIA H100",
     "gpu_count_visible": 1,
-    "hostname": "gcn79.local.snellius.surf.nl"
+    "hostname": "gcn97.local.snellius.surf.nl"
   },
   "evaluation_config": {
     "system_prompt": "You are a medical expert answering multiple-choice questions.",
@@ -85,6 +87,7 @@
     "instruction_thinking": "Answer the following multiple-choice question. Reason step by step, then end your response with \"Answer: X\", where X is the letter of the correct option.",
     "temperature": 0.0,
     "max_tokens_direct": 256,
-    "max_tokens_thinking": 8192
+    "max_tokens_thinking": 8192,
+    "max_tokens_open": 1024
   }
 }

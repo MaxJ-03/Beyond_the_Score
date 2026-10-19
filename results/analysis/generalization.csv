@@ -1,0 +1,40 @@
+layer,comparison,new_exam_quality,real_world_quality,retention,retention_ci_low,retention_ci_high,new_exam_near_chance,accuracy_drop,drop_ci_low,drop_ci_high
+cupcase,gemma3-1b,0.3471,0.6762,4.3908,2.833,5.5433,False,-0.3291,-0.3838,-0.2737
+cupcase,gemma3-27b,0.8147,0.884,1.1227,1.0468,1.2184,False,-0.0693,-0.1144,-0.0281
+cupcase,gemma3-4b,0.5618,0.7777,1.6925,1.4452,2.0542,False,-0.2159,-0.2729,-0.1622
+cupcase,llama3-8b,0.6971,0.8763,1.4009,1.2646,1.5702,False,-0.1792,-0.2285,-0.1306
+cupcase,med42-8b,0.7206,0.8558,1.2872,1.1718,1.4311,False,-0.1352,-0.1835,-0.0884
+cupcase,medgemma-27b,0.8382,0.8139,0.9586,0.8984,1.034,False,0.0244,-0.0184,0.0634
+cupcase,medgemma-4b,0.6412,0.8047,1.4181,1.26,1.6285,False,-0.1636,-0.2144,-0.1136
+cupcase,qwen3-1.7b,0.5206,0.8079,2.0617,1.7161,2.5527,False,-0.2873,-0.3393,-0.2318
+cupcase,qwen3-4b,0.6647,0.8475,1.4408,1.2854,1.6477,False,-0.1828,-0.2361,-0.1313
+cupcase,gemma3-1b minus gemma3-27b,,,3.2682,1.7096,4.4233,,,,
+cupcase,gemma3-4b minus gemma3-27b,,,0.5698,0.3294,0.9102,,,,
+cupcase,medgemma-4b minus medgemma-27b,,,0.4596,0.3125,0.6532,,,,
+cupcase,qwen3-1.7b minus qwen3-4b,,,0.6209,0.2797,1.0492,,,,
+livemedbench,gemma3-1b,0.3471,0.0672,0.5195,0.3312,0.6667,False,,,
+livemedbench,gemma3-27b,0.8147,0.1303,0.1731,0.1578,0.1922,False,,,
+livemedbench,gemma3-4b,0.5618,0.0947,0.2279,0.1913,0.2797,False,,,
+livemedbench,llama3-8b,0.6971,0.0786,0.1319,0.1159,0.1513,False,,,
+livemedbench,med42-8b,0.7206,0.0965,0.1539,0.136,0.175,False,,,
+livemedbench,medgemma-27b,0.8382,0.1689,0.2154,0.1979,0.2345,False,,,
+livemedbench,medgemma-4b,0.6412,0.103,0.1974,0.1702,0.2311,False,,,
+livemedbench,qwen3-1.7b,0.5206,0.1834,0.5085,0.4217,0.6362,False,,,
+livemedbench,qwen3-4b,0.6647,0.2218,0.4012,0.3548,0.4621,False,,,
+livemedbench,gemma3-1b minus gemma3-27b,,,0.3464,0.1623,0.4898,,,,
+livemedbench,gemma3-4b minus gemma3-27b,,,0.0548,0.0199,0.1031,,,,
+livemedbench,medgemma-4b minus medgemma-27b,,,-0.018,-0.0441,0.0126,,,,
+livemedbench,qwen3-1.7b minus qwen3-4b,,,0.1073,0.021,0.2173,,,,
+kqa,gemma3-1b,0.3471,0.4169,3.2213,2.0332,4.1395,False,,,
+kqa,gemma3-27b,0.8147,0.6683,0.8876,0.8055,0.979,False,,,
+kqa,gemma3-4b,0.5618,0.5698,1.3707,1.1433,1.6824,False,,,
+kqa,llama3-8b,0.6971,0.5269,0.8839,0.7669,1.0212,False,,,
+kqa,med42-8b,0.7206,0.4798,0.7647,0.6637,0.8832,False,,,
+kqa,medgemma-27b,0.8382,0.6935,0.8842,0.805,0.9706,False,,,
+kqa,medgemma-4b,0.6412,0.4826,0.9253,0.7875,1.0994,False,,,
+kqa,qwen3-1.7b,0.5206,0.5139,1.4243,1.1586,1.7974,False,,,
+kqa,qwen3-4b,0.6647,0.556,1.0055,0.8694,1.1684,False,,,
+kqa,gemma3-1b minus gemma3-27b,,,2.3337,1.1461,3.2176,,,,
+kqa,gemma3-4b minus gemma3-27b,,,0.4831,0.2714,0.7619,,,,
+kqa,medgemma-4b minus medgemma-27b,,,0.0411,-0.087,0.2002,,,,
+kqa,qwen3-1.7b minus qwen3-4b,,,0.4187,0.1778,0.7595,,,,

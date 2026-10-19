@@ -1,0 +1,28 @@
+{
+  "model": "med42-8b",
+  "dataset": "livemedbench",
+  "task": "rubric",
+  "judge": "gpt-oss-120b",
+  "judge_hf_id": "openai/gpt-oss-120b",
+  "judge_settings": {
+    "model": "gpt-oss-120b",
+    "temperature": 0.0,
+    "max_tokens": 4096,
+    "validation_file": "data/kqa_nli_validation.csv",
+    "hf_id": "openai/gpt-oss-120b",
+    "chat_template_kwargs": {
+      "reasoning_effort": "low"
+    }
+  },
+  "n_items": 2664,
+  "n_judge_calls": 16577,
+  "n_unparsed": 0,
+  "judge_seconds": 314.08217892004177,
+  "finished_utc": "2026-10-18T23:42:04.045186+00:00",
+  "environment": {
+    "vllm_version": "0.31.0",
+    "torch_version": "2.13.0+cu130",
+    "gpu_name": "NVIDIA H100",
+    "gpu_count_visible": 1
+  }
+}

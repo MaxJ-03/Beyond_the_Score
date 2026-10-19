@@ -1,0 +1,91 @@
+{
+  "model": "llama3-8b",
+  "model_config": {
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 8192,
+    "tensor_parallel_size": 1,
+    "seed": 0,
+    "thinking": false,
+    "slurm_time": "00:30:00",
+    "llm_kwargs": {},
+    "chat_template_kwargs": {},
+    "hf_id": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "family": "llama3",
+    "size_b": 8,
+    "medical": false,
+    "release": "2024-04-18",
+    "unseen_from": 2024,
+    "training_cutoff": "2023-03",
+    "key": "llama3-8b"
+  },
+  "dataset": "mir_2024",
+  "dataset_config": {
+    "format": "csv",
+    "path": "data/mir_2024_en.csv",
+    "group": "older_exam",
+    "language": "en",
+    "columns": {
+      "id": "id",
+      "year": "year",
+      "question": "question_en",
+      "answer": "answer",
+      "options": {
+        "A": "option_a_en",
+        "B": "option_b_en",
+        "C": "option_c_en",
+        "D": "option_d_en"
+      }
+    }
+  },
+  "n_items": 171,
+  "limit": null,
+  "backend": "vllm",
+  "thinking": false,
+  "temperature": 0.0,
+  "max_tokens": 256,
+  "generation_seconds": 0.6379791561048478,
+  "n_gpus": 1,
+  "gpu_seconds": 0.6379791561048478,
+  "latency_seconds": [
+    0.025328062940388918,
+    0.02798353787511587,
+    0.027590268990024924,
+    0.028192027006298304,
+    0.02729914104565978,
+    0.027712838957086205,
+    0.02758943010121584,
+    0.027660348918288946,
+    0.036156299989670515,
+    0.027846598997712135,
+    0.02766656898893416,
+    0.027749378932639956,
+    0.02771920897066593,
+    0.027601800160482526,
+    0.02758718002587557,
+    0.03626162884756923,
+    0.08726834296248853,
+    0.02780201891437173,
+    0.028026157058775425,
+    0.027221912052482367
+  ],
+  "median_latency_seconds": 0.02771920897066593,
+  "model_load_seconds": 86.30952510191128,
+  "started_utc": "2026-10-18T21:56:17.371372+00:00",
+  "environment": {
+    "vllm_version": "0.31.0",
+    "torch_version": "2.13.0+cu130",
+    "gpu_name": "NVIDIA H100",
+    "gpu_count_visible": 1,
+    "hostname": "gcn97.local.snellius.surf.nl"
+  },
+  "evaluation_config": {
+    "system_prompt": "You are a medical expert answering multiple-choice questions.",
+    "instruction_direct": "Answer the following multiple-choice question. Respond with only the letter of the correct option.",
+    "instruction_thinking": "Answer the following multiple-choice question. Reason step by step, then end your response with \"Answer: X\", where X is the letter of the correct option.",
+    "temperature": 0.0,
+    "max_tokens_direct": 256,
+    "max_tokens_thinking": 8192,
+    "max_tokens_open": 1024
+  }
+}

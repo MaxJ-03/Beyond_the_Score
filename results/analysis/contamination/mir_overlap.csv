@@ -1,3 +1,3 @@
 comparison,years,gain_on_mir_in_medexpqa_train,gain_on_other_mir,extra_gain,ci_low,ci_high,n_in_train,n_other
 medgemma-4b minus gemma3-4b,2020 2021 2022,9.2,8.9,0.3,-10.9,12.4,87,348
-medgemma-27b minus gemma3-27b,2020 2021 2022,3.4,1.4,2.0,-5.7,9.8,87,348
+medgemma-27b minus gemma3-27b,2020 2021 2022,5.7,4.3,1.4,-5.2,8.3,87,348
