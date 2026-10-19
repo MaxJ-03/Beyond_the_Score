@@ -66,6 +66,7 @@ src/                         all Python code, one file per pipeline stage
   run_eval.py                  model run and answer parsing
   judge.py                     grading of open-ended answers by the judge model
   check_results.py             completeness check of all results and grades
+  reparse_answers.py           parse stored answers again after a parser change
   analyze.py                   quality, cost, rankings, Pareto frontier, exam shift, plots
   compare_layers.py            standard exam vs new exam vs real world
   contamination.py             year-difficulty adjustment, unparseable check, positive control,

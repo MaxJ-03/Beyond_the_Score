@@ -636,7 +636,7 @@ and adds the parameter count), the smoke test with
 | Job stays pending for a long time | GPUs busy | Wait; check with `squeue -u $USER` |
 | Job hits its time limit | Time limit too short | Rerun `bash scripts/submit_all.sh` (finished datasets are kept); if the same dataset keeps timing out, increase `slurm_time` in `models.yaml` |
 | Job state `CANCELLED by 0` without running | Shared compute budget too low for the requested time | Request less time (`slurm_time`, or `--time` for `judge.sbatch`) and resubmit; contact the course staff if it persists |
-| High `invalid_rate` | Model answers in an unexpected format | Inspect `response` fields; adjust the prompt or the parser and rerun all models |
+| High `invalid_rate` | Model answers in an unexpected format | Inspect `response` fields; adjust `extract_answer` in `src/run_eval.py`, then `python src/reparse_answers.py` (no GPU) |
 | High `truncated_rate` | Token limit too low (mainly with thinking) | Increase `max_tokens_direct`, `max_tokens_thinking` or `max_model_len` |
 | MIR 2025 preparation stops with "STOP" | The PDFs or the extracted text differ from the audited version | Check that the Version 0 PDFs in `data/external/` are unchanged |
 | FLOPs columns empty in `summary.csv` | `results/param_counts.json` missing | Run `python src/models.py` or copy the file from Snellius |

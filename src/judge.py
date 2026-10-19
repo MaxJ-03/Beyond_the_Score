@@ -14,8 +14,10 @@ Scoring, as in the benchmark papers:
                 must-have and nice-to-have statement is contradicted by the answer or not.
                 score = share of must-have statements entailed (comprehensiveness);
                 hallucinations = number of statements contradicted.
-An empty answer meets no criterion and entails or contradicts no statement. A judge output
-without a recognizable verdict counts as not met (or False) and is counted in n_unparsed.
+Reasoning sections are removed before grading, so only the final response is judged
+(strip_reasoning in src/run_eval.py). An empty answer meets no criterion and entails or
+contradicts no statement. A judge output without a recognizable verdict counts as not met (or
+False) and is counted in n_unparsed.
 
 K-QA verdicts are read with the official rule ("True" or "False" in the last 20 characters).
 When that rule finds nothing, the last standalone "true" or "false" in the judge's final answer
@@ -51,6 +53,7 @@ import pandas as pd
 
 from config import load_datasets_config, load_models, load_yaml, resolve_path
 from items import load_dataset
+from run_eval import strip_reasoning
 
 OPEN_TASKS = ("rubric", "statements")
 
@@ -181,7 +184,8 @@ def grade(model, dataset, spec, backend, settings, prompts, out_dir, limit):
         answers = answers.head(limit)
     records, all_checks = [], []
     for _, row in answers.iterrows():
-        response = str(row["response"] or "").strip()
+        # Only the final response is graded; a reasoning section (MedGemma 27B) is removed first.
+        response = strip_reasoning(str(row["response"] or ""))
         checks = build_checks(items[row["item_id"]], response, prompts)
         for check in checks:
             check["empty_answer"] = not response

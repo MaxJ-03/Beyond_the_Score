@@ -38,10 +38,25 @@ from items import build_messages, load_dataset
 
 THINK_BLOCK = re.compile(r"<think>.*?</think>", flags=re.DOTALL | re.IGNORECASE)
 UNCLOSED_THINK = re.compile(r"<think>.*", flags=re.DOTALL | re.IGNORECASE)
+# MedGemma 27B can write a reasoning section before its final response, even when not asked to;
+# the section starts with <unused94> and the final response follows <unused95>.
+GEMMA_THOUGHT_START, GEMMA_THOUGHT_END = "<unused94>", "<unused95>"
+
+
+def has_reasoning(text):
+    """True if the response contains a reasoning section (Qwen3 <think> or MedGemma thought)."""
+    text = text or ""
+    return GEMMA_THOUGHT_START in text or GEMMA_THOUGHT_END in text or bool(THINK_BLOCK.search(text))
 
 
 def strip_reasoning(text):
-    """Remove reasoning blocks so that only the final response is parsed."""
+    """Remove reasoning sections so that only the final response is parsed or graded. A
+    reasoning section without an end (cut off at the token limit) leaves no final response."""
+    text = text or ""
+    if GEMMA_THOUGHT_END in text:
+        text = text.rsplit(GEMMA_THOUGHT_END, 1)[1]
+    elif GEMMA_THOUGHT_START in text:
+        text = text.split(GEMMA_THOUGHT_START, 1)[0]
     text = THINK_BLOCK.sub("", text)
     return UNCLOSED_THINK.sub("", text).strip()
 
@@ -49,18 +64,23 @@ def strip_reasoning(text):
 def extract_answer(text, valid_letters):
     """Return the chosen letter, or None if no unambiguous answer is found.
 
-    Rules, applied in order:
-      1. the last explicit statement such as "Answer: B" or "the answer is (B)"
-      2. a letter at the very start of the response, e.g. "B", "B.", "(B)"
-      3. a single distinct standalone letter anywhere in the response
+    Rules, applied in order to the final response (reasoning sections removed):
+      1. the last LaTeX box such as "$\\boxed{B}$"
+      2. the last explicit statement such as "Answer: B", "**Answer:** B" or "the answer is (B)"
+      3. a letter at the very start of the response, e.g. "B", "B.", "(B)"
+      4. a single distinct standalone letter anywhere in the response
     """
     letters = "".join(sorted(valid_letters))
     response = strip_reasoning(text)
     if not response:
         return None
 
+    boxed = re.findall(rf"\\boxed\{{\s*(?:\\text\{{)?\s*([{letters}])\b", response, flags=re.IGNORECASE)
+    if boxed:
+        return boxed[-1].upper()
+
     explicit = re.findall(
-        rf"answer\s*(?:is|:)?\s*(?:option\s*)?\(?\**([{letters}])\b", response, flags=re.IGNORECASE
+        rf"answer\s*(?:is|:)?\s*\**\s*(?:option\s*)?\(?\**([{letters}])\b", response, flags=re.IGNORECASE
     )
     if explicit:
         return explicit[-1].upper()

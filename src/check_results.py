@@ -1,7 +1,8 @@
 """Check that every model has complete and usable results for every dataset.
 
 For each model and each default dataset the script reports the number of items (compared with
-the dataset size), the share of answers cut off at the token limit, and for multiple-choice
+the dataset size), the share of answers cut off at the token limit, the share of answers with a
+reasoning section (written although the prompt asks for the answer only), and for multiple-choice
 datasets the accuracy and the share of answers without a recognizable letter. For open-ended
 datasets it reports the share of empty answers, the mean answer length, and the grading status
 with the mean score and the share of judge verdicts that could not be read.
@@ -18,6 +19,7 @@ import pandas as pd
 
 from config import PROJECT_ROOT, default_datasets, load_datasets_config, load_models
 from items import load_dataset
+from run_eval import has_reasoning
 
 LIMIT_PERCENT = 5.0  # a share of cut-off or unparsed answers above this is listed as a problem
 
@@ -32,7 +34,8 @@ def check_pair(model, dataset, spec, expected, problems):
     meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
     row = {"model": model, "dataset": dataset, "n": len(answers), "expected": expected,
            "max_tokens": meta.get("max_tokens"),
-           "truncated_%": round(100 * (answers["finish_reason"] == "length").mean(), 1)}
+           "truncated_%": round(100 * (answers["finish_reason"] == "length").mean(), 1),
+           "reasoning_%": round(100 * answers["response"].map(has_reasoning).mean(), 1)}
     if expected and len(answers) != expected:
         problems.append(f"{model} {dataset}: {len(answers)} of {expected} items")
     if row["truncated_%"] > LIMIT_PERCENT:
