@@ -22,7 +22,9 @@
 #                         python src/contamination.py --unseen-from qwen3-4b=2025)
 #
 # training_cutoff is the last month of training data (for Qwen3 the release month). It is
-# compared with the posting date of each LiveMedBench case in src/contamination.py.
+# compared with the posting date of each LiveMedBench case in src/contamination.py and used by
+# src/sanitize.py. release is the publication date of the weights; the main LiveMedBench
+# evaluation only uses cases posted after the latest release (min_date in configs/datasets.yaml).
 #
 # The judge (role: judge) grades open-ended answers in src/judge.py; it is downloaded by
 # src/models.py but never evaluated, and scripts/submit_all.sh skips it.

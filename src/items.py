@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
-from config import resolve_path
+from config import load_models, resolve_path
 
 TASKS = ("multiple_choice", "rubric", "statements")
 
@@ -127,7 +127,18 @@ def load_dataset(name, spec, limit=None):
     else:
         raise ValueError(f"Dataset '{name}': unsupported format '{spec['format']}' for task '{task}'.")
     items = _validate(items, name)
+    if spec.get("min_date"):
+        items = _from_date(items, name, str(spec["min_date"]))
     return items[:limit] if limit else items
+
+
+def _from_date(items, name, min_date):
+    """Items posted on or after min_date, which must lie after the release of every model."""
+    releases = [str(m["release"]) for m in load_models().values() if m.get("release") and m.get("role") != "judge"]
+    if releases and min_date <= max(releases):
+        raise ValueError(f"Dataset '{name}': min_date {min_date} is not after the latest model "
+                         f"release ({max(releases)}).")
+    return [item for item in items if str(item.extra.get("date") or "") >= min_date]
 
 
 # ---------------------------------------------------------------- prompts

@@ -38,6 +38,7 @@ import numpy as np
 import pandas as pd
 
 from config import load_datasets_config, load_models, resolve_path
+from items import load_dataset
 
 
 def parse_args():
@@ -68,6 +69,14 @@ def load_raw(results_dir):
         df = df.merge(scores, on=["model", "dataset", "item_id"], how="left")
     else:
         df["score"], df["hallucinations"] = np.nan, np.nan
+    # Datasets restricted by date (min_date in configs/datasets.yaml) keep only the current items,
+    # so answers to older items that are still stored are not counted.
+    ds_cfg = load_datasets_config()
+    for dataset in df["dataset"].unique():
+        spec = ds_cfg["datasets"].get(dataset, {})
+        if spec.get("min_date"):
+            keep = {item.item_id for item in load_dataset(dataset, spec)}
+            df = df[(df["dataset"] != dataset) | df["item_id"].isin(keep)]
     correct = df["correct"].map({True: 1.0, False: 0.0})
     df["quality"] = correct.where(correct.notna(), df["score"])
     return df, metas
@@ -105,7 +114,7 @@ def summarize(df, metas, param_counts, models, ds_cfg):
         flops = 2.0 * n_params * tokens.mean() if n_params else np.nan
 
         meta = meta_index.get((model, dataset), {})
-        gpu_seconds = meta.get("gpu_seconds", np.nan) / n if meta else np.nan
+        gpu_seconds = meta.get("gpu_seconds", np.nan) / meta.get("n_items", n) if meta else np.nan
 
         rows.append({
             "model": model,

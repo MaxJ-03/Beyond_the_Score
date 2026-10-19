@@ -247,7 +247,10 @@ This runs three steps:
      are shuffled with a fixed seed
    * LiveMedBench from Hugging Face: all monthly files merged (later files replace earlier
      versions of a case), English cases only, written to `data/livemedbench_en.jsonl` with the
-     posting date and rubric of each case
+     posting date and rubric of each case. The evaluation uses only cases posted on or after
+     `min_date` in `configs/datasets.yaml` (1 June 2025), which lies after the release of every
+     evaluated model, so no case can be part of any model's training data. Answers to older
+     cases that are still stored in `results/raw/` are left out of the analysis
    * K-QA from a fixed commit of its GitHub repository, written to `data/kqa.jsonl`, plus the
      physician-labelled statements for the judge validation, `data/kqa_nli_validation.csv`
    * a report per dataset, `data/<name>.report.json` (counts, sources, date range)
@@ -427,6 +430,7 @@ When all jobs have finished:
 python src/analyze.py
 python src/compare_layers.py
 python src/contamination.py
+python src/conda_check.py     # needs internet access (login node)
 git add results && git commit -m "Update results" && git push
 ```
 
@@ -518,7 +522,7 @@ points; negative means lower quality on unseen questions, which is what memoriza
 | `unparseable_by_year.csv`, `unparseable_reasons.csv`, `unparseable_answers.csv` | how often answers had no option letter, per year and why |
 | `shift_with_without.csv` | the year-adjusted shift with all answers and with parseable answers only |
 | `mir_overlap.csv`, `matched_questions.csv` | positive control: MedGemma's lead over Gemma 3 on MIR questions in its MedExpQA training data versus other MIR questions of the same years |
-| `livemedbench_cutoff.csv` | the same idea on real-world data: effect of a LiveMedBench case being posted after the model's `training_cutoff` month, with case effects removing case difficulty (`score ~ model + case + unseen`) |
+| `livemedbench_cutoff.csv` | the same idea on real-world data, using all dated LiveMedBench cases (also those before `min_date`): effect of a case being posted after the model's `training_cutoff` month, with case effects removing case difficulty (`score ~ model + case + unseen`) |
 
 The difficulty adjustment works because the training cutoffs differ between models: within
 the same exam year, models that could have seen the exam are compared with models that could
@@ -532,6 +536,13 @@ Options:
 | Only some checks | `python src/contamination.py --checks year unparseable` |
 | Sensitivity check with a different cutoff | `python src/contamination.py --unseen-from qwen3-1.7b=2025 qwen3-4b=2025 --out results/analysis/contamination_qwen2025` |
 | MedExpQA from local files (no download) | `python src/contamination.py --medexpqa-dir <folder>` |
+
+Contamination that others have already reported is looked up in the Data Contamination
+Database of the CONDA workshop with `python src/conda_check.py`. It lists every report for the
+Gemma 3, Llama 3 and Qwen3 families (including MedGemma and Med42) and for the benchmarks our
+questions come from or overlap with (MIR, HEAD-QA, CareQA, MedExpQA, MedQA, MedMCQA,
+LiveMedBench, K-QA, CUPCase), in `results/analysis/contamination/conda_reports.csv`, and records
+the version of the database in `conda_source.json`. `--file <path>` reads a local copy.
 
 ### 8.4 Interpreting with care
 
@@ -556,7 +567,7 @@ Settings under `defaults` apply to all models unless a model overrides them.
 | `hf_id` | Hugging Face model identifier |
 | `family`, `size_b`, `medical`, `release` | metadata used in the analysis and the paper |
 | `unseen_from` | first MIR exam year after the training cutoff (per-model split) |
-| `training_cutoff` | last month of training data, compared with LiveMedBench posting dates |
+| `training_cutoff` | last month of training data, compared with LiveMedBench posting dates (`src/contamination.py`) and used by `src/sanitize.py` |
 | `role` | `judge` for the grading model: downloaded, never evaluated |
 | `dtype` | numeric precision (bfloat16) |
 | `max_model_len` | maximum tokens (prompt plus answer) per question |
@@ -696,5 +707,6 @@ sbatch scripts/judge.sbatch
 python src/analyze.py
 python src/compare_layers.py
 python src/contamination.py
+python src/conda_check.py     # needs internet access (login node)
 git add results && git commit -m "Update results" && git push
 ```

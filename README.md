@@ -36,6 +36,7 @@ python src/check_results.py
 python src/analyze.py
 python src/compare_layers.py
 python src/contamination.py
+python src/conda_check.py          # contamination already reported in the CONDA database
 
 # Contamination tests on the raw question text (completion and Min-K% Prob): smoke test,
 # then all models, then the summary
@@ -80,6 +81,7 @@ src/                         all Python code, one file per pipeline stage
   compare_layers.py            standard exam vs new exam vs real world
   contamination.py             year-difficulty adjustment, unparseable check, positive control,
                                LiveMedBench posting dates
+  conda_check.py               contamination reported for our models and benchmarks (CONDA)
   sanitize.py                  contamination tests on the raw question text: completion and
                                Min-K% Prob (adapted from LLMSanitize), optional LoRA adapter
   sanitize_metrics.py          question text, scores and seen/unseen labels of these tests

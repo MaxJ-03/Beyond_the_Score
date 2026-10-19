@@ -20,11 +20,12 @@ the fourth the LiveMedBench judge scores; no GPU and no new model runs are neede
               questions mattered, MedGemma's lead over its base model Gemma 3 would be larger
               on exactly those questions than on the other MIR questions of the same years.
     livemedbench
-              the same idea on real-world data: each LiveMedBench case has a posting date,
-              which is compared with each model's training_cutoff month. A regression with
-              model and case effects separates the effect of a case being posted after the
-              cutoff from the difficulty of the case:  score ~ model + case + unseen
-              (uses the judge scores in results/judged/<model>/livemedbench.jsonl).
+              the same idea on real-world data. The main LiveMedBench evaluation only uses cases
+              posted after every model's release (min_date in configs/datasets.yaml); this check
+              also uses the older graded cases. Each case's posting month is compared with each
+              model's training_cutoff, and a regression with model and case effects separates
+              the effect of a case being posted after the cutoff from the difficulty of the case:
+              score ~ model + case + unseen. Cases without a posting date are left out.
 
 Shifts are in percentage points; negative means lower accuracy on unseen exams, which is
 what contamination predicts.
@@ -44,7 +45,7 @@ Outputs, written to results/analysis/contamination/:
 
 Usage:
     python src/contamination.py                                  all four checks
-    python src/contamination.py --checks year unparseable livemedbench
+    python src/contamination.py --checks year unparseable
     python src/contamination.py --unseen-from qwen3-1.7b=2025 qwen3-4b=2025 --out <folder>
     python src/contamination.py --medexpqa-dir <folder with the MedExpQA jsonl files>
 """
@@ -88,7 +89,7 @@ def load_answers(results_dir, unseen_from):
 
 
 def fit_unseen_effect(data, model=None, outcome="correct", fixed="year"):
-    """Regress the outcome on model and year (or case) effects plus an unseen indicator.
+    """Regress the outcome on model and year effects plus an unseen indicator.
 
     Without a model, one pooled unseen effect is estimated. With a model, that model gets its
     own unseen indicator and all other models share a second one. Standard errors are
@@ -335,7 +336,7 @@ def livemedbench_check(results_dir, cutoffs, out):
     d = pd.concat([pd.read_json(f, lines=True, dtype={"item_id": str}) for f in files], ignore_index=True)
     dates = pd.read_json(PROJECT_ROOT / "data" / "livemedbench_en.jsonl", lines=True, dtype={"id": str},
                          convert_dates=False)
-    d["month"] = d["item_id"].map(dates.set_index("id")["date"]).str[:7]
+    d["month"] = d["item_id"].map(dates.set_index("id")["date"]).str[:7].replace("", np.nan)
     d = d[d["model"].isin(cutoffs)].dropna(subset=["month"]).copy()
     d["unseen"] = (d["month"] > d["model"].map(cutoffs)).astype(int)
     counts = d.groupby("model")["unseen"].agg(n_unseen="sum", n_cases="size")
@@ -349,7 +350,7 @@ def livemedbench_check(results_dir, cutoffs, out):
         rows.append({"model": m, "training_cutoff": cutoffs[m], "shift": b, "ci_low": lo, "ci_high": hi})
     table = pd.DataFrame(rows).merge(counts.reset_index(), on="model", how="left").round(1)
     table.to_csv(out / "livemedbench_cutoff.csv", index=False)
-    print("Unseen effect on LiveMedBench rubric scores (points on a 0-100 scale, 95% CI):")
+    print("Unseen effect on LiveMedBench rubric scores (points on a 0-100 scale, 95% CI), all dated cases:")
     print(table.to_string(index=False))
 
 

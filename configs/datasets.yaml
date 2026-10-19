@@ -163,6 +163,10 @@ datasets:
     group: real_world
     language: en
     task: rubric
+    # Only cases posted on or after this date are used. It lies after the release of every
+    # evaluated model (the latest is MedGemma, 20 May 2025; release in configs/models.yaml),
+    # so no case can be part of any model's training data. src/items.py checks this.
+    min_date: "2025-06-01"
     instruction: >-
       IMPORTANT: Provide ONLY the final answer to the following question, without any
       explanation or reasoning steps.

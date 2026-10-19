@@ -180,6 +180,7 @@ def grade(model, dataset, spec, backend, settings, prompts, out_dir, limit):
     items = {item.item_id: item for item in load_dataset(dataset, spec)}
     answers = pd.read_json(resolve_path("results") / "raw" / model / f"{dataset}.jsonl", lines=True,
                            dtype={"item_id": str})
+    answers = answers[answers["item_id"].isin(items)]  # items outside min_date are not graded
     if limit:
         answers = answers.head(limit)
     records, all_checks = [], []
@@ -224,6 +225,17 @@ def grade(model, dataset, spec, backend, settings, prompts, out_dir, limit):
           f"mean score {scores.mean():.3f}, {n_unparsed} unparsed, {elapsed:.0f} s")
 
 
+def answers_newer_than_grades(answers, judged):
+    """True if the answers were generated after the grades were made. Uses the times recorded in
+    the .meta.json files, because file modification times change when Git checks files out."""
+    try:
+        started = json.loads(answers.with_suffix(".meta.json").read_text(encoding="utf-8"))["started_utc"]
+        graded = json.loads(judged.with_suffix(".meta.json").read_text(encoding="utf-8"))["finished_utc"]
+    except (OSError, KeyError, ValueError):
+        return False
+    return started > graded
+
+
 def pending_pairs(models, datasets, ds_cfg, force):
     """(model, dataset) pairs with answers and, unless force is set, without grades."""
     raw = resolve_path("results") / "raw"
@@ -236,8 +248,8 @@ def pending_pairs(models, datasets, ds_cfg, force):
                 continue
             answers = model_dir / f"{dataset}.jsonl"
             judged = resolve_path("results") / "judged" / model_dir.name / f"{dataset}.jsonl"
-            # Answers newer than their grades were evaluated again and are graded again.
-            outdated = judged.exists() and answers.exists() and answers.stat().st_mtime > judged.stat().st_mtime
+            # Answers generated after their grades were evaluated again and are graded again.
+            outdated = judged.exists() and answers.exists() and answers_newer_than_grades(answers, judged)
             if answers.exists() and (force or not judged.exists() or outdated):
                 pairs.append((model_dir.name, dataset))
     return pairs
