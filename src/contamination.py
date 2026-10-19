@@ -57,6 +57,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
 from config import PROJECT_ROOT, load_datasets_config, load_models, resolve_path
@@ -102,8 +103,16 @@ def fit_unseen_effect(data, model=None, outcome="correct", fixed="year"):
         data["unseen_other"] = data["unseen"] * (data["model"] != model)
         term, extra = "unseen_m", " + unseen_other"
     groups = pd.factorize(data["item_id"])[0]
-    fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
-        cov_type="cluster", cov_kwds={"groups": groups})
+    if fixed == "item_id":
+        # Removing each case's mean gives the same estimate as thousands of case columns, much faster.
+        x = pd.get_dummies(data["model"], drop_first=True, dtype=float)
+        x = x.join(data[[term] + extra.split(" + ")[1:]].astype(float))
+        x = x - x.groupby(data[fixed]).transform("mean")
+        y = data[outcome] - data.groupby(fixed)[outcome].transform("mean")
+        fit = sm.OLS(y, x).fit(cov_type="cluster", cov_kwds={"groups": groups})
+    else:
+        fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
+            cov_type="cluster", cov_kwds={"groups": groups})
     low, high = fit.conf_int().loc[term]
     return fit, 100 * fit.params[term], 100 * low, 100 * high
 
