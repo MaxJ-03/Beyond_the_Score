@@ -192,10 +192,12 @@ evaluation:
     Answer the following multiple-choice question. Reason step by step, then end
     your response with "Answer: X", where X is the letter of the correct option.
   temperature: 0.0
-  max_tokens_direct: 256
+  # Answer length limits. Decoding is greedy, so raising a limit only changes answers that
+  # reached the previous limit; scripts/submit_all.sh reruns exactly those results.
+  max_tokens_direct: 1024
   max_tokens_thinking: 8192
   # Answer length limit for open-ended questions (rubric and statements tasks).
-  max_tokens_open: 1024
+  max_tokens_open: 2048
 
 # Grading of open-ended answers by src/judge.py. The judge is a model from
 # configs/models.yaml with role: judge; its prompts are in configs/judge_prompts.yaml.

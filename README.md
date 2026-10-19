@@ -31,7 +31,8 @@ bash scripts/submit_all.sh
 # Grading only, e.g. after a grading job hit its time limit
 sbatch scripts/judge.sbatch
 
-# Analyse
+# Check completeness, then analyse
+python src/check_results.py
 python src/analyze.py
 python src/compare_layers.py
 python src/contamination.py
@@ -64,6 +65,7 @@ src/                         all Python code, one file per pipeline stage
   items.py                     questions in a common format and their prompts
   run_eval.py                  model run and answer parsing
   judge.py                     grading of open-ended answers by the judge model
+  check_results.py             completeness check of all results and grades
   analyze.py                   quality, cost, rankings, Pareto frontier, exam shift, plots
   compare_layers.py            standard exam vs new exam vs real world
   contamination.py             year-difficulty adjustment, unparseable check, positive control,

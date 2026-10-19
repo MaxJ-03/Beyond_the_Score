@@ -1,7 +1,8 @@
 #!/bin/bash
 # Submit evaluation jobs for every model, but only for the datasets that do not have
 # results yet. Rerunning this script after adding a dataset therefore only evaluates
-# the new dataset.
+# the new dataset. Results with answers that were cut off at a lower token limit than the
+# current one in configs/datasets.yaml are outdated and are submitted again as well.
 #
 # The jobs run one after another: each job starts when the previous one has ended, so only
 # one job at a time is checked against the compute budget. A grading job (scripts/judge.sbatch)
@@ -13,6 +14,7 @@
 #   DATASETS="medqa" bash scripts/submit_all.sh     specific datasets
 #   INCLUDE_OPTIONAL=1 bash scripts/submit_all.sh   include optional models
 #   FORCE=1 bash scripts/submit_all.sh              rerun everything, overwriting results
+#   MODELS="gemma3-27b" bash scripts/submit_all.sh  only these models
 #   JUDGE=0 bash scripts/submit_all.sh              do not queue the grading job
 #   PARALLEL=1 bash scripts/submit_all.sh           submit all jobs at once instead of in a chain
 set -euo pipefail
@@ -20,20 +22,43 @@ cd "$(dirname "$0")/.."
 source "$HOME/venvs/medeval/bin/activate"
 mkdir -p logs
 
-python - "${INCLUDE_OPTIONAL:-0}" "${FORCE:-0}" "${DATASETS:-}" <<'PY' > logs/submit_list.txt
+python - "${INCLUDE_OPTIONAL:-0}" "${FORCE:-0}" "${DATASETS:-}" "${MODELS:-}" <<'PY' > logs/submit_list.txt
+import json
 import sys
 sys.path.insert(0, "src")
 from config import PROJECT_ROOT, default_datasets, load_datasets_config, load_models
 
-include_optional, force, requested = sys.argv[1] == "1", sys.argv[2] == "1", sys.argv[3].split()
-datasets = requested or default_datasets(load_datasets_config())
+include_optional, force = sys.argv[1] == "1", sys.argv[2] == "1"
+requested, models = sys.argv[3].split(), sys.argv[4].split()
+ds_cfg = load_datasets_config()
+eval_cfg = ds_cfg["evaluation"]
+datasets = requested or default_datasets(ds_cfg)
+
+
+def needs_run(model, dataset, thinking):
+    """True if the result is missing, or was cut off at a lower token limit than the current one."""
+    results = PROJECT_ROOT / "results" / "raw" / model / f"{dataset}.jsonl"
+    meta = results.with_suffix(".meta.json")
+    if force or not results.exists() or not meta.exists():
+        return True
+    if ds_cfg["datasets"][dataset].get("task", "multiple_choice") != "multiple_choice":
+        limit = eval_cfg["max_tokens_open"]
+    else:
+        limit = eval_cfg["max_tokens_thinking"] if thinking else eval_cfg["max_tokens_direct"]
+    if json.loads(meta.read_text(encoding="utf-8")).get("max_tokens", limit) >= limit:
+        return False
+    with open(results, encoding="utf-8") as handle:
+        return any(json.loads(line).get("finish_reason") == "length" for line in handle)
+
+
 for key, cfg in load_models().items():
     if cfg.get("role") == "judge" or (cfg.get("optional") and not include_optional):
         continue
-    missing = [d for d in datasets
-               if force or not (PROJECT_ROOT / "results" / "raw" / key / f"{d}.jsonl").exists()]
-    if missing:
-        print(key, cfg["slurm_time"], ",".join(missing))
+    if models and key not in models:
+        continue
+    rerun = [d for d in datasets if needs_run(key, d, cfg.get("thinking", False))]
+    if rerun:
+        print(key, cfg["slurm_time"], ",".join(rerun))
 PY
 
 if [[ ! -s logs/submit_list.txt ]]; then

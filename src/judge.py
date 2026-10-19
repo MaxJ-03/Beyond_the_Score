@@ -17,6 +17,10 @@ Scoring, as in the benchmark papers:
 An empty answer meets no criterion and entails or contradicts no statement. A judge output
 without a recognizable verdict counts as not met (or False) and is counted in n_unparsed.
 
+K-QA verdicts are read with the official rule ("True" or "False" in the last 20 characters).
+When that rule finds nothing, the last standalone "true" or "false" in the judge's final answer
+is used instead (for example when the verdict is followed by a closing remark).
+
 Outputs:
     results/judged/<model>/<dataset>.jsonl      per item: item_id, score, hallucinations,
                                                 n_checks, n_unparsed and every check with
@@ -31,6 +35,8 @@ Usage:
     python src/judge.py --models qwen3-4b --datasets kqa
     python src/judge.py --force                      grade again, overwriting existing grades
     python src/judge.py --validate                   agreement with the K-QA physician labels
+    python src/judge.py --rescore                    read the stored K-QA verdicts again and
+                                                     recompute the scores (no GPU needed)
     python src/judge.py --backend mock --limit 3     test without a GPU
 """
 
@@ -82,11 +88,15 @@ def parse_met(text):
 
 
 def parse_true_false(text):
-    """Verdict of the K-QA prompts: "True" or "False" in the last 20 characters (official rule)."""
+    """Verdict of the K-QA prompts: "True" or "False" in the last 20 characters (official rule),
+    otherwise the last standalone "true" or "false" in the text."""
     tail = text.lower()[-20:]
     if "true" in tail:
         return True
-    return False if "false" in tail else None
+    if "false" in tail:
+        return False
+    words = re.findall(r"\b(true|false)\b", text, flags=re.IGNORECASE)
+    return words[-1].lower() == "true" if words else None
 
 
 def build_checks(item, response, prompts):
@@ -193,6 +203,7 @@ def grade(model, dataset, spec, backend, settings, prompts, out_dir, limit):
             unparsed = sum(1 for c in checks if not c["empty_answer"] and c["verdict"] is None)
             n_unparsed += unparsed
             for check in checks:
+                check["unparsed"] = not check["empty_answer"] and check.get("verdict") is None
                 check["verdict"] = bool(check.get("verdict"))
                 del check["prompt"]
             record = {"model": model, "dataset": dataset, "item_id": item_id,
@@ -219,10 +230,43 @@ def pending_pairs(models, datasets, ds_cfg, force):
         for dataset, spec in ds_cfg["datasets"].items():
             if spec.get("task") not in OPEN_TASKS or (datasets and dataset not in datasets):
                 continue
+            answers = model_dir / f"{dataset}.jsonl"
             judged = resolve_path("results") / "judged" / model_dir.name / f"{dataset}.jsonl"
-            if (model_dir / f"{dataset}.jsonl").exists() and (force or not judged.exists()):
+            # Answers newer than their grades were evaluated again and are graded again.
+            outdated = judged.exists() and answers.exists() and answers.stat().st_mtime > judged.stat().st_mtime
+            if answers.exists() and (force or not judged.exists() or outdated):
                 pairs.append((model_dir.name, dataset))
     return pairs
+
+
+def rescore(models, datasets, ds_cfg):
+    """Read the stored K-QA verdicts again with parse_true_false and recompute the scores."""
+    root = resolve_path("results") / "judged"
+    for path in sorted(root.glob("*/*.jsonl")):
+        model, dataset = path.parent.name, path.stem
+        spec = ds_cfg["datasets"].get(dataset, {})
+        if spec.get("task") != "statements" or (models and model not in models) \
+                or (datasets and dataset not in datasets):
+            continue
+        records = pd.read_json(path, lines=True, dtype={"item_id": str}).to_dict("records")
+        before = sum(r["n_unparsed"] for r in records)
+        with open(path, "w", encoding="utf-8") as handle:
+            for record in records:
+                for check in record["checks"]:
+                    verdict = None if check["empty_answer"] else parse_true_false(check["judge_answer"])
+                    check["unparsed"] = not check["empty_answer"] and verdict is None
+                    check["verdict"] = bool(verdict)
+                record.update(score_item("statements", record["checks"]))
+                record["n_unparsed"] = sum(c["unparsed"] for c in record["checks"])
+                handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+        after = sum(r["n_unparsed"] for r in records)
+        meta_path = path.with_suffix(".meta.json")
+        if meta_path.exists():
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            meta.update(n_unparsed=after, rescored_utc=datetime.now(timezone.utc).isoformat())
+            meta_path.write_text(json.dumps(meta, indent=2, default=str), encoding="utf-8")
+        score = sum(r["score"] for r in records) / len(records)
+        print(f"[{model}] {dataset}: unparsed {before} -> {after}, mean score {score:.3f}")
 
 
 # ---------------------------------------------------------------- validation
@@ -281,11 +325,16 @@ def main():
     parser.add_argument("--datasets", nargs="+", default=None, help="Open-ended datasets (default: all).")
     parser.add_argument("--force", action="store_true", help="Grade again, overwriting existing grades.")
     parser.add_argument("--validate", action="store_true", help="Only run the judge validation.")
+    parser.add_argument("--rescore", action="store_true",
+                        help="Read the stored K-QA verdicts again and recompute the scores (no GPU).")
     parser.add_argument("--backend", choices=["vllm", "mock"], default="vllm")
     parser.add_argument("--limit", type=int, default=None, help="Grade only the first N answers (testing).")
     args = parser.parse_args()
 
     ds_cfg = load_datasets_config()
+    if args.rescore:
+        rescore(args.models, args.datasets, ds_cfg)
+        return
     settings = dict(ds_cfg["judge"])
     judge_cfg = load_models()[settings["model"]]
     settings.update(hf_id=judge_cfg["hf_id"], chat_template_kwargs=judge_cfg["chat_template_kwargs"])

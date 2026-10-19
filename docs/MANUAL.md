@@ -359,7 +359,11 @@ the new dataset is evaluated. The jobs form a chain: each job starts when the pr
 ended, so only one job at a time is checked against the compute budget. The grading job
 (section 7.3) is queued at the end of the chain. A job that is cancelled or hits its time limit
 does not stop the chain, and the datasets it finished are kept; running the script again
-submits what is still missing. Models that already have a job in the queue are skipped, and new
+submits what is still missing. Results whose answers were cut off at a lower token limit than
+the current one (`max_tokens_direct`, `max_tokens_open` in `configs/datasets.yaml`) also count
+as missing: decoding is greedy, so a higher limit changes only the answers that reached the old
+limit, and rerunning exactly these results is equivalent to rerunning everything. Models that
+already have a job in the queue are skipped, and new
 jobs are added to the end of the existing chain, so the script can also be rerun while jobs
 are still pending (for example after a submission was refused).
 
@@ -369,6 +373,7 @@ are still pending (for example after a submission was refused).
 | Include optional models | `INCLUDE_OPTIONAL=1 bash scripts/submit_all.sh` |
 | Rerun everything, overwriting results | `FORCE=1 bash scripts/submit_all.sh` |
 | Change the latency sample (default 20) | `LATENCY_SAMPLE=50 bash scripts/submit_all.sh` |
+| Only some models | `MODELS="gemma3-27b medgemma-27b" bash scripts/submit_all.sh` |
 | Do not queue the grading job | `JUDGE=0 bash scripts/submit_all.sh` |
 | Submit all jobs at once instead of in a chain | `PARALLEL=1 bash scripts/submit_all.sh` |
 
@@ -377,12 +382,13 @@ are still pending (for example after a submission was refused).
 When the evaluation jobs have finished, one job grades all LiveMedBench and K-QA answers with
 the judge (gpt-oss-120b, `reasoning_effort: low`). `scripts/submit_all.sh` queues this job
 automatically after the last evaluation job. It loads the judge once and grades only answers
-without grades, so it can be resubmitted after more models have been evaluated or after it has
-hit its time limit:
+without grades (or with answers that are newer than their grades), so it can be resubmitted
+after more models have been evaluated or after it has hit its time limit:
 
 ```bash
 VALIDATE=1 sbatch scripts/judge.sbatch       # first: agreement with physicians (minutes)
-sbatch scripts/judge.sbatch                  # then: grade all answers (a few hours)
+sbatch scripts/judge.sbatch                  # then: grade all answers (about 10 minutes per model)
+python src/judge.py --rescore                # read stored K-QA verdicts again (login node, no GPU)
 ```
 
 The judge uses the official grading prompts of each benchmark (`configs/judge_prompts.yaml`)

@@ -4,11 +4,13 @@
 #   sbatch scripts/judge.sbatch                       grade everything that is missing
 #   VALIDATE=1 sbatch scripts/judge.sbatch            agreement with the K-QA physician labels
 #   JUDGE_ARGS="--models qwen3-4b --force" sbatch scripts/judge.sbatch
+# Grades are written per model and dataset, so a job that reaches its time limit loses only the
+# pair in progress; submitting the job again continues with the remaining pairs.
 #SBATCH --job-name=medeval_judge
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=16
-#SBATCH --time=04:00:00
+#SBATCH --time=01:00:00
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --export=ALL
 
