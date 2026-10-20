@@ -9,7 +9,7 @@ standard_exam  medgemma-4b          accuracy    0.619     2.669238e+12          
 standard_exam   qwen3-1.7b          accuracy    0.493     2.349967e+12                   1.0
 standard_exam     qwen3-4b          accuracy    0.621     3.068643e+12                   3.0
      new_exam    gemma3-1b          accuracy    0.347     2.737460e+12                   3.0
-     new_exam   gemma3-27b          accuracy    0.815     1.264016e+13                   8.0
+     new_exam   gemma3-27b          accuracy    0.815     1.263974e+13                   8.0
      new_exam    gemma3-4b          accuracy    0.562     3.306698e+12                   5.0
      new_exam    llama3-8b          accuracy    0.697     4.816017e+12                   7.0
      new_exam     med42-8b          accuracy    0.721     4.705156e+12                   6.0
