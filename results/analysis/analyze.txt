@@ -17,15 +17,15 @@ medgemma-27b          kqa      201 comprehensiveness 0.693486              0.693
  medgemma-4b          kqa      201 comprehensiveness 0.482585              0.482585           NaN        2.722671e+12                  0.053804
   qwen3-1.7b          kqa      201 comprehensiveness 0.513855              0.513855           NaN        1.620459e+12                  0.019207
     qwen3-4b          kqa      201 comprehensiveness 0.556002              0.556002           NaN        3.117953e+12                  0.036000
-   gemma3-1b livemedbench     2664      rubric_score 0.067232              0.067232           NaN        4.008439e+11                  0.001980
-  gemma3-27b livemedbench     2664      rubric_score 0.130342              0.130342           NaN        1.146859e+13                  0.023152
-   gemma3-4b livemedbench     2664      rubric_score 0.094746              0.094746           NaN        1.568206e+12                  0.004177
-   llama3-8b livemedbench     2664      rubric_score 0.078608              0.078608           NaN        3.159703e+12                  0.010360
-    med42-8b livemedbench     2664      rubric_score 0.096536              0.096536           NaN        3.275834e+12                  0.004880
-medgemma-27b livemedbench     2664      rubric_score 0.168942              0.168942           NaN        1.485813e+13                  0.060737
- medgemma-4b livemedbench     2664      rubric_score 0.102957              0.102957           NaN        1.814649e+12                  0.008523
-  qwen3-1.7b livemedbench     2664      rubric_score 0.183449              0.183449           NaN        1.367288e+12                  0.005874
-    qwen3-4b livemedbench     2664      rubric_score 0.221848              0.221848           NaN        2.532796e+12                  0.007769
+   gemma3-1b livemedbench     1926      rubric_score 0.060292              0.060292           NaN        3.929500e+11                  0.001980
+  gemma3-27b livemedbench     1926      rubric_score 0.120358              0.120358           NaN        1.132684e+13                  0.023152
+   gemma3-4b livemedbench     1926      rubric_score 0.087153              0.087153           NaN        1.545485e+12                  0.004177
+   llama3-8b livemedbench     1926      rubric_score 0.071940              0.071940           NaN        3.122813e+12                  0.010360
+    med42-8b livemedbench     1926      rubric_score 0.087298              0.087298           NaN        3.234319e+12                  0.004880
+medgemma-27b livemedbench     1926      rubric_score 0.160555              0.160555           NaN        1.434719e+13                  0.060737
+ medgemma-4b livemedbench     1926      rubric_score 0.092345              0.092345           NaN        1.787862e+12                  0.008523
+  qwen3-1.7b livemedbench     1926      rubric_score 0.175151              0.175151           NaN        1.343489e+12                  0.005874
+    qwen3-4b livemedbench     1926      rubric_score 0.213834              0.213834           NaN        2.542952e+12                  0.007769
    gemma3-1b     mir_2020      145          accuracy 0.268966              0.025287      0.000000        3.425678e+11                  0.001377
   gemma3-27b     mir_2020      145          accuracy 0.758621              0.678161      0.000000        9.201060e+12                  0.011883
    gemma3-4b     mir_2020      145          accuracy 0.503448              0.337931      0.000000        1.329298e+12                  0.002361
@@ -134,13 +134,13 @@ medgemma-27b  mir_2025_es      170          accuracy 0.794118              0.725
  medgemma-4b  mir_2025_es      170          accuracy 0.464706              0.286275      0.000000        1.653814e+12                  0.002487
   qwen3-1.7b  mir_2025_es      170          accuracy 0.429412              0.239216      0.000000        1.074814e+12                  0.009062
     qwen3-4b  mir_2025_es      170          accuracy 0.570588              0.427451      0.000000        2.076682e+12                  0.005620
-   gemma3-1b     mir_2026      170          accuracy 0.382353              0.176471      0.000000        3.319386e+11                  0.001123
+   gemma3-1b     mir_2026      170          accuracy 0.382353              0.176471      0.000000        3.319151e+11                  0.001221
   gemma3-27b     mir_2026      170          accuracy 0.811765              0.749020      0.000000        8.914038e+12                  0.011233
-   gemma3-4b     mir_2026      170          accuracy 0.623529              0.498039      0.000000        1.287837e+12                  0.002007
+   gemma3-4b     mir_2026      170          accuracy 0.623529              0.498039      0.000000        1.287745e+12                  0.002295
    llama3-8b     mir_2026      170          accuracy 0.735294              0.647059      0.000000        2.697223e+12                  0.003370
     med42-8b     mir_2026      170          accuracy 0.764706              0.686275      0.000000        2.763827e+12                  0.004851
 medgemma-27b     mir_2026      170          accuracy 0.858824              0.811765      0.005882        1.084332e+13                  0.193335
- medgemma-4b     mir_2026      170          accuracy 0.670588              0.560784      0.000000        1.288156e+12                  0.001847
+ medgemma-4b     mir_2026      170          accuracy 0.670588              0.560784      0.000000        1.288065e+12                  0.002205
   qwen3-1.7b     mir_2026      170          accuracy 0.547059              0.396078      0.000000        7.486842e+11                  0.003160
     qwen3-4b     mir_2026      170          accuracy 0.664706              0.552941      0.000000        1.522481e+12                  0.005272
    gemma3-1b  mir_2026_es      170          accuracy 0.317647              0.090196      0.000000        3.776158e+11                  0.001083

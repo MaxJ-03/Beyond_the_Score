@@ -8,13 +8,13 @@ standard_exam medgemma-27b          accuracy    0.827     1.574858e+13          
 standard_exam  medgemma-4b          accuracy    0.619     2.669238e+12                   2.0
 standard_exam   qwen3-1.7b          accuracy    0.493     2.349967e+12                   1.0
 standard_exam     qwen3-4b          accuracy    0.621     3.068643e+12                   3.0
-     new_exam    gemma3-1b          accuracy    0.347     2.737551e+12                   3.0
+     new_exam    gemma3-1b          accuracy    0.347     2.737460e+12                   3.0
      new_exam   gemma3-27b          accuracy    0.815     1.264016e+13                   8.0
-     new_exam    gemma3-4b          accuracy    0.562     3.306808e+12                   5.0
+     new_exam    gemma3-4b          accuracy    0.562     3.306698e+12                   5.0
      new_exam    llama3-8b          accuracy    0.697     4.816017e+12                   7.0
      new_exam     med42-8b          accuracy    0.721     4.705156e+12                   6.0
      new_exam medgemma-27b          accuracy    0.838     1.593335e+13                   9.0
-     new_exam  medgemma-4b          accuracy    0.641     2.635895e+12                   2.0
+     new_exam  medgemma-4b          accuracy    0.641     2.635807e+12                   2.0
      new_exam   qwen3-1.7b          accuracy    0.521     2.201037e+12                   1.0
      new_exam     qwen3-4b          accuracy    0.665     2.896691e+12                   4.0
       cupcase    gemma3-1b          accuracy    0.676     3.597641e+12                   1.0
@@ -26,15 +26,15 @@ standard_exam     qwen3-4b          accuracy    0.621     3.068643e+12          
       cupcase  medgemma-4b          accuracy    0.805     1.070213e+13                   3.0
       cupcase   qwen3-1.7b          accuracy    0.808     5.983459e+12                   2.0
       cupcase     qwen3-4b          accuracy    0.847     1.101219e+13                   4.0
- livemedbench    gemma3-1b      rubric_score    0.067     5.962105e+12                   1.0
- livemedbench   gemma3-27b      rubric_score    0.130     8.798864e+13                   9.0
- livemedbench    gemma3-4b      rubric_score    0.095     1.655168e+13                   4.0
- livemedbench    llama3-8b      rubric_score    0.079     4.019560e+13                   7.0
- livemedbench     med42-8b      rubric_score    0.097     3.393371e+13                   6.0
- livemedbench medgemma-27b      rubric_score    0.169     8.794828e+13                   8.0
- livemedbench  medgemma-4b      rubric_score    0.103     1.762538e+13                   5.0
- livemedbench   qwen3-1.7b      rubric_score    0.183     7.453242e+12                   2.0
- livemedbench     qwen3-4b      rubric_score    0.222     1.141679e+13                   3.0
+ livemedbench    gemma3-1b      rubric_score    0.060     6.517402e+12                   1.0
+ livemedbench   gemma3-27b      rubric_score    0.120     9.410961e+13                   9.0
+ livemedbench    gemma3-4b      rubric_score    0.087     1.773291e+13                   4.0
+ livemedbench    llama3-8b      rubric_score    0.072     4.340883e+13                   7.0
+ livemedbench     med42-8b      rubric_score    0.087     3.704920e+13                   6.0
+ livemedbench medgemma-27b      rubric_score    0.161     8.935981e+13                   8.0
+ livemedbench  medgemma-4b      rubric_score    0.092     1.936067e+13                   5.0
+ livemedbench   qwen3-1.7b      rubric_score    0.175     7.670475e+12                   2.0
+ livemedbench     qwen3-4b      rubric_score    0.214     1.189219e+13                   3.0
           kqa    gemma3-1b comprehensiveness    0.417     3.060249e+12                   1.0
           kqa   gemma3-27b comprehensiveness    0.668     7.786684e+13                   9.0
           kqa    gemma3-4b comprehensiveness    0.570     9.327147e+12                   6.0
@@ -73,31 +73,31 @@ Generalization from the new exam to the real-world layers:
      cupcase     gemma3-4b minus gemma3-27b               NaN                 NaN     0.5698            0.3294             0.9102                  NaN            NaN          NaN           NaN
      cupcase medgemma-4b minus medgemma-27b               NaN                 NaN     0.4596            0.3125             0.6532                  NaN            NaN          NaN           NaN
      cupcase      qwen3-1.7b minus qwen3-4b               NaN                 NaN     0.6209            0.2797             1.0492                  NaN            NaN          NaN           NaN
-livemedbench                      gemma3-1b            0.3471              0.0672     0.5195            0.3312             0.6667                False            NaN          NaN           NaN
-livemedbench                     gemma3-27b            0.8147              0.1303     0.1731            0.1578             0.1922                False            NaN          NaN           NaN
-livemedbench                      gemma3-4b            0.5618              0.0947     0.2279            0.1913             0.2797                False            NaN          NaN           NaN
-livemedbench                      llama3-8b            0.6971              0.0786     0.1319            0.1159             0.1513                False            NaN          NaN           NaN
-livemedbench                       med42-8b            0.7206              0.0965     0.1539            0.1360             0.1750                False            NaN          NaN           NaN
-livemedbench                   medgemma-27b            0.8382              0.1689     0.2154            0.1979             0.2345                False            NaN          NaN           NaN
-livemedbench                    medgemma-4b            0.6412              0.1030     0.1974            0.1702             0.2311                False            NaN          NaN           NaN
-livemedbench                     qwen3-1.7b            0.5206              0.1834     0.5085            0.4217             0.6362                False            NaN          NaN           NaN
-livemedbench                       qwen3-4b            0.6647              0.2218     0.4012            0.3548             0.4621                False            NaN          NaN           NaN
-livemedbench     gemma3-1b minus gemma3-27b               NaN                 NaN     0.3464            0.1623             0.4898                  NaN            NaN          NaN           NaN
-livemedbench     gemma3-4b minus gemma3-27b               NaN                 NaN     0.0548            0.0199             0.1031                  NaN            NaN          NaN           NaN
-livemedbench medgemma-4b minus medgemma-27b               NaN                 NaN    -0.0180           -0.0441             0.0126                  NaN            NaN          NaN           NaN
-livemedbench      qwen3-1.7b minus qwen3-4b               NaN                 NaN     0.1073            0.0210             0.2173                  NaN            NaN          NaN           NaN
-         kqa                      gemma3-1b            0.3471              0.4169     3.2213            2.0332             4.1395                False            NaN          NaN           NaN
-         kqa                     gemma3-27b            0.8147              0.6683     0.8876            0.8055             0.9790                False            NaN          NaN           NaN
-         kqa                      gemma3-4b            0.5618              0.5698     1.3707            1.1433             1.6824                False            NaN          NaN           NaN
-         kqa                      llama3-8b            0.6971              0.5269     0.8839            0.7669             1.0212                False            NaN          NaN           NaN
-         kqa                       med42-8b            0.7206              0.4798     0.7647            0.6637             0.8832                False            NaN          NaN           NaN
-         kqa                   medgemma-27b            0.8382              0.6935     0.8842            0.8050             0.9706                False            NaN          NaN           NaN
-         kqa                    medgemma-4b            0.6412              0.4826     0.9253            0.7875             1.0994                False            NaN          NaN           NaN
-         kqa                     qwen3-1.7b            0.5206              0.5139     1.4243            1.1586             1.7974                False            NaN          NaN           NaN
-         kqa                       qwen3-4b            0.6647              0.5560     1.0055            0.8694             1.1684                False            NaN          NaN           NaN
-         kqa     gemma3-1b minus gemma3-27b               NaN                 NaN     2.3337            1.1461             3.2176                  NaN            NaN          NaN           NaN
-         kqa     gemma3-4b minus gemma3-27b               NaN                 NaN     0.4831            0.2714             0.7619                  NaN            NaN          NaN           NaN
-         kqa medgemma-4b minus medgemma-27b               NaN                 NaN     0.0411           -0.0870             0.2002                  NaN            NaN          NaN           NaN
-         kqa      qwen3-1.7b minus qwen3-4b               NaN                 NaN     0.4187            0.1778             0.7595                  NaN            NaN          NaN           NaN
+livemedbench                      gemma3-1b            0.3471              0.0603     0.4659            0.2915             0.5976                False            NaN          NaN           NaN
+livemedbench                     gemma3-27b            0.8147              0.1204     0.1599            0.1439             0.1785                False            NaN          NaN           NaN
+livemedbench                      gemma3-4b            0.5618              0.0872     0.2097            0.1741             0.2584                False            NaN          NaN           NaN
+livemedbench                      llama3-8b            0.6971              0.0719     0.1207            0.1048             0.1416                False            NaN          NaN           NaN
+livemedbench                       med42-8b            0.7206              0.0873     0.1391            0.1221             0.1607                False            NaN          NaN           NaN
+livemedbench                   medgemma-27b            0.8382              0.1606     0.2047            0.1861             0.2255                False            NaN          NaN           NaN
+livemedbench                    medgemma-4b            0.6412              0.0923     0.1771            0.1530             0.2088                False            NaN          NaN           NaN
+livemedbench                     qwen3-1.7b            0.5206              0.1752     0.4855            0.4035             0.6104                False            NaN          NaN           NaN
+livemedbench                       qwen3-4b            0.6647              0.2138     0.3867            0.3405             0.4442                False            NaN          NaN           NaN
+livemedbench     gemma3-1b minus gemma3-27b               NaN                 NaN     0.3060            0.1339             0.4377                  NaN            NaN          NaN           NaN
+livemedbench     gemma3-4b minus gemma3-27b               NaN                 NaN     0.0498            0.0163             0.0934                  NaN            NaN          NaN           NaN
+livemedbench medgemma-4b minus medgemma-27b               NaN                 NaN    -0.0277           -0.0524             0.0029                  NaN            NaN          NaN           NaN
+livemedbench      qwen3-1.7b minus qwen3-4b               NaN                 NaN     0.0988            0.0175             0.2089                  NaN            NaN          NaN           NaN
+         kqa                      gemma3-1b            0.3471              0.4169     3.2213            2.0278             4.1942                False            NaN          NaN           NaN
+         kqa                     gemma3-27b            0.8147              0.6683     0.8876            0.8075             0.9814                False            NaN          NaN           NaN
+         kqa                      gemma3-4b            0.5618              0.5698     1.3707            1.1544             1.6847                False            NaN          NaN           NaN
+         kqa                      llama3-8b            0.6971              0.5269     0.8839            0.7730             1.0284                False            NaN          NaN           NaN
+         kqa                       med42-8b            0.7206              0.4798     0.7647            0.6706             0.8854                False            NaN          NaN           NaN
+         kqa                   medgemma-27b            0.8382              0.6935     0.8842            0.8043             0.9730                False            NaN          NaN           NaN
+         kqa                    medgemma-4b            0.6412              0.4826     0.9253            0.7798             1.1099                False            NaN          NaN           NaN
+         kqa                     qwen3-1.7b            0.5206              0.5139     1.4243            1.1673             1.8119                False            NaN          NaN           NaN
+         kqa                       qwen3-4b            0.6647              0.5560     1.0055            0.8736             1.1751                False            NaN          NaN           NaN
+         kqa     gemma3-1b minus gemma3-27b               NaN                 NaN     2.3337            1.1530             3.2782                  NaN            NaN          NaN           NaN
+         kqa     gemma3-4b minus gemma3-27b               NaN                 NaN     0.4831            0.2833             0.7752                  NaN            NaN          NaN           NaN
+         kqa medgemma-4b minus medgemma-27b               NaN                 NaN     0.0411           -0.0893             0.2036                  NaN            NaN          NaN           NaN
+         kqa      qwen3-1.7b minus qwen3-4b               NaN                 NaN     0.4187            0.1719             0.7623                  NaN            NaN          NaN           NaN
 
 Wrote layer_summary.csv, layer_agreement.csv and generalization.csv to /gpfs/home5/scur0455/RTDM_Group_4/results/analysis

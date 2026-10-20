@@ -1,0 +1,59 @@
+/gpfs/home5/scur0455/RTDM_Group_4/src/contamination.py:115: SingularMatrixWarning: The design matrix is rank-deficient. The model parameters are not uniquely determined.
+  fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
+/gpfs/home5/scur0455/RTDM_Group_4/src/contamination.py:115: SingularMatrixWarning: The design matrix is rank-deficient. The model parameters are not uniquely determined.
+  fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
+/gpfs/home5/scur0455/RTDM_Group_4/src/contamination.py:115: SingularMatrixWarning: The design matrix is rank-deficient. The model parameters are not uniquely determined.
+  fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
+/gpfs/home5/scur0455/RTDM_Group_4/src/contamination.py:115: SingularMatrixWarning: The design matrix is rank-deficient. The model parameters are not uniquely determined.
+  fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
+/gpfs/home5/scur0455/RTDM_Group_4/src/contamination.py:115: SingularMatrixWarning: The design matrix is rank-deficient. The model parameters are not uniquely determined.
+  fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
+/gpfs/home5/scur0455/RTDM_Group_4/src/contamination.py:115: SingularMatrixWarning: The design matrix is rank-deficient. The model parameters are not uniquely determined.
+  fit = smf.ols(f"{outcome} ~ C(model) + C({fixed}) + {term}{extra}", data=data).fit(
+
+ROC-AUC, all seen vs unseen editions, main split, Spanish (0.5 = no separation, above 0.5 = seen questions closer to their text):
+score         lcp_tokens  levenshtein_ratio  mean_logprob  mink_20  near_verbatim  rouge_l_f1  stem_mink_20  zlib_ratio
+model                                                                                                                  
+gemma3-1b          0.519              0.501         0.511    0.512          0.500       0.477         0.507       0.456
+gemma3-27b         0.525              0.514         0.504    0.507          0.499       0.493         0.509       0.454
+gemma3-4b          0.509              0.487         0.524    0.530          0.500       0.480         0.514       0.459
+llama3-8b          0.503              0.507         0.518    0.528          0.499       0.472         0.508       0.450
+med42-8b           0.501              0.491         0.521    0.531          0.500       0.484         0.508       0.451
+medgemma-27b       0.534              0.529         0.505    0.509          0.497       0.490         0.508       0.454
+medgemma-4b        0.511              0.479         0.524    0.534          0.499       0.463         0.521       0.458
+qwen3-1.7b         0.531              0.419         0.509    0.557          0.501       0.433         0.587       0.520
+qwen3-4b           0.531              0.444         0.522    0.566          0.497       0.427         0.627       0.523
+
+ROC-AUC, all seen vs unseen editions, main split, English (0.5 = no separation, above 0.5 = seen questions closer to their text):
+score         lcp_tokens  levenshtein_ratio  mean_logprob  mink_20  near_verbatim  rouge_l_f1  stem_mink_20  zlib_ratio
+model                                                                                                                  
+gemma3-1b          0.517              0.509         0.454    0.487          0.500       0.490         0.473       0.449
+gemma3-27b         0.516              0.503         0.449    0.477          0.499       0.483         0.490       0.449
+gemma3-4b          0.526              0.496         0.468    0.507          0.500       0.479         0.489       0.456
+llama3-8b          0.511              0.524         0.444    0.462          0.500       0.507         0.475       0.436
+med42-8b           0.523              0.528         0.437    0.456          0.500       0.508         0.466       0.432
+medgemma-27b       0.520              0.515         0.429    0.457          0.499       0.488         0.472       0.440
+medgemma-4b        0.535              0.525         0.433    0.470          0.500       0.525         0.469       0.442
+qwen3-1.7b         0.541              0.461         0.450    0.473          0.500       0.462         0.541       0.502
+qwen3-4b           0.551              0.502         0.453    0.484          0.500       0.478         0.542       0.504
+
+Edition-adjusted unseen effect (SD; negative = contamination direction), main split, pooled:
+language split             score        model  unseen_effect_sd  ci_low  ci_high  contamination_signal
+      en  main        lcp_tokens ALL (pooled)             0.016  -0.048    0.081                 False
+      en  main levenshtein_ratio ALL (pooled)             0.029  -0.030    0.087                 False
+      en  main      mean_logprob ALL (pooled)            -0.020  -0.065    0.024                 False
+      en  main           mink_20 ALL (pooled)            -0.079  -0.134   -0.023                  True
+      en  main     near_verbatim ALL (pooled)             0.002  -0.153    0.157                 False
+      en  main        rouge_l_f1 ALL (pooled)             0.028  -0.025    0.081                 False
+      en  main      stem_mink_20 ALL (pooled)            -0.087  -0.131   -0.043                  True
+      en  main        zlib_ratio ALL (pooled)            -0.003  -0.024    0.018                 False
+      es  main        lcp_tokens ALL (pooled)             0.017  -0.061    0.095                 False
+      es  main levenshtein_ratio ALL (pooled)             0.014  -0.043    0.071                 False
+      es  main      mean_logprob ALL (pooled)             0.006  -0.051    0.062                 False
+      es  main           mink_20 ALL (pooled)            -0.022  -0.089    0.045                 False
+      es  main     near_verbatim ALL (pooled)             0.018  -0.024    0.059                 False
+      es  main        rouge_l_f1 ALL (pooled)             0.063   0.012    0.114                 False
+      es  main      stem_mink_20 ALL (pooled)            -0.015  -0.072    0.042                 False
+      es  main        zlib_ratio ALL (pooled)             0.009  -0.015    0.033                 False
+
+Wrote results to /gpfs/home5/scur0455/RTDM_Group_4/results/analysis/sanitize
