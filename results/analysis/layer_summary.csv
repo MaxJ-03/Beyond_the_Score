@@ -1,46 +1,46 @@
-layer,datasets,model,n_items,metric,quality,chance_corrected_quality,flops_per_question,flops_per_point,rank_quality,rank_cost_efficiency,most_cost_efficient,on_pareto_frontier
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,gemma3-1b,809,accuracy,0.2979,0.0639,338740102146.5315,5304014373610.532,9.0,7.0,False,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,gemma3-27b,809,accuracy,0.7837,0.7116,9095439100483.719,12782067572017.361,2.0,8.0,False,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,gemma3-4b,809,accuracy,0.5105,0.3473,1314157361434.2644,3783463720285.837,7.0,4.0,False,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,llama3-8b,809,accuracy,0.6601,0.5468,2730090301174.1904,4993164401620.016,4.0,6.0,False,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,med42-8b,809,accuracy,0.6761,0.5682,2797330090659.916,4923219818732.137,3.0,5.0,False,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,medgemma-27b,809,accuracy,0.8269,0.7693,12114789467042.967,15748577416450.605,1.0,9.0,False,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,medgemma-4b,809,accuracy,0.6193,0.4924,1314272474309.4585,2669237903890.4233,6.0,2.0,False,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,qwen3-1.7b,809,accuracy,0.4932,0.3243,762020500805.3004,2349966652419.9033,8.0,1.0,True,True
-standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,qwen3-4b,809,accuracy,0.6205,0.494,1515988173792.356,3068643284231.9,5.0,3.0,False,True
-new_exam,mir_2026 mir_2025,gemma3-1b,340,accuracy,0.3471,0.1294,354259592793.6,2737460489768.7275,9.0,3.0,False,True
-new_exam,mir_2026 mir_2025,gemma3-27b,340,accuracy,0.8147,0.7529,9516981487975.906,12639741038718.0,2.0,8.0,False,True
-new_exam,mir_2026 mir_2025,gemma3-4b,340,accuracy,0.5618,0.4157,1374548989647.812,3306698041133.887,7.0,5.0,False,True
-new_exam,mir_2026 mir_2025,llama3-8b,340,accuracy,0.6971,0.5961,2870723922498.259,4816017106822.737,4.0,7.0,False,True
-new_exam,mir_2026 mir_2025,med42-8b,340,accuracy,0.7206,0.6275,2952254692580.894,4705155916300.8,3.0,6.0,False,True
-new_exam,mir_2026 mir_2025,medgemma-27b,340,accuracy,0.8382,0.7843,12496747583480.47,15933353168937.6,1.0,9.0,False,True
-new_exam,mir_2026 mir_2025,medgemma-4b,340,accuracy,0.6412,0.5216,1374754415344.941,2635807337691.4277,6.0,2.0,False,True
-new_exam,mir_2026 mir_2025,qwen3-1.7b,340,accuracy,0.5206,0.3608,794099565772.8,2201036839913.739,8.0,1.0,True,True
-new_exam,mir_2026 mir_2025,qwen3-4b,340,accuracy,0.6647,0.5529,1601699472673.1294,2896690535685.4473,5.0,4.0,False,True
-cupcase,cupcase,gemma3-1b,3508,accuracy,0.6762,0.5682,2044269679166.0295,3597641154438.6777,9.0,1.0,True,True
-cupcase,cupcase,gemma3-27b,3508,accuracy,0.884,0.8453,55049898362811.84,65124227784423.54,1.0,8.0,False,True
-cupcase,cupcase,gemma3-4b,3508,accuracy,0.7777,0.7035,7956293798101.383,11309027003136.0,8.0,5.0,False,False
-cupcase,cupcase,llama3-8b,3508,accuracy,0.8763,0.835,16837182443760.527,20163234870065.523,2.0,6.0,False,True
-cupcase,cupcase,med42-8b,3508,accuracy,0.8558,0.8077,17021068101129.924,21074084787798.977,3.0,7.0,False,False
-cupcase,cupcase,medgemma-27b,3508,accuracy,0.8139,0.7518,70651669433064.36,93976007218600.77,5.0,9.0,False,False
-cupcase,cupcase,medgemma-4b,3508,accuracy,0.8047,0.7396,7915750136140.1875,10702126725685.936,7.0,3.0,False,False
-cupcase,cupcase,qwen3-1.7b,3508,accuracy,0.8079,0.7438,4450638619330.408,5983459482605.163,6.0,2.0,False,True
-cupcase,cupcase,qwen3-4b,3508,accuracy,0.8475,0.7967,8772920358167.645,11012191537375.512,4.0,4.0,False,True
-livemedbench,livemedbench,gemma3-1b,1926,rubric_score,0.0603,0.0603,392949987620.1537,6517401992856.757,9.0,1.0,True,True
-livemedbench,livemedbench,gemma3-27b,1926,rubric_score,0.1204,0.1204,11326844770733.855,94109610458292.23,4.0,9.0,False,False
-livemedbench,livemedbench,gemma3-4b,1926,rubric_score,0.0872,0.0872,1545485046654.804,17732908620743.85,7.0,4.0,False,False
-livemedbench,livemedbench,llama3-8b,1926,rubric_score,0.0719,0.0719,3122812663848.407,43408833550508.82,8.0,7.0,False,False
-livemedbench,livemedbench,med42-8b,1926,rubric_score,0.0873,0.0873,3234319053680.4487,37049202607309.164,6.0,6.0,False,False
-livemedbench,livemedbench,medgemma-27b,1926,rubric_score,0.1606,0.1606,14347193208580.52,89359807432359.34,3.0,8.0,False,False
-livemedbench,livemedbench,medgemma-4b,1926,rubric_score,0.0923,0.0923,1787862482111.402,19360671737798.555,5.0,5.0,False,False
-livemedbench,livemedbench,qwen3-1.7b,1926,rubric_score,0.1752,0.1752,1343488538970.65,7670474658890.211,2.0,2.0,False,True
-livemedbench,livemedbench,qwen3-4b,1926,rubric_score,0.2138,0.2138,2542951699867.5137,11892193315285.344,1.0,3.0,False,True
-kqa,kqa,gemma3-1b,201,comprehensiveness,0.4169,0.4169,1275745034498.5474,3060248920048.14,9.0,1.0,True,True
-kqa,kqa,gemma3-27b,201,comprehensiveness,0.6683,0.6683,52038007212373.336,77866843924730.84,2.0,9.0,False,False
-kqa,kqa,gemma3-4b,201,comprehensiveness,0.5698,0.5698,5314300328058.269,9327146599360.242,3.0,6.0,False,True
-kqa,kqa,llama3-8b,201,comprehensiveness,0.5269,0.5269,6003678998915.184,11394560670201.4,5.0,7.0,False,False
-kqa,kqa,med42-8b,201,comprehensiveness,0.4798,0.4798,2820419517730.388,5878068162617.762,8.0,5.0,False,False
-kqa,kqa,medgemma-27b,201,comprehensiveness,0.6935,0.6935,51022827067414.92,73574363832485.77,1.0,8.0,False,True
-kqa,kqa,medgemma-4b,201,comprehensiveness,0.4826,0.4826,2722670627671.8804,5641846605018.888,7.0,4.0,False,False
-kqa,kqa,qwen3-1.7b,201,comprehensiveness,0.5139,0.5139,1620459141741.5322,3153531218541.689,6.0,2.0,False,True
-kqa,kqa,qwen3-4b,201,comprehensiveness,0.556,0.556,3117953105935.283,5607805849754.307,4.0,3.0,False,True
+layer,datasets,model,n_items,metric,quality,chance_corrected_quality,flops_per_question,points_per_tflop,rank_quality,rank_cost_efficiency,most_cost_efficient,on_pareto_frontier
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,gemma3-1b,809,accuracy,0.2979,0.0639,338740102146.5315,18.8536,9.0,7.0,False,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,gemma3-27b,809,accuracy,0.7837,0.7116,9095439100483.719,7.8235,2.0,8.0,False,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,gemma3-4b,809,accuracy,0.5105,0.3473,1314157361434.2644,26.4308,7.0,4.0,False,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,llama3-8b,809,accuracy,0.6601,0.5468,2730090301174.1904,20.0274,4.0,6.0,False,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,med42-8b,809,accuracy,0.6761,0.5682,2797330090659.916,20.3119,3.0,5.0,False,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,medgemma-27b,809,accuracy,0.8269,0.7693,12114789467042.967,6.3498,1.0,9.0,False,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,medgemma-4b,809,accuracy,0.6193,0.4924,1314272474309.4585,37.4639,6.0,2.0,False,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,qwen3-1.7b,809,accuracy,0.4932,0.3243,762020500805.3004,42.5538,8.0,1.0,True,True
+standard_exam,mir_2022 mir_2024 mir_2020 mir_2021 mir_2023,qwen3-4b,809,accuracy,0.6205,0.494,1515988173792.356,32.5877,5.0,3.0,False,True
+new_exam,mir_2026 mir_2025,gemma3-1b,340,accuracy,0.3471,0.1294,354259592793.6,36.5302,9.0,3.0,False,True
+new_exam,mir_2026 mir_2025,gemma3-27b,340,accuracy,0.8147,0.7529,9516981487975.906,7.9116,2.0,8.0,False,True
+new_exam,mir_2026 mir_2025,gemma3-4b,340,accuracy,0.5618,0.4157,1374548989647.812,30.2416,7.0,5.0,False,True
+new_exam,mir_2026 mir_2025,llama3-8b,340,accuracy,0.6971,0.5961,2870723922498.259,20.764,4.0,7.0,False,True
+new_exam,mir_2026 mir_2025,med42-8b,340,accuracy,0.7206,0.6275,2952254692580.894,21.2533,3.0,6.0,False,True
+new_exam,mir_2026 mir_2025,medgemma-27b,340,accuracy,0.8382,0.7843,12496747583480.47,6.2761,1.0,9.0,False,True
+new_exam,mir_2026 mir_2025,medgemma-4b,340,accuracy,0.6412,0.5216,1374754415344.941,37.939,6.0,2.0,False,True
+new_exam,mir_2026 mir_2025,qwen3-1.7b,340,accuracy,0.5206,0.3608,794099565772.8,45.4331,8.0,1.0,True,True
+new_exam,mir_2026 mir_2025,qwen3-4b,340,accuracy,0.6647,0.5529,1601699472673.1294,34.5222,5.0,4.0,False,True
+cupcase,cupcase,gemma3-1b,3508,accuracy,0.6762,0.5682,2044269679166.0295,27.796,9.0,1.0,True,True
+cupcase,cupcase,gemma3-27b,3508,accuracy,0.884,0.8453,55049898362811.84,1.5355,1.0,8.0,False,True
+cupcase,cupcase,gemma3-4b,3508,accuracy,0.7777,0.7035,7956293798101.383,8.8425,8.0,5.0,False,False
+cupcase,cupcase,llama3-8b,3508,accuracy,0.8763,0.835,16837182443760.527,4.9595,2.0,6.0,False,True
+cupcase,cupcase,med42-8b,3508,accuracy,0.8558,0.8077,17021068101129.924,4.7452,3.0,7.0,False,False
+cupcase,cupcase,medgemma-27b,3508,accuracy,0.8139,0.7518,70651669433064.36,1.0641,5.0,9.0,False,False
+cupcase,cupcase,medgemma-4b,3508,accuracy,0.8047,0.7396,7915750136140.1875,9.3439,7.0,3.0,False,False
+cupcase,cupcase,qwen3-1.7b,3508,accuracy,0.8079,0.7438,4450638619330.408,16.7127,6.0,2.0,False,True
+cupcase,cupcase,qwen3-4b,3508,accuracy,0.8475,0.7967,8772920358167.645,9.0808,4.0,4.0,False,True
+livemedbench,livemedbench,gemma3-1b,1926,rubric_score,0.0603,0.0603,392949987620.1537,15.3435,9.0,1.0,True,True
+livemedbench,livemedbench,gemma3-27b,1926,rubric_score,0.1204,0.1204,11326844770733.855,1.0626,4.0,9.0,False,False
+livemedbench,livemedbench,gemma3-4b,1926,rubric_score,0.0872,0.0872,1545485046654.804,5.6392,7.0,4.0,False,False
+livemedbench,livemedbench,llama3-8b,1926,rubric_score,0.0719,0.0719,3122812663848.407,2.3037,8.0,7.0,False,False
+livemedbench,livemedbench,med42-8b,1926,rubric_score,0.0873,0.0873,3234319053680.4487,2.6991,6.0,6.0,False,False
+livemedbench,livemedbench,medgemma-27b,1926,rubric_score,0.1606,0.1606,14347193208580.52,1.1191,3.0,8.0,False,False
+livemedbench,livemedbench,medgemma-4b,1926,rubric_score,0.0923,0.0923,1787862482111.402,5.1651,5.0,5.0,False,False
+livemedbench,livemedbench,qwen3-1.7b,1926,rubric_score,0.1752,0.1752,1343488538970.65,13.037,2.0,2.0,False,True
+livemedbench,livemedbench,qwen3-4b,1926,rubric_score,0.2138,0.2138,2542951699867.5137,8.4089,1.0,3.0,False,True
+kqa,kqa,gemma3-1b,201,comprehensiveness,0.4169,0.4169,1275745034498.5474,32.6771,9.0,1.0,True,True
+kqa,kqa,gemma3-27b,201,comprehensiveness,0.6683,0.6683,52038007212373.336,1.2842,2.0,9.0,False,False
+kqa,kqa,gemma3-4b,201,comprehensiveness,0.5698,0.5698,5314300328058.269,10.7214,3.0,6.0,False,True
+kqa,kqa,llama3-8b,201,comprehensiveness,0.5269,0.5269,6003678998915.184,8.7761,5.0,7.0,False,False
+kqa,kqa,med42-8b,201,comprehensiveness,0.4798,0.4798,2820419517730.388,17.0124,8.0,5.0,False,False
+kqa,kqa,medgemma-27b,201,comprehensiveness,0.6935,0.6935,51022827067414.92,1.3592,1.0,8.0,False,True
+kqa,kqa,medgemma-4b,201,comprehensiveness,0.4826,0.4826,2722670627671.8804,17.7247,7.0,4.0,False,False
+kqa,kqa,qwen3-1.7b,201,comprehensiveness,0.5139,0.5139,1620459141741.5322,31.7105,6.0,2.0,False,True
+kqa,kqa,qwen3-4b,201,comprehensiveness,0.556,0.556,3117953105935.283,17.8323,4.0,3.0,False,True

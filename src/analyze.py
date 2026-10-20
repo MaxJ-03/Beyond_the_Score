@@ -12,8 +12,10 @@ Metrics per model and dataset:
     flops_per_question       2 * N * (input tokens + output tokens), averaged over items
     gpu_seconds_per_question measured generation time times number of GPUs, per item
     output_tokens_per_question
-    flops_per_above_chance_correct = flops_per_question / chance_corrected_acc
-                             (undefined when chance_corrected_acc <= 0)
+    points_per_tflop         100 * chance_corrected_acc / (flops_per_question / 1e12): accuracy
+                             points above chance per TFLOP spent per question; higher is more
+                             cost-efficient, zero or negative at or below chance
+    points_per_gpu_second    the same with measured GPU time instead of FLOPs
 
 Comparisons:
     rankings.csv             rank of each model per dataset, by quality and by cost-efficiency
@@ -143,8 +145,8 @@ def summarize(df, metas, param_counts, models, ds_cfg):
             "params_used_for_flops": n_params,
             "flops_per_question": flops,
             "gpu_seconds_per_question": gpu_seconds,
-            "flops_per_above_chance_correct": flops / cca if cca > 0 else np.nan,
-            "gpu_seconds_per_above_chance_correct": gpu_seconds / cca if cca > 0 else np.nan,
+            "points_per_tflop": 100 * cca / (flops / 1e12) if flops > 0 else np.nan,
+            "points_per_gpu_second": 100 * cca / gpu_seconds if gpu_seconds > 0 else np.nan,
             "median_latency_seconds": meta.get("median_latency_seconds") if meta else np.nan,
             # Memory needed for the weights in bfloat16 (2 bytes per parameter). With vLLM, the
             # measured GPU memory reflects the reserved share, not what the model needs.
@@ -166,10 +168,10 @@ def summarize(df, metas, param_counts, models, ds_cfg):
 
 
 def rankings(summary):
-    ranked = summary[["model", "dataset", "metric", "quality", "flops_per_above_chance_correct"]].copy()
+    ranked = summary[["model", "dataset", "metric", "quality", "points_per_tflop"]].copy()
     ranked["rank_quality"] = ranked.groupby("dataset")["quality"].rank(ascending=False, method="min")
-    ranked["rank_cost_efficiency"] = ranked.groupby("dataset")["flops_per_above_chance_correct"].rank(
-        ascending=True, method="min", na_option="bottom")
+    ranked["rank_cost_efficiency"] = ranked.groupby("dataset")["points_per_tflop"].rank(
+        ascending=False, method="min", na_option="bottom")
     return ranked
 
 

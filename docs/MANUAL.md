@@ -459,8 +459,8 @@ answers are graded.
 | `input_tokens_per_question`, `output_tokens_per_question` | mean tokens processed and generated |
 | `flops_per_question` | 2 x N x (input + output tokens), N from `param_counts.json` |
 | `gpu_seconds_per_question` | measured generation time x number of GPUs, per question |
-| `flops_per_above_chance_correct` | FLOPs per question / chance-corrected accuracy; empty if at or below chance |
-| `gpu_seconds_per_above_chance_correct` | the same with measured GPU time |
+| `points_per_tflop` | accuracy points above chance per TFLOP spent per question: 100 x chance-corrected accuracy / (FLOPs per question / 10^12); higher is more cost-efficient, zero or negative at or below chance |
+| `points_per_gpu_second` | the same with measured GPU time |
 | `median_latency_seconds` | median time to answer one question on its own (from the latency sample) |
 | `weights_memory_gb` | memory needed for the model weights in bfloat16 |
 | `on_pareto_frontier` | true if no other model is both cheaper (FLOPs) and more accurate on this dataset |
@@ -471,7 +471,7 @@ Peak GPU memory is reported as the memory needed for the weights rather than mea
 because vLLM reserves a fixed share of the GPU (90%) regardless of the model's actual needs.
 
 **`rankings.csv`**: each model's rank per dataset, by quality and by cost-efficiency
-(lowest FLOPs per above-chance correct answer ranks first).
+(highest points per TFLOP ranks first).
 
 **`rank_correlations.csv`**: Spearman correlation between datasets of the cost-efficiency
 rankings. A value near 1 means the same models are most cost-efficient on both datasets; low
@@ -499,7 +499,7 @@ after `analyze.py`. Files in `results/analysis/`:
 
 | File | Content |
 |---|---|
-| `layer_summary.csv` | per model and layer: quality, chance-corrected quality, FLOPs per question, FLOPs per quality point, rank by quality and by cost-efficiency, the most cost-efficient model, Pareto frontier |
+| `layer_summary.csv` | per model and layer: quality, chance-corrected quality, FLOPs per question, points per TFLOP, rank by quality and by cost-efficiency, the most cost-efficient model, Pareto frontier |
 | `layer_agreement.csv` | per pair of layers: Spearman correlation of the quality and cost-efficiency rankings, the most cost-efficient model in each layer, and whether the choice is the same |
 | `generalization.csv` | per model: retention = chance-corrected quality on a real-world layer / chance-corrected quality on the new exam (empty when the new-exam value is near chance), and the accuracy drop for CUPCase; per family: retention of each smaller model minus that of the largest, with bootstrap 95% CIs |
 

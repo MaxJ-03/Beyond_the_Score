@@ -9,8 +9,8 @@ The layer language is English, so that only the type of question differs between
 
 Quality per layer is pooled over its items. Chance-corrected quality is
 (quality - c) / (1 - c), with c the mean of 1/k for multiple choice and 0 for open-ended
-datasets. Cost per point is FLOPs per question / chance-corrected quality (as in
-summary.csv), so a lower value means a more cost-efficient model.
+datasets. Cost efficiency is points per TFLOP, 100 * chance-corrected quality / (FLOPs per
+question / 1e12) as in summary.csv, so a higher value means a more cost-efficient model.
 
 Outputs, written to results/analysis/:
     layer_summary.csv     per model and layer: quality, cost, both rankings, whether the
@@ -95,11 +95,12 @@ def layer_summary(df, summary, layers):
             rows.append({"layer": layer, "datasets": " ".join(datasets), "model": model, "n_items": len(matrix),
                          "metric": cost["metric"].iloc[0] if len(cost) else "", "quality": quality,
                          "chance_corrected_quality": cca, "flops_per_question": flops,
-                         "flops_per_point": flops / cca if cca > 0 and flops > 0 else np.nan})
+                         "points_per_tflop": 100 * cca / (flops / 1e12) if flops > 0 else np.nan})
     table = pd.DataFrame(rows)
     by_layer = table.groupby("layer")
     table["rank_quality"] = by_layer["quality"].rank(ascending=False, method="min")
-    table["rank_cost_efficiency"] = by_layer["flops_per_point"].rank(method="min", na_option="bottom")
+    table["rank_cost_efficiency"] = by_layer["points_per_tflop"].rank(ascending=False, method="min",
+                                                                      na_option="bottom")
     table["most_cost_efficient"] = table["rank_cost_efficiency"] == 1
     table["on_pareto_frontier"] = False
     for _, group in by_layer:
@@ -207,7 +208,7 @@ def main():
     general.to_csv(out_dir / "generalization.csv", index=False)
 
     pd.set_option("display.width", 180)
-    columns = ["layer", "model", "metric", "quality", "flops_per_point", "rank_cost_efficiency"]
+    columns = ["layer", "model", "metric", "quality", "points_per_tflop", "rank_cost_efficiency"]
     print(table[columns].round(3).to_string(index=False))
     print("\nAgreement between layers:")
     print(agreement.to_string(index=False))

@@ -167,7 +167,7 @@ whether translation affects accuracy. Report both translation sources in the pap
 
 | File | Content |
 |---|---|
-| `results/analysis/summary.csv` | quality (accuracy, or the judge score for open-ended datasets) with 95% CI, chance-corrected quality, hallucinations, invalid and truncated rates, tokens, FLOPs, GPU-seconds and median latency per question, weights memory, cost per above-chance correct answer, Pareto frontier membership |
+| `results/analysis/summary.csv` | quality (accuracy, or the judge score for open-ended datasets) with 95% CI, chance-corrected quality, hallucinations, invalid and truncated rates, tokens, FLOPs, GPU-seconds and median latency per question, weights memory, points per TFLOP (cost efficiency), Pareto frontier membership |
 | `results/analysis/rankings.csv` | rank of each model per dataset, by accuracy and by cost-efficiency |
 | `results/analysis/rank_correlations.csv` | agreement of cost-efficiency rankings between datasets |
 | `results/analysis/exam_shift.csv` | accuracy on unseen minus seen exam years, per model, language and split |
