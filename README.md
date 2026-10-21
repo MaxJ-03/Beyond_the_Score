@@ -1,8 +1,10 @@
 # medeval
 
 Evaluation pipeline for the accuracy and inference cost of open LLMs on the Spanish MIR
-medical licensing exam: older editions (2022 and 2024) against the newest edition (2026),
-in the original Spanish and in English, and later on real-world clinical questions.
+medical licensing exam: older editions (2020 to 2024) against the newest editions (2025 and
+2026), in the original Spanish and in English, with checks for benchmark memorization, and
+on real-world clinical questions (CUPCase, LiveMedBench, K-QA). The three layers (standard
+exam, new exam, real world) show whether the most cost-efficient model stays the same.
 
 The full user manual is in [`docs/MANUAL.md`](docs/MANUAL.md). This README is the short version.
 
@@ -16,36 +18,115 @@ bash scripts/setup_env.sh
 source ~/venvs/medeval/bin/activate
 hf auth login
 
-# Prepare datasets, models and parameter counts (runs in the background, about an hour)
+# Prepare datasets, model weights and parameter counts (background; models already
+# downloaded are skipped)
 nohup bash scripts/prepare_all.sh > logs/prepare.log 2>&1 &
 
-# Test, then run everything
-sbatch slurm/smoke_test.sbatch
+# Test, validate the judge, then run everything (jobs run one after another and the
+# grading of the open-ended answers is queued at the end)
+SMOKE=1 sbatch scripts/evaluate.sbatch
+VALIDATE=1 sbatch scripts/judge.sbatch
 bash scripts/submit_all.sh
 
-# Analyse
-python -m medeval.analyze
+# Grading only, e.g. after a grading job hit its time limit
+sbatch scripts/judge.sbatch
+
+# Check completeness, then analyse
+python src/check_results.py
+python src/analyze.py
+python src/compare_layers.py
+python src/contamination.py
+python src/conda_check.py          # contamination already reported in the CONDA database
+
+# Contamination tests on the raw question text (completion and Min-K% Prob): smoke test,
+# then all models, then the summary
+SMOKE=1 sbatch scripts/sanitize.sbatch
+bash scripts/submit_sanitize.sh
+python src/sanitize_summary.py
 ```
 
 In every new session, activate the environment first with `source ~/venvs/medeval/bin/activate`.
+On your own computer, `pip install -r requirements.txt` installs everything needed for data
+preparation and analysis (all dependencies except vLLM, which only the GPU jobs need).
+
+## Project layout
+
+```
+configs/models.yaml          models, cutoffs and the judge
+configs/datasets.yaml        datasets, prompts, generation, judge and analysis settings
+configs/judge_prompts.yaml   the official grading prompts of LiveMedBench and K-QA
+configs/sanitize.yaml        settings of the contamination tests (text format, k, split, exam dates)
+scripts/                     everything run on Snellius
+  setup_env.sh                 environment (once)
+  prepare_all.sh               datasets, model weights, parameter counts
+  submit_all.sh                chained evaluation jobs (missing results only), then grading
+  evaluate.sbatch              the evaluation job (also the smoke test, SMOKE=1)
+  judge.sbatch                 the grading job for open-ended answers (VALIDATE=1: judge check)
+  submit_sanitize.sh           chained contamination-test jobs (missing outputs only)
+  sanitize.sbatch              the contamination-test job (also the smoke test, SMOKE=1)
+src/                         all Python code, one file per pipeline stage
+  config.py                    reading the configuration files
+  prepare_data.py              builds the MIR dataset files and checks the translations
+  mir_sources.py               selection rules, official PDFs, MIR 2025 extraction
+  mir_corrections.py           audited corrections to source text
+  prepare_real_world.py        builds the CUPCase, LiveMedBench and K-QA files
+  prepare_medqa.py             optional MedQA reference set
+  models.py                    model download and parameter counting
+  items.py                     questions in a common format and their prompts
+  run_eval.py                  model run and answer parsing
+  judge.py                     grading of open-ended answers by the judge model
+  check_results.py             completeness check of all results and grades
+  reparse_answers.py           parse stored answers again after a parser change
+  analyze.py                   quality, cost, rankings, Pareto frontier, exam shift, plots
+  compare_layers.py            standard exam vs new exam vs real world
+  contamination.py             year-difficulty adjustment, unparseable check, positive control,
+                               LiveMedBench posting dates
+  conda_check.py               contamination reported for our models and benchmarks (CONDA)
+  sanitize.py                  contamination tests on the raw question text: completion and
+                               Min-K% Prob (adapted from LLMSanitize), optional LoRA adapter
+  sanitize_metrics.py          question text, scores and seen/unseen labels of these tests
+  vllm_scoring.py              all vLLM-specific calls of these tests (written for vLLM 0.31)
+  sanitize_summary.py          seen against unseen editions: bootstrap CIs, ROC-AUC, plot
+tests/                       python -m pytest tests/ (GPU smoke test skipped without a GPU)
+docs/MANUAL.md               full user manual
+data/external/               files from outside the pipeline (tracked by Git)
+data/raw/, data/             prepared datasets (tracked by Git)
+results/raw/                 model answers (tracked by Git)
+results/judged/              judge grades of open-ended answers (tracked by Git)
+results/sanitize/            contamination-test scores per question (tracked by Git)
+results/analysis/            analysis outputs (tracked by Git)
+```
+
+Each stage file (`prepare_data`, `prepare_real_world`, `prepare_medqa`, `models`, `run_eval`,
+`judge`, `analyze`, `compare_layers`, `contamination`) runs with `python src/<file>.py` from
+the project folder; `--help` shows its options.
 
 ## Datasets
 
 | Dataset key | Content | Source |
 |---|---|---|
-| `mir_2022_es`, `mir_2024_es` | Original Spanish | CareQA (Hugging Face, from the official exam booklets) |
-| `mir_2022`, `mir_2024` | English | CareQA's official English version (GPT-4 translation, validated by human evaluators) |
+| `mir_2020_es` to `mir_2024_es` | Original Spanish | CareQA (Hugging Face, from the official exam booklets) |
+| `mir_2020` to `mir_2024` | English | CareQA's official English version (GPT-4 translation, validated by human evaluators) |
+| `mir_2025_es` | Original Spanish | Official Version 0 booklet and definitive answer key in `data/external/` |
+| `mir_2025` | English | 2025 translation in `data/external/` (Google machine translation, same procedure as 2026) |
 | `mir_2026_es` | Original Spanish | Scraped 2026 file in `data/external/` |
 | `mir_2026` | English | Scraped 2026 translation in `data/external/` (Google machine translation) |
-| `medqa` | Optional reference | `scripts/prepare_medqa.py`; run only on request |
+| `cupcase` | Real world, multiple choice | CUPCase (Hugging Face `ofir408/CupCase`): 3,562 case reports, four candidate diagnoses |
+| `livemedbench` | Real world, open-ended | LiveMedBench (Hugging Face `JuelieYann/LiveMedBench`), English cases, graded against rubrics |
+| `kqa` | Real world, open-ended | K-QA (GitHub `Itaymanes/K-QA`): 201 patient questions, graded against physician statements |
+| `medqa` | Optional reference | `python src/prepare_medqa.py`; run only on request |
 
-All years use the same selection: the 200 main questions, without reserve, image-based or
-annulled questions. The 2026 source files live in `data/external/` (tracked by Git):
+All years use the same selection: the main questions (175 for 2020 and 2021, 200 from 2022
+on), without reserve, image-based or annulled questions. The source files that do not come
+from the internet live in `data/external/` (tracked by Git):
 
 | File | Content |
 |---|---|
-| `mir2026_text_primary_es.csv` (and `.jsonl`) | original Spanish questions and answers (included) |
-| `mir_2026_en_mlt.csv` | the same questions with the English translation (add this file) |
+| `mir2025_questions_v0.pdf`, `mir2025_answers_definitive_v0.pdf` | official 2025 booklet and answer key |
+| `mir_2025_en_mlt.csv` | English translation of the selected 2025 questions |
+| `mir2026_text_primary_es.csv` | original Spanish 2026 questions and answers |
+| `mir_2026_en_mlt.csv` | the same 2026 questions with the English translation |
+| `mir_human_difficulty_2020_2026.csv` | human reference accuracy per exam year, with sources |
 
 Every English file has the same format and contains exactly the questions of its Spanish
 counterpart, with the Spanish text in parallel columns.
@@ -54,41 +135,53 @@ counterpart, with the Spanish text in parallel columns.
 
 * Every evaluation job runs one model on one H100 and answers all questions of all
   available datasets. Datasets whose input file exists are picked up automatically.
-* `submit_all.sh` only submits work that has no results yet. After adding a dataset (for
-  example MIR 2026 in English), run it again and only the new dataset is evaluated.
-  `FORCE=1 bash scripts/submit_all.sh` reruns everything.
-* `results/analysis/` is tracked by Git, so results can be pushed from Snellius and
-  pulled on any computer.
+* `submit_all.sh` only submits work that has no results yet. After adding a dataset, run it
+  again and only the new dataset is evaluated. `FORCE=1 bash scripts/submit_all.sh` reruns
+  everything.
+* `prepare_all.sh` can be rerun at any time: it only downloads missing models and only
+  counts parameters of models that are not counted yet.
+
+## Seen and unseen exam years
+
+Two splits of the exam years are reported:
+
+* **Common split** (`analysis.common_split` in `configs/datasets.yaml`): the same years for
+  every model, 2020 to 2024 as seen and 2025 to 2026 as unseen, so results are directly
+  comparable. It is not exact for Llama 3 and Med42 (2024 is already unseen) or Qwen3 (2025
+  may have been seen).
+* **Per-model split** (`unseen_from` in `configs/models.yaml`): unseen from the first exam
+  after each model's training cutoff. Because the cutoffs differ between models, this split
+  allows `src/contamination.py` to separate the effect of being unseen from the difficulty
+  of each exam year.
 
 ## Translations
 
-The English versions come from different translators: GPT-4 for 2022 and 2024 (CareQA) and
-Google machine translation for 2026 (scraped file). The Spanish comparison is therefore the
+The English versions come from different translators: GPT-4 for 2020 to 2024 (CareQA) and
+Google machine translation for 2025 and 2026. The Spanish comparison is therefore the
 cleanest test of old versus new questions, and comparing Spanish and English results shows
 whether translation affects accuracy. Report both translation sources in the paper.
-`scripts/prepare_data.py` validates all English files and writes a spot-check sample to
+`python src/prepare_data.py` checks all English files and writes a spot-check sample to
 `data/translation_checks/`.
 
 ## Outputs
 
 | File | Content |
 |---|---|
-| `results/analysis/summary.csv` | accuracy (95% CI), chance-corrected accuracy, invalid and truncated rates, tokens, FLOPs, GPU-seconds and median latency per question, weights memory, cost per above-chance correct answer, Pareto frontier membership |
+| `results/analysis/summary.csv` | quality (accuracy, or the judge score for open-ended datasets) with 95% CI, chance-corrected quality, hallucinations, invalid and truncated rates, tokens, FLOPs, GPU-seconds and median latency per question, weights memory, points per TFLOP (cost efficiency), Pareto frontier membership |
 | `results/analysis/rankings.csv` | rank of each model per dataset, by accuracy and by cost-efficiency |
 | `results/analysis/rank_correlations.csv` | agreement of cost-efficiency rankings between datasets |
-| `results/analysis/exam_shift.csv` | accuracy on 2026 minus accuracy on 2022 and 2024, per model and language |
+| `results/analysis/exam_shift.csv` | accuracy on unseen minus seen exam years, per model, language and split |
 | `results/analysis/accuracy_vs_flops_<dataset>.png` | accuracy against FLOPs, with the Pareto frontier |
+| `results/analysis/layer_summary.csv`, `layer_agreement.csv` | quality and cost per layer, and whether the most cost-efficient model is the same across layers |
+| `results/analysis/generalization.csv` | quality kept from the new exam to each real-world dataset, per model and per family |
+| `results/analysis/judge_validation.csv` | agreement of the judge with physicians on K-QA statements |
+| `results/analysis/contamination/` | year-difficulty adjustment (main contamination result), unparseable-answer check, MedExpQA positive control, LiveMedBench posting-date check |
 
-## Project layout
+## Grading open-ended answers
 
-```
-configs/models.yaml       models and settings
-configs/datasets.yaml     datasets, prompts, generation and analysis settings
-src/medeval/              pipeline code
-scripts/                  setup, data preparation, model download, job submission
-slurm/                    Slurm job scripts
-docs/MANUAL.md            full user manual
-data/external/            files from outside the pipeline (tracked by Git)
-data/raw/, data/          prepared datasets (generated)
-results/                  raw outputs (generated) and analysis (tracked by Git)
-```
+LiveMedBench and K-QA answers are free text. `src/judge.py` grades them with gpt-oss-120b
+(OpenAI's open-weight model, from a family that is not evaluated) using the official prompts
+and score formulas of each benchmark: LiveMedBench rubric score (points earned / maximum
+points), K-QA comprehensiveness (share of must-have statements covered) and hallucinations
+(statements contradicted). `python src/judge.py --validate` measures the judge's agreement
+with three physicians on the K-QA validation statements.

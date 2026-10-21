@@ -1,0 +1,84 @@
+{
+  "model": "qwen3-1.7b",
+  "base_model": "qwen3-1.7b",
+  "model_config": {
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 8192,
+    "tensor_parallel_size": 1,
+    "seed": 0,
+    "thinking": false,
+    "slurm_time": "00:20:00",
+    "llm_kwargs": {},
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "sampling_kwargs": {},
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "family": "qwen3",
+    "size_b": 1.7,
+    "medical": false,
+    "release": "2025-04-29",
+    "unseen_from": 2026,
+    "training_cutoff": "2025-04",
+    "key": "qwen3-1.7b"
+  },
+  "vllm_version": "0.31.0",
+  "model_revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+  "lora": null,
+  "dataset": "mir_2024",
+  "dataset_config": {
+    "format": "csv",
+    "path": "data/mir_2024_en.csv",
+    "group": "older_exam",
+    "language": "en",
+    "columns": {
+      "id": "id",
+      "year": "year",
+      "question": "question_en",
+      "answer": "answer",
+      "options": {
+        "A": "option_a_en",
+        "B": "option_b_en",
+        "C": "option_c_en",
+        "D": "option_d_en"
+      }
+    }
+  },
+  "test": "completion",
+  "n_items": 171,
+  "limit": null,
+  "backend": "vllm",
+  "settings": {
+    "text": {
+      "option_labels": "numbers",
+      "include_options": true,
+      "include_question_number": false
+    },
+    "completion": {
+      "split_ratio": 0.5,
+      "max_new_tokens_cap": 512,
+      "near_verbatim_threshold": 0.9
+    },
+    "seed": 0,
+    "exam_dates": {
+      "2020": "2020-01-25",
+      "2021": "2021-03-27",
+      "2022": "2022-01-29",
+      "2023": "2023-01-28",
+      "2024": "2024-01-20",
+      "2025": "2025-01-25",
+      "2026": "2026-01-24"
+    }
+  },
+  "seconds": 0.7831343549769372,
+  "model_load_seconds": 30.905919149983674,
+  "started_utc": "2026-10-19T22:15:06.915881+00:00",
+  "environment": {
+    "vllm_version": "0.31.0",
+    "torch_version": "2.13.0+cu130",
+    "gpu_name": "NVIDIA H100",
+    "gpu_count_visible": 1,
+    "hostname": "gcn129.local.snellius.surf.nl"
+  }
+}

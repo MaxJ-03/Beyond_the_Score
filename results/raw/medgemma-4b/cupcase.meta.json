@@ -1,0 +1,83 @@
+{
+  "model": "medgemma-4b",
+  "model_config": {
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 8192,
+    "tensor_parallel_size": 1,
+    "seed": 0,
+    "thinking": false,
+    "slurm_time": "00:20:00",
+    "llm_kwargs": {
+      "limit_mm_per_prompt": {
+        "image": 0
+      }
+    },
+    "chat_template_kwargs": {},
+    "hf_id": "google/medgemma-4b-it",
+    "family": "gemma3",
+    "size_b": 4,
+    "medical": true,
+    "release": "2025-05-20",
+    "unseen_from": 2025,
+    "training_cutoff": "2024-08",
+    "key": "medgemma-4b"
+  },
+  "dataset": "cupcase",
+  "dataset_config": {
+    "format": "jsonl",
+    "path": "data/cupcase.jsonl",
+    "group": "real_world",
+    "language": "en"
+  },
+  "n_items": 3508,
+  "limit": null,
+  "backend": "vllm",
+  "thinking": false,
+  "temperature": 0.0,
+  "max_tokens": 256,
+  "generation_seconds": 39.99497881508432,
+  "n_gpus": 1,
+  "gpu_seconds": 39.99497881508432,
+  "latency_seconds": [
+    0.025647895876318216,
+    0.04028091812506318,
+    0.03788340697064996,
+    0.026646382873877883,
+    0.02825344610027969,
+    0.03798623592592776,
+    0.035696886014193296,
+    0.03611579490825534,
+    0.036320402985438704,
+    0.03342727501876652,
+    0.04070326592773199,
+    0.03356727515347302,
+    0.03766454802826047,
+    0.036663301987573504,
+    0.03340739500708878,
+    0.038033547112718225,
+    0.040553255937993526,
+    0.04090577480383217,
+    0.04116049408912659,
+    0.03750283899717033
+  ],
+  "median_latency_seconds": 0.03750283899717033,
+  "model_load_seconds": 56.527171649970114,
+  "started_utc": "2026-10-18T21:14:35.388206+00:00",
+  "environment": {
+    "vllm_version": "0.31.0",
+    "torch_version": "2.13.0+cu130",
+    "gpu_name": "NVIDIA H100",
+    "gpu_count_visible": 1,
+    "hostname": "gcn109.local.snellius.surf.nl"
+  },
+  "evaluation_config": {
+    "system_prompt": "You are a medical expert answering multiple-choice questions.",
+    "instruction_direct": "Answer the following multiple-choice question. Respond with only the letter of the correct option.",
+    "instruction_thinking": "Answer the following multiple-choice question. Reason step by step, then end your response with \"Answer: X\", where X is the letter of the correct option.",
+    "temperature": 0.0,
+    "max_tokens_direct": 256,
+    "max_tokens_thinking": 8192,
+    "max_tokens_open": 1024
+  }
+}

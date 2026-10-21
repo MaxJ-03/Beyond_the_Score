@@ -1,0 +1,82 @@
+{
+  "model": "med42-8b",
+  "base_model": "med42-8b",
+  "model_config": {
+    "dtype": "bfloat16",
+    "gpu_memory_utilization": 0.9,
+    "max_model_len": 8192,
+    "tensor_parallel_size": 1,
+    "seed": 0,
+    "thinking": false,
+    "slurm_time": "00:30:00",
+    "llm_kwargs": {},
+    "chat_template_kwargs": {},
+    "sampling_kwargs": {},
+    "hf_id": "m42-health/Llama3-Med42-8B",
+    "family": "llama3",
+    "size_b": 8,
+    "medical": true,
+    "release": "2024-08",
+    "unseen_from": 2024,
+    "training_cutoff": "2023-03",
+    "key": "med42-8b"
+  },
+  "vllm_version": "0.31.0",
+  "model_revision": "ceab7e7ee4b9dbde7ba82867f34274db51487d83",
+  "lora": null,
+  "dataset": "mir_2023_es",
+  "dataset_config": {
+    "format": "csv",
+    "path": "data/raw/mir_2023_es.csv",
+    "group": "older_exam",
+    "language": "es",
+    "columns": {
+      "id": "id",
+      "year": "year",
+      "question": "question",
+      "answer": "answer",
+      "options": {
+        "A": "option_a",
+        "B": "option_b",
+        "C": "option_c",
+        "D": "option_d"
+      }
+    }
+  },
+  "test": "completion",
+  "n_items": 172,
+  "limit": null,
+  "backend": "vllm",
+  "settings": {
+    "text": {
+      "option_labels": "numbers",
+      "include_options": true,
+      "include_question_number": false
+    },
+    "completion": {
+      "split_ratio": 0.5,
+      "max_new_tokens_cap": 512,
+      "near_verbatim_threshold": 0.9
+    },
+    "seed": 0,
+    "exam_dates": {
+      "2020": "2020-01-25",
+      "2021": "2021-03-27",
+      "2022": "2022-01-29",
+      "2023": "2023-01-28",
+      "2024": "2024-01-20",
+      "2025": "2025-01-25",
+      "2026": "2026-01-24"
+    }
+  },
+  "seconds": 2.6304068590980023,
+  "model_load_seconds": 44.31918613309972,
+  "started_utc": "2026-10-19T22:23:01.275628+00:00",
+  "environment": {
+    "vllm_version": "0.31.0",
+    "torch_version": "2.13.0+cu130",
+    "gpu_name": "NVIDIA H100",
+    "gpu_count_visible": 1,
+    "hostname": "gcn122.local.snellius.surf.nl"
+  }
+}

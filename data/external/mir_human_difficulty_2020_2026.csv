@@ -1,0 +1,8 @@
+year,scored_questions,top_mean_points,top_rule,top_net,top_equivalent_accuracy,median_net,median_equivalent_accuracy,mean_net,mean_equivalent_accuracy,candidates_presented,source,note
+2020,175,,,,,,,,,,not found; Ministry results listing no longer public,Exam had 175 scored questions.
+2021,175,,,,,,,,,13332.0,"Curbelo et al., Educacion Medica 2026 (official lists; medians only per academic-score band)",Exam had 175 scored questions; candidates presented from the paper (convocatoria 2020/2021).
+2022,200,507.5,"mean of the 10 best exams (old rule, NOT comparable)",169.2,,,,,,11827.0,Redaccion Medica (MIR 2022 provisional results); candidates: Curbelo et al. 2026,Correction factor 0.17733990147 = 90/507.5
+2023,200,452.3,mean of the top 10% (current rule),150.8,0.816,,,,,11578.0,Redaccion Medica 2024-02 (quotes 2023 value),"Escuelamedica: 52 very easy, 39 easy, 64 optimal, 37 difficult, 8 very difficult questions"
+2024,200,461.3,mean of the top 10% (current rule),153.8,0.827,104.67,0.643,99.06,0.621,12721.0,Ministry via Redaccion Medica 2024-02-20; mean/median Redaccion Medica 2025-02-06,Correction factor 0.19510080208 = 90/461.3
+2025,200,385.2,mean of the top 10% (current rule),128.4,0.732,80.33,0.551,77.35,0.54,,Ministry via Redaccion Medica 2025-03-04; mean/median Redaccion Medica 2025-02-06,VERIFY 385.2 on the Ministry portal: the article's factor (0.2599...) belongs to psychology
+2026,200,457.4,mean of the top 10% (current rule),152.5,0.822,102.0,0.633,,,15090.0,Ministry via Redaccion Medica 2026-03-10; median Curbelo via Redaccion Medica 2026-03-09,"Escuelamedica: 64 very easy, 48 easy, 52 optimal, 25 difficult, 11 very difficult questions"

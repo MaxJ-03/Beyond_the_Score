@@ -1,0 +1,5 @@
+model_family,benchmark,Evaluation Dataset,Subset,Contaminated Source,Version,Model or corpus,Train Split,Development Split,Test Split,Approach,Reference,PR
+,MIR / HEAD-QA,head_qa,en,EleutherAI/pile,,corpus,,,5.11,data-based,https://arxiv.org/abs/2310.20707,2
+,MIR / HEAD-QA,head_qa,en,allenai/c4,,corpus,,,5.22,data-based,https://arxiv.org/abs/2310.20707,2
+,MIR / HEAD-QA,head_qa,en,oscar-corpus/OSCAR-2301,,corpus,,,5.29,data-based,https://arxiv.org/abs/2310.20707,2
+,MIR / HEAD-QA,head_qa,en,togethercomputer/RedPajama-Data-V2,,corpus,,,5.94,data-based,https://arxiv.org/abs/2310.20707,2

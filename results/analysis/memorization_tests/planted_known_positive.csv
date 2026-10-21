@@ -1,0 +1,7 @@
+model,mink_auc,guided_diff_exposed,guided_diff_heldout,masked_em_exposed,masked_em_heldout
+planted-gemma3-4b-ep1,0.54,0.063,0.063,0.01,0.011
+planted-gemma3-4b-ep10,0.944,-0.004,0.018,0.01,0.0
+planted-gemma3-4b-ep3,0.759,0.089,0.041,0.03,0.0
+planted-medgemma-4b-ep1,0.552,-0.017,-0.016,0.0,0.0
+planted-medgemma-4b-ep10,0.953,-0.063,-0.013,0.0,0.0
+planted-medgemma-4b-ep3,0.808,-0.016,-0.019,0.01,0.0

@@ -1,16 +1,24 @@
 # Dataset registry.
 #
-# Every dataset is converted to the same internal format (question, lettered options,
-# correct letter). Two input formats are supported:
-#   jsonl: one JSON object per line with keys id, year, question, options, answer
-#          (options is a mapping from letter to text, answer is a letter)
-#   csv:   one row per question; the columns block maps the CSV columns to fields
+# Every dataset is converted to the same internal format (src/items.py). The task field
+# decides how questions are presented and scored:
+#   multiple_choice (default)  lettered options, scored by the parsed answer letter
+#   rubric                     open-ended case graded against rubric items (src/judge.py)
+#   statements                 open-ended question graded against statements (src/judge.py)
+# Two input formats are supported:
+#   jsonl: one JSON object per line. Multiple choice: id, year, question, options, answer
+#          (options is a mapping from letter to text, answer is a letter). Open-ended: id,
+#          question and the task-specific fields written by src/prepare_real_world.py.
+#   csv:   multiple choice only; the columns block maps the CSV columns to fields
 #
-# The group label drives the analysis:
+# The group label describes the role of a dataset (reported in summary.csv):
 #   older_exam = older MIR editions, used as the standard benchmark (possibly seen in training)
-#   new_exam   = newest MIR edition, released after all evaluated models
-#   real_world = questions from clinical practice (to be added)
+#   new_exam   = newest MIR editions (2025 and 2026), held after most or all model cutoffs
+#   real_world = questions from clinical practice (CUPCase, LiveMedBench, K-QA)
 #   reference  = additional benchmark, not part of the main comparison
+# Which exam years count as seen or unseen in the exam-shift and contamination analyses is
+# set by the exam year, not by the group: see analysis.common_split below and unseen_from in
+# configs/models.yaml.
 #
 # The *_es entries evaluate the original Spanish questions from data/raw/, which also
 # allows running before the translation is done. The instructions stay in English, so
@@ -61,6 +69,13 @@ datasets:
     format: csv
     path: data/mir_2023_en.csv
     group: older_exam
+    language: en
+    columns: *mir_en
+
+  mir_2025:
+    format: csv
+    path: data/mir_2025_en.csv
+    group: new_exam
     language: en
     columns: *mir_en
 
@@ -132,14 +147,38 @@ datasets:
     language: en
     optional: true
 
-  # Placeholder for the real-world dataset. The pipeline scores multiple-choice
-  # questions only; once a dataset is chosen and converted to the jsonl format above,
-  # uncomment and adjust the path.
-  # real_world:
-  #   format: jsonl
-  #   path: data/real_world.jsonl
-  #   group: real_world
-  #   language: en
+  # Real-world questions (third layer), prepared by src/prepare_real_world.py.
+  # CUPCase: case reports with four candidate diagnoses (multiple choice).
+  cupcase:
+    format: jsonl
+    path: data/cupcase.jsonl
+    group: real_world
+    language: en
+
+  # LiveMedBench: real-world cases graded against rubric items. The instruction is the
+  # one of the official LiveMedBench evaluation script.
+  livemedbench:
+    format: jsonl
+    path: data/livemedbench_en.jsonl
+    group: real_world
+    language: en
+    task: rubric
+    # Only cases posted on or after this date are used. It lies after the release of every
+    # evaluated model (the latest is MedGemma, 20 May 2025; release in configs/models.yaml),
+    # so no case can be part of any model's training data. src/items.py checks this.
+    min_date: "2025-06-01"
+    instruction: >-
+      IMPORTANT: Provide ONLY the final answer to the following question, without any
+      explanation or reasoning steps.
+
+  # K-QA: real patient questions graded against physician-written statements.
+  kqa:
+    format: jsonl
+    path: data/kqa.jsonl
+    group: real_world
+    language: en
+    task: statements
+    instruction: Answer the following patient question.
 
 # "auto" evaluates every non-optional dataset whose input file exists. A dataset added
 # later (for example MIR 2026 in English) is picked up automatically, and
@@ -157,8 +196,20 @@ evaluation:
     Answer the following multiple-choice question. Reason step by step, then end
     your response with "Answer: X", where X is the letter of the correct option.
   temperature: 0.0
-  max_tokens_direct: 256
+  # Answer length limits. Decoding is greedy, so raising a limit only changes answers that
+  # reached the previous limit; scripts/submit_all.sh reruns exactly those results.
+  max_tokens_direct: 1024
   max_tokens_thinking: 8192
+  # Answer length limit for open-ended questions (rubric and statements tasks).
+  max_tokens_open: 2048
+
+# Grading of open-ended answers by src/judge.py. The judge is a model from
+# configs/models.yaml with role: judge; its prompts are in configs/judge_prompts.yaml.
+judge:
+  model: gpt-oss-120b
+  temperature: 0.0
+  max_tokens: 4096
+  validation_file: data/kqa_nli_validation.csv
 
 analysis:
   # Parameter count used in FLOPs = 2 * N * (input tokens + output tokens).
@@ -167,3 +218,23 @@ analysis:
   flops_param_count: lm_total
   bootstrap_samples: 2000
   bootstrap_seed: 0
+  # Common split of exam years for exam_shift.csv, identical for every model: the older
+  # editions (2020 to 2024) against the newest editions (2025 and 2026). It is not exact for
+  # every model: Llama 3 and Med42 cannot have seen 2024 (cutoff March 2023), and Qwen3 was
+  # released after the 2025 exam. The per-model split (unseen_from in configs/models.yaml)
+  # follows each model's cutoff.
+  common_split:
+    seen_years: [2020, 2021, 2022, 2023, 2024]
+    unseen_years: [2025, 2026]
+  # Models left out of the year-difficulty regression in src/contamination.py, because their
+  # accuracy is near chance and carries no signal.
+  exclude_from_regression: [gemma3-1b]
+  # Human reference accuracy per exam year (top 10% of candidates), used as a check on the
+  # year-difficulty adjustment. Columns: year, top_equivalent_accuracy (a fraction, e.g. 0.816).
+  human_difficulty: data/external/mir_human_difficulty_2020_2026.csv
+  # Layers compared by src/compare_layers.py: the older and newest MIR editions and every
+  # real-world dataset, in one language (the real-world datasets are English).
+  layers:
+    language: en
+    standard: older_exam
+    new: new_exam

@@ -1,7 +1,0 @@
-# Optional extras for data preparation outside the main environment (for example on your
-# own computer). The Snellius environment from scripts/setup_env.sh already covers
-# scripts/prepare_data.py.
-pandas
-datasets          # CareQA and MedQA downloads
-pdfplumber        # only for download_mir.py with official PDF booklets
-requests

@@ -1,0 +1,5 @@
+comparison,n,agreement,cohen_kappa
+"judge vs physician majority, 3 labels",399,0.835,0.672
+entailed or not (comprehensiveness decision),399,0.852,0.68
+contradicted or not (hallucination decision),399,0.975,0.63
+"physician vs physician, 3 labels (mean of pairs)",399,0.855,0.721

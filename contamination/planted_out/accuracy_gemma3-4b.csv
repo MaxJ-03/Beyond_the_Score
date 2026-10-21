@@ -1,0 +1,5 @@
+model,epochs,acc_exposed,acc_held_out,planted_effect,ci_low,ci_high,acc_mir_2026,n_exposed,n_held_out
+gemma3-4b,0,46.1,45.3,0.0,0.0,0.0,55.3,232,234
+planted-gemma3-4b-ep1,1,45.3,35.5,9.0,-0.9,19.2,45.9,232,234
+planted-gemma3-4b-ep3,3,68.1,46.6,20.7,11.7,29.7,46.5,232,234
+planted-gemma3-4b-ep10,10,85.8,42.7,42.2,32.3,51.7,52.9,232,234

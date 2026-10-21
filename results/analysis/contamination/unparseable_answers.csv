@@ -1,0 +1,9 @@
+model,year,item_id,finish_reason,reason,response_end
+med42-8b,2021,mir2021-053,stop,no clear letter,"E. Educar: no es una de las cinco ""aes"" del modelo de educación para la salud."
+qwen3-1.7b,2020,mir2020-106,stop,no clear letter,"orrecta porque no se menciona el uso de ATRA en la opción, y la opción C es incorrecta porque no se menciona el uso de heparina. La opción D es incorrecta porque no se menciona el uso de antibióticos."
+qwen3-1.7b,2020,mir2020-118,stop,no clear letter,"s con EPOC, ya que la intubación es más común en casos de insuficiencia respiratoria aguda con hipocapnia y acidosis respiratoria.  **Respuesta correcta: A. Iniciar ventilación mecánica no invasiva.**"
+qwen3-1.7b,2021,mir2021-122,stop,no clear letter, no se menciona el uso de glucocorticoides en este contexto. - **D** es incorrecto porque el infliximab no se usa como fármaco de primera línea en el síndrome de Takahashi.  **Respuesta correcta: B**.
+qwen3-1.7b,2021,mir2021-173,stop,no clear letter," D** es incorrecta porque el **test de Coombs directo** no evalúa la **haptoglobina libre** en el plasma, sino la **presencia de anticuerpos sobre la membrana del hematíe**.  **Respuesta correcta: C**"
+qwen3-1.7b,2024,mir2024-175,stop,no clear letter,"rol total es superior a 200 mg/dl y el HDL no es elevado.   - **D** es incorrecta porque, aunque la paciente ha dejado de fumar, su perfil lipídico no es adecuado y no se debe ignorar la optimización."
+qwen3-1.7b,2026,mir2026-105,stop,no clear letter,porque no se puede indicar un diagnóstico genético específico con la información disponible.   **Opción D es incorrecta** porque no hay evidencia suficiente para afirmar un alto riesgo de recurrencia.
+qwen3-1.7b,2026,mir2026-194,stop,no clear letter,e GLP-1 no es efectivo en la reducción de la albuminuria.   - **D.** Aumentar la dosis de empagliflozina no es efectivo en la reducción de la albuminuria en este contexto.    **Respuesta correcta: C**

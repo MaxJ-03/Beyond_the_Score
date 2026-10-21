@@ -2,15 +2,32 @@
 #
 # All models run on a single NVIDIA H100 (94 GB) so that measured GPU time is
 # comparable across models. Parameter counts for the FLOPs metric are not set here:
-# they are computed from the downloaded weights by scripts/count_params.py.
+# they are computed from the downloaded weights by python src/models.py.
 #
 # Main comparisons:
 #   size:                 gemma3-4b vs gemma3-27b (and gemma3-1b)
-#   medical fine-tuning:  gemma3-4b vs medgemma-4b, gemma3-27b vs medgemma-27b
+#   medical fine-tuning:  gemma3-4b vs medgemma-4b, gemma3-27b vs medgemma-27b,
+#                         llama3-8b vs med42-8b
 #   independent family:   qwen3-1.7b and qwen3-4b
 #
-# Release dates are recorded for the exposure analysis; verify them against the
-# official model cards before reporting.
+# unseen_from is the first MIR exam year the model cannot have seen in training. The MIR is
+# held in January, so it is the first exam after the training cutoff. It defines the
+# per-model split of exam years in src/analyze.py (exam_shift.csv) and src/contamination.py.
+#   Gemma 3 and MedGemma: cutoff August 2024 (Gemma 3 model card); MedGemma's additional
+#                         medical training data has no published cutoff
+#   Llama 3 8B and Med42: cutoff March 2023 (Llama 3 model card); Med42's additional clinical
+#                         training data has no published cutoff
+#   Qwen3:                no published cutoff; the release (29 April 2025) is used, so only
+#                         2026 is unseen (a sensitivity check with 2025 is possible with
+#                         python src/contamination.py --unseen-from qwen3-4b=2025)
+#
+# training_cutoff is the last month of training data (for Qwen3 the release month). It is
+# compared with the posting date of each LiveMedBench case in src/contamination.py and used by
+# src/sanitize.py. release is the publication date of the weights; the main LiveMedBench
+# evaluation only uses cases posted after the latest release (min_date in configs/datasets.yaml).
+#
+# The judge (role: judge) grades open-ended answers in src/judge.py; it is downloaded by
+# src/models.py but never evaluated, and scripts/submit_all.sh skips it.
 
 defaults:
   dtype: bfloat16
@@ -19,9 +36,11 @@ defaults:
   tensor_parallel_size: 1
   seed: 0
   thinking: false
-  slurm_time: "01:00:00"
+  slurm_time: "00:20:00"
   llm_kwargs: {}
   chat_template_kwargs: {}
+  # Extra vLLM sampling options, e.g. bad_words to forbid a token sequence.
+  sampling_kwargs: {}
 
 models:
   # Gemma 3 (general purpose). The 4B and 27B instruction-tuned checkpoints are
@@ -33,6 +52,8 @@ models:
     size_b: 1
     medical: false
     release: "2025-03-12"
+    unseen_from: 2025
+    training_cutoff: "2024-08"
 
   gemma3-4b:
     hf_id: google/gemma-3-4b-it
@@ -40,6 +61,8 @@ models:
     size_b: 4
     medical: false
     release: "2025-03-12"
+    unseen_from: 2025
+    training_cutoff: "2024-08"
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
 
   gemma3-27b:
@@ -48,8 +71,10 @@ models:
     size_b: 27
     medical: false
     release: "2025-03-12"
+    unseen_from: 2025
+    training_cutoff: "2024-08"
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
-    slurm_time: "02:00:00"
+    slurm_time: "01:00:00"
 
   # MedGemma (medical fine-tunes of Gemma 3). Both checkpoints require accepting
   # the Health AI Developer Foundations terms on Hugging Face.
@@ -59,6 +84,8 @@ models:
     size_b: 4
     medical: true
     release: "2025-05-20"
+    unseen_from: 2025
+    training_cutoff: "2024-08"
     llm_kwargs: {limit_mm_per_prompt: {image: 0}}
 
   medgemma-27b:
@@ -67,7 +94,13 @@ models:
     size_b: 27
     medical: true
     release: "2025-05-20"
-    slurm_time: "02:00:00"
+    unseen_from: 2025
+    training_cutoff: "2024-08"
+    slurm_time: "01:00:00"
+    # MedGemma 27B starts a reasoning section (opened by <unused94>) in about a third of its
+    # English answers although the prompt asks for the answer only. The opening token is
+    # forbidden so that it answers directly, like all other models (thinking is off for all).
+    sampling_kwargs: {bad_words: ["<unused94>"]}
 
   # Qwen3 (original April 2025 checkpoints, not the later "2507" updates).
   # Thinking is disabled through the chat template for comparability with Gemma.
@@ -77,6 +110,8 @@ models:
     size_b: 1.7
     medical: false
     release: "2025-04-29"
+    unseen_from: 2026
+    training_cutoff: "2025-04"
     chat_template_kwargs: {enable_thinking: false}
 
   qwen3-4b:
@@ -85,6 +120,8 @@ models:
     size_b: 4
     medical: false
     release: "2025-04-29"
+    unseen_from: 2026
+    training_cutoff: "2025-04"
     chat_template_kwargs: {enable_thinking: false}
 
   # Optional: medical fine-tune of the Qwen family. Fill in the exact Hugging Face
@@ -95,36 +132,40 @@ models:
   #   size_b: 8
   #   medical: true
   #   release: "<release date>"
+  #   unseen_from: <first MIR year after the training cutoff>
   #   optional: true
 
-  # Optional variant with thinking enabled, to measure the cost of reasoning.
-  qwen3-4b-think:
-    hf_id: Qwen/Qwen3-4B
-    family: qwen3
-    size_b: 4
-    medical: false
-    release: "2025-04-29"
-    thinking: true
-    max_model_len: 16384
-    chat_template_kwargs: {enable_thinking: true}
-    slurm_time: "06:00:00"
-    optional: true
-
-  # Llama 3 — base model
+  # Llama 3 (general purpose).
   llama3-8b:
     hf_id: meta-llama/Meta-Llama-3-8B-Instruct
     family: llama3
     size_b: 8
     medical: false
     release: "2024-04-18"
-    slurm_time: "02:00:00"
+    unseen_from: 2024
+    training_cutoff: "2023-03"
+    slurm_time: "00:30:00"
 
-  # Med42-v2 — medically specialized Llama 3
+  # Med42-v2 (medical fine-tune of Llama 3 8B).
   med42-8b:
     hf_id: m42-health/Llama3-Med42-8B
     family: llama3
     size_b: 8
     medical: true
     release: "2024-08"
-    slurm_time: "02:00:00"
+    unseen_from: 2024
+    training_cutoff: "2023-03"
+    slurm_time: "00:30:00"
 
+  # Judge for open-ended answers (src/judge.py): OpenAI's open-weight gpt-oss-120b, a
+  # mixture-of-experts model (117B parameters, about 5B active) stored in MXFP4, which fits
+  # on one H100. It belongs to none of the evaluated families. reasoning_effort is passed to
+  # its chat template.
+  gpt-oss-120b:
+    hf_id: openai/gpt-oss-120b
+    family: gpt-oss
+    role: judge
+    max_model_len: 16384
+    gpu_memory_utilization: 0.92
+    chat_template_kwargs: {reasoning_effort: low}
+    slurm_time: "04:00:00"

@@ -1,0 +1,72 @@
+{
+  "gemma3-1b": {
+    "hf_id": "google/gemma-3-1b-it",
+    "lm_total": 999885952,
+    "lm_non_embedding": 697896064,
+    "vision_excluded": 0,
+    "total_in_files": 999885952
+  },
+  "gemma3-4b": {
+    "hf_id": "google/gemma-3-4b-it",
+    "lm_total": 3880263168,
+    "lm_non_embedding": 3209010688,
+    "vision_excluded": 419816304,
+    "total_in_files": 4300079472
+  },
+  "gemma3-27b": {
+    "hf_id": "google/gemma-3-27b-it",
+    "lm_total": 27009346304,
+    "lm_non_embedding": 25599716096,
+    "vision_excluded": 423060336,
+    "total_in_files": 27432406640
+  },
+  "medgemma-4b": {
+    "hf_id": "google/medgemma-4b-it",
+    "lm_total": 3880263168,
+    "lm_non_embedding": 3209010688,
+    "vision_excluded": 419816304,
+    "total_in_files": 4300079472
+  },
+  "medgemma-27b": {
+    "hf_id": "google/medgemma-27b-text-it",
+    "lm_total": 27009002240,
+    "lm_non_embedding": 25599716096,
+    "vision_excluded": 0,
+    "total_in_files": 27009002240
+  },
+  "qwen3-1.7b": {
+    "hf_id": "Qwen/Qwen3-1.7B",
+    "lm_total": 2031739904,
+    "lm_non_embedding": 1720574976,
+    "vision_excluded": 0,
+    "total_in_files": 2031739904
+  },
+  "qwen3-4b": {
+    "hf_id": "Qwen/Qwen3-4B",
+    "lm_total": 4022468096,
+    "lm_non_embedding": 3633511936,
+    "vision_excluded": 0,
+    "total_in_files": 4022468096
+  },
+  "qwen3-4b-think": {
+    "hf_id": "Qwen/Qwen3-4B",
+    "lm_total": 4022468096,
+    "lm_non_embedding": 3633511936,
+    "vision_excluded": 0,
+    "total_in_files": 4022468096
+  },
+  "llama3-8b": {
+    "hf_id": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "lm_total": 8030261248,
+    "lm_non_embedding": 7504924672,
+    "vision_excluded": 0,
+    "total_in_files": 8030261248
+  },
+  "med42-8b": {
+    "hf_id": "m42-health/Llama3-Med42-8B",
+    "lm_total": 8030261248,
+    "lm_non_embedding": 7504924672,
+    "vision_excluded": 0,
+    "total_in_files": 8030261248
+  }
+}

@@ -1,0 +1,10 @@
+model,comparison,auc,ci_low,ci_high,n_medqa,n_mir2026
+gemma3-1b,MedQA vs MIR 2026 (EN),0.883,0.835,0.924,100,100
+gemma3-27b,MedQA vs MIR 2026 (EN),0.88,0.83,0.922,100,100
+gemma3-4b,MedQA vs MIR 2026 (EN),0.912,0.873,0.948,100,100
+llama3-8b,MedQA vs MIR 2026 (EN),0.876,0.825,0.92,100,100
+med42-8b,MedQA vs MIR 2026 (EN),0.899,0.853,0.939,100,100
+medgemma-27b,MedQA vs MIR 2026 (EN),0.899,0.854,0.939,100,100
+medgemma-4b,MedQA vs MIR 2026 (EN),0.896,0.853,0.937,100,100
+qwen3-1.7b,MedQA vs MIR 2026 (EN),0.893,0.846,0.934,100,100
+qwen3-4b,MedQA vs MIR 2026 (EN),0.888,0.84,0.93,100,100

@@ -1,0 +1,11 @@
+layer_a,layer_b,n_models,spearman_quality,spearman_cost_efficiency,most_cost_efficient_a,most_cost_efficient_b,same_choice
+standard_exam,new_exam,9,1.0,0.833,qwen3-1.7b,qwen3-1.7b,True
+standard_exam,cupcase,9,0.767,0.633,qwen3-1.7b,gemma3-1b,False
+standard_exam,livemedbench,9,0.283,0.583,qwen3-1.7b,gemma3-1b,False
+standard_exam,kqa,9,0.6,0.6,qwen3-1.7b,gemma3-1b,False
+new_exam,cupcase,9,0.767,0.933,qwen3-1.7b,gemma3-1b,False
+new_exam,livemedbench,9,0.283,0.85,qwen3-1.7b,gemma3-1b,False
+new_exam,kqa,9,0.6,0.883,qwen3-1.7b,gemma3-1b,False
+cupcase,livemedbench,9,0.267,0.917,gemma3-1b,gemma3-1b,True
+cupcase,kqa,9,0.367,0.917,gemma3-1b,gemma3-1b,True
+livemedbench,kqa,9,0.45,0.95,gemma3-1b,gemma3-1b,True

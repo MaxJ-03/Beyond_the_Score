@@ -1,0 +1,302 @@
+language,split,score,model,unseen_effect_sd,ci_low,ci_high,contamination_signal
+en,main,lcp_tokens,ALL (pooled),0.016,-0.048,0.081,False
+en,main,lcp_tokens,gemma3-1b,0.002,-0.101,0.105,False
+en,main,lcp_tokens,gemma3-27b,0.045,-0.053,0.142,False
+en,main,lcp_tokens,gemma3-4b,-0.007,-0.109,0.094,False
+en,main,lcp_tokens,llama3-8b,0.061,-0.02,0.141,False
+en,main,lcp_tokens,med42-8b,0.018,-0.073,0.108,False
+en,main,lcp_tokens,medgemma-27b,0.054,-0.048,0.156,False
+en,main,lcp_tokens,medgemma-4b,0.013,-0.089,0.116,False
+en,main,lcp_tokens,qwen3-1.7b,-0.055,-0.181,0.072,False
+en,main,lcp_tokens,qwen3-4b,-0.054,-0.181,0.073,False
+en,main,levenshtein_ratio,ALL (pooled),0.029,-0.03,0.087,False
+en,main,levenshtein_ratio,gemma3-1b,0.034,-0.08,0.148,False
+en,main,levenshtein_ratio,gemma3-27b,0.035,-0.069,0.138,False
+en,main,levenshtein_ratio,gemma3-4b,0.065,-0.034,0.164,False
+en,main,levenshtein_ratio,llama3-8b,0.003,-0.081,0.088,False
+en,main,levenshtein_ratio,med42-8b,-0.022,-0.113,0.069,False
+en,main,levenshtein_ratio,medgemma-27b,0.045,-0.05,0.14,False
+en,main,levenshtein_ratio,medgemma-4b,0.076,-0.023,0.174,False
+en,main,levenshtein_ratio,qwen3-1.7b,0.074,-0.059,0.207,False
+en,main,levenshtein_ratio,qwen3-4b,-0.039,-0.156,0.078,False
+en,main,mean_logprob,ALL (pooled),-0.02,-0.065,0.024,False
+en,main,mean_logprob,gemma3-1b,-0.093,-0.181,-0.006,True
+en,main,mean_logprob,gemma3-27b,-0.084,-0.155,-0.013,True
+en,main,mean_logprob,gemma3-4b,-0.168,-0.244,-0.092,True
+en,main,mean_logprob,llama3-8b,0.029,-0.024,0.082,False
+en,main,mean_logprob,med42-8b,0.056,0.0,0.112,False
+en,main,mean_logprob,medgemma-27b,0.013,-0.05,0.076,False
+en,main,mean_logprob,medgemma-4b,-0.034,-0.092,0.024,False
+en,main,mean_logprob,qwen3-1.7b,0.078,0.009,0.147,False
+en,main,mean_logprob,qwen3-4b,0.052,-0.017,0.122,False
+en,main,mink_20,ALL (pooled),-0.079,-0.134,-0.023,True
+en,main,mink_20,gemma3-1b,-0.143,-0.253,-0.034,True
+en,main,mink_20,gemma3-27b,-0.151,-0.24,-0.062,True
+en,main,mink_20,gemma3-4b,-0.253,-0.345,-0.161,True
+en,main,mink_20,llama3-8b,-0.018,-0.088,0.051,False
+en,main,mink_20,med42-8b,-0.002,-0.071,0.068,False
+en,main,mink_20,medgemma-27b,-0.049,-0.127,0.03,False
+en,main,mink_20,medgemma-4b,-0.107,-0.18,-0.035,True
+en,main,mink_20,qwen3-1.7b,0.058,-0.036,0.151,False
+en,main,mink_20,qwen3-4b,0.009,-0.089,0.107,False
+en,main,near_verbatim,ALL (pooled),0.002,-0.153,0.157,False
+en,main,near_verbatim,gemma3-27b,0.031,-0.093,0.154,False
+en,main,near_verbatim,medgemma-27b,-0.028,-0.151,0.095,False
+en,main,rouge_l_f1,ALL (pooled),0.028,-0.025,0.081,False
+en,main,rouge_l_f1,gemma3-1b,0.049,-0.044,0.141,False
+en,main,rouge_l_f1,gemma3-27b,0.075,-0.014,0.163,False
+en,main,rouge_l_f1,gemma3-4b,0.084,-0.003,0.172,False
+en,main,rouge_l_f1,llama3-8b,0.006,-0.068,0.081,False
+en,main,rouge_l_f1,med42-8b,-0.001,-0.082,0.079,False
+en,main,rouge_l_f1,medgemma-27b,0.066,-0.018,0.151,False
+en,main,rouge_l_f1,medgemma-4b,-0.008,-0.085,0.068,False
+en,main,rouge_l_f1,qwen3-1.7b,0.016,-0.1,0.132,False
+en,main,rouge_l_f1,qwen3-4b,-0.06,-0.165,0.045,False
+en,main,stem_mink_20,ALL (pooled),-0.087,-0.131,-0.043,True
+en,main,stem_mink_20,gemma3-1b,-0.099,-0.181,-0.018,True
+en,main,stem_mink_20,gemma3-27b,-0.163,-0.229,-0.097,True
+en,main,stem_mink_20,gemma3-4b,-0.114,-0.194,-0.034,True
+en,main,stem_mink_20,llama3-8b,-0.079,-0.136,-0.022,True
+en,main,stem_mink_20,med42-8b,-0.07,-0.124,-0.016,True
+en,main,stem_mink_20,medgemma-27b,-0.124,-0.187,-0.061,True
+en,main,stem_mink_20,medgemma-4b,-0.095,-0.156,-0.033,True
+en,main,stem_mink_20,qwen3-1.7b,0.018,-0.071,0.108,False
+en,main,stem_mink_20,qwen3-4b,0.021,-0.074,0.116,False
+en,main,zlib_ratio,ALL (pooled),-0.003,-0.024,0.018,False
+en,main,zlib_ratio,gemma3-1b,-0.029,-0.071,0.012,False
+en,main,zlib_ratio,gemma3-27b,-0.026,-0.059,0.006,False
+en,main,zlib_ratio,gemma3-4b,-0.06,-0.095,-0.025,True
+en,main,zlib_ratio,llama3-8b,0.012,-0.012,0.036,False
+en,main,zlib_ratio,med42-8b,0.022,-0.005,0.048,False
+en,main,zlib_ratio,medgemma-27b,0.016,-0.014,0.046,False
+en,main,zlib_ratio,medgemma-4b,-0.005,-0.032,0.022,False
+en,main,zlib_ratio,qwen3-1.7b,0.039,0.006,0.072,False
+en,main,zlib_ratio,qwen3-4b,0.026,-0.009,0.06,False
+es,main,lcp_tokens,ALL (pooled),0.017,-0.061,0.095,False
+es,main,lcp_tokens,gemma3-1b,-0.088,-0.213,0.038,False
+es,main,lcp_tokens,gemma3-27b,-0.035,-0.153,0.082,False
+es,main,lcp_tokens,gemma3-4b,0.072,-0.054,0.198,False
+es,main,lcp_tokens,llama3-8b,0.113,0.019,0.208,False
+es,main,lcp_tokens,med42-8b,0.057,-0.045,0.159,False
+es,main,lcp_tokens,medgemma-27b,-0.046,-0.145,0.053,False
+es,main,lcp_tokens,medgemma-4b,0.034,-0.084,0.151,False
+es,main,lcp_tokens,qwen3-1.7b,-0.066,-0.199,0.067,False
+es,main,lcp_tokens,qwen3-4b,0.053,-0.091,0.197,False
+es,main,levenshtein_ratio,ALL (pooled),0.014,-0.043,0.071,False
+es,main,levenshtein_ratio,gemma3-1b,-0.028,-0.128,0.071,False
+es,main,levenshtein_ratio,gemma3-27b,-0.089,-0.194,0.016,False
+es,main,levenshtein_ratio,gemma3-4b,0.031,-0.067,0.129,False
+es,main,levenshtein_ratio,llama3-8b,0.041,-0.041,0.122,False
+es,main,levenshtein_ratio,med42-8b,0.003,-0.083,0.089,False
+es,main,levenshtein_ratio,medgemma-27b,-0.076,-0.173,0.021,False
+es,main,levenshtein_ratio,medgemma-4b,0.088,0.003,0.173,False
+es,main,levenshtein_ratio,qwen3-1.7b,0.148,0.017,0.278,False
+es,main,levenshtein_ratio,qwen3-4b,0.086,-0.044,0.216,False
+es,main,mean_logprob,ALL (pooled),0.006,-0.051,0.062,False
+es,main,mean_logprob,gemma3-1b,0.015,-0.068,0.099,False
+es,main,mean_logprob,gemma3-27b,0.031,-0.058,0.121,False
+es,main,mean_logprob,gemma3-4b,-0.013,-0.093,0.067,False
+es,main,mean_logprob,llama3-8b,0.028,-0.036,0.091,False
+es,main,mean_logprob,med42-8b,0.01,-0.055,0.075,False
+es,main,mean_logprob,medgemma-27b,0.036,-0.05,0.121,False
+es,main,mean_logprob,medgemma-4b,-0.019,-0.09,0.051,False
+es,main,mean_logprob,qwen3-1.7b,-0.021,-0.109,0.067,False
+es,main,mean_logprob,qwen3-4b,-0.065,-0.15,0.019,False
+es,main,mink_20,ALL (pooled),-0.022,-0.089,0.045,False
+es,main,mink_20,gemma3-1b,-0.002,-0.107,0.103,False
+es,main,mink_20,gemma3-27b,0.035,-0.066,0.137,False
+es,main,mink_20,gemma3-4b,-0.022,-0.12,0.077,False
+es,main,mink_20,llama3-8b,-0.004,-0.086,0.077,False
+es,main,mink_20,med42-8b,-0.029,-0.107,0.05,False
+es,main,mink_20,medgemma-27b,0.02,-0.079,0.12,False
+es,main,mink_20,medgemma-4b,-0.042,-0.128,0.043,False
+es,main,mink_20,qwen3-1.7b,-0.104,-0.217,0.008,False
+es,main,mink_20,qwen3-4b,-0.134,-0.235,-0.034,True
+es,main,near_verbatim,ALL (pooled),0.018,-0.024,0.059,False
+es,main,near_verbatim,gemma3-27b,0.016,-0.166,0.199,False
+es,main,near_verbatim,llama3-8b,0.016,-0.056,0.088,False
+es,main,near_verbatim,med42-8b,-0.04,-0.124,0.045,False
+es,main,near_verbatim,medgemma-27b,0.06,-0.034,0.154,False
+es,main,near_verbatim,medgemma-4b,0.016,-0.097,0.13,False
+es,main,near_verbatim,qwen3-1.7b,-0.081,-0.228,0.065,False
+es,main,near_verbatim,qwen3-4b,0.177,-0.116,0.471,False
+es,main,rouge_l_f1,ALL (pooled),0.063,0.012,0.114,False
+es,main,rouge_l_f1,gemma3-1b,0.04,-0.05,0.129,False
+es,main,rouge_l_f1,gemma3-27b,0.018,-0.073,0.109,False
+es,main,rouge_l_f1,gemma3-4b,0.056,-0.024,0.137,False
+es,main,rouge_l_f1,llama3-8b,0.116,0.044,0.188,False
+es,main,rouge_l_f1,med42-8b,0.038,-0.038,0.115,False
+es,main,rouge_l_f1,medgemma-27b,0.022,-0.065,0.108,False
+es,main,rouge_l_f1,medgemma-4b,0.148,0.07,0.227,False
+es,main,rouge_l_f1,qwen3-1.7b,0.055,-0.047,0.158,False
+es,main,rouge_l_f1,qwen3-4b,0.065,-0.039,0.169,False
+es,main,stem_mink_20,ALL (pooled),-0.015,-0.072,0.042,False
+es,main,stem_mink_20,gemma3-1b,-0.014,-0.12,0.092,False
+es,main,stem_mink_20,gemma3-27b,-0.002,-0.087,0.083,False
+es,main,stem_mink_20,gemma3-4b,-0.023,-0.108,0.062,False
+es,main,stem_mink_20,llama3-8b,-0.037,-0.109,0.036,False
+es,main,stem_mink_20,med42-8b,-0.018,-0.087,0.051,False
+es,main,stem_mink_20,medgemma-27b,0.01,-0.074,0.095,False
+es,main,stem_mink_20,medgemma-4b,-0.014,-0.102,0.074,False
+es,main,stem_mink_20,qwen3-1.7b,0.04,-0.073,0.154,False
+es,main,stem_mink_20,qwen3-4b,-0.071,-0.166,0.025,False
+es,main,zlib_ratio,ALL (pooled),0.009,-0.015,0.033,False
+es,main,zlib_ratio,gemma3-1b,0.023,-0.013,0.059,False
+es,main,zlib_ratio,gemma3-27b,0.013,-0.024,0.05,False
+es,main,zlib_ratio,gemma3-4b,-0.006,-0.04,0.028,False
+es,main,zlib_ratio,llama3-8b,0.018,-0.009,0.045,False
+es,main,zlib_ratio,med42-8b,0.01,-0.018,0.038,False
+es,main,zlib_ratio,medgemma-27b,0.024,-0.013,0.06,False
+es,main,zlib_ratio,medgemma-4b,-0.002,-0.032,0.028,False
+es,main,zlib_ratio,qwen3-1.7b,-0.003,-0.039,0.034,False
+es,main,zlib_ratio,qwen3-4b,-0.011,-0.048,0.026,False
+en,strict,lcp_tokens,ALL (pooled),0.019,-0.078,0.115,False
+en,strict,lcp_tokens,gemma3-1b,-0.023,-0.182,0.137,False
+en,strict,lcp_tokens,gemma3-27b,0.065,-0.071,0.2,False
+en,strict,lcp_tokens,gemma3-4b,0.019,-0.134,0.173,False
+en,strict,lcp_tokens,llama3-8b,0.057,-0.048,0.162,False
+en,strict,lcp_tokens,med42-8b,-0.009,-0.127,0.108,False
+en,strict,lcp_tokens,medgemma-27b,0.055,-0.091,0.201,False
+en,strict,lcp_tokens,medgemma-4b,0.103,-0.046,0.252,False
+en,strict,lcp_tokens,qwen3-1.7b,-0.048,-0.188,0.092,False
+en,strict,lcp_tokens,qwen3-4b,-0.048,-0.192,0.097,False
+en,strict,levenshtein_ratio,ALL (pooled),0.0,-0.1,0.101,False
+en,strict,levenshtein_ratio,gemma3-1b,-0.008,-0.198,0.181,False
+en,strict,levenshtein_ratio,gemma3-27b,0.062,-0.104,0.229,False
+en,strict,levenshtein_ratio,gemma3-4b,-0.02,-0.174,0.135,False
+en,strict,levenshtein_ratio,llama3-8b,-0.039,-0.148,0.07,False
+en,strict,levenshtein_ratio,med42-8b,-0.049,-0.171,0.074,False
+en,strict,levenshtein_ratio,medgemma-27b,0.052,-0.104,0.208,False
+en,strict,levenshtein_ratio,medgemma-4b,0.119,-0.032,0.27,False
+en,strict,levenshtein_ratio,qwen3-1.7b,0.049,-0.106,0.204,False
+en,strict,levenshtein_ratio,qwen3-4b,-0.061,-0.198,0.077,False
+en,strict,mean_logprob,ALL (pooled),0.036,-0.026,0.097,False
+en,strict,mean_logprob,gemma3-1b,-0.041,-0.168,0.086,False
+en,strict,mean_logprob,gemma3-27b,-0.085,-0.181,0.012,False
+en,strict,mean_logprob,gemma3-4b,-0.152,-0.262,-0.042,True
+en,strict,mean_logprob,llama3-8b,0.07,0.0,0.139,False
+en,strict,mean_logprob,med42-8b,0.093,0.023,0.164,False
+en,strict,mean_logprob,medgemma-27b,0.044,-0.045,0.132,False
+en,strict,mean_logprob,medgemma-4b,0.034,-0.05,0.117,False
+en,strict,mean_logprob,qwen3-1.7b,0.13,0.049,0.211,False
+en,strict,mean_logprob,qwen3-4b,0.106,0.024,0.187,False
+en,strict,mink_20,ALL (pooled),-0.018,-0.098,0.062,False
+en,strict,mink_20,gemma3-1b,-0.048,-0.205,0.109,False
+en,strict,mink_20,gemma3-27b,-0.16,-0.28,-0.039,True
+en,strict,mink_20,gemma3-4b,-0.214,-0.351,-0.077,True
+en,strict,mink_20,llama3-8b,0.015,-0.075,0.105,False
+en,strict,mink_20,med42-8b,0.027,-0.063,0.118,False
+en,strict,mink_20,medgemma-27b,-0.051,-0.164,0.062,False
+en,strict,mink_20,medgemma-4b,-0.033,-0.142,0.076,False
+en,strict,mink_20,qwen3-1.7b,0.115,0.006,0.223,False
+en,strict,mink_20,qwen3-4b,0.068,-0.044,0.18,False
+en,strict,near_verbatim,ALL (pooled),0.04,-0.131,0.211,False
+en,strict,near_verbatim,gemma3-27b,0.068,-0.09,0.225,False
+en,strict,near_verbatim,medgemma-27b,-0.014,-0.105,0.078,False
+en,strict,rouge_l_f1,ALL (pooled),0.026,-0.068,0.12,False
+en,strict,rouge_l_f1,gemma3-1b,-0.004,-0.159,0.151,False
+en,strict,rouge_l_f1,gemma3-27b,0.13,-0.015,0.274,False
+en,strict,rouge_l_f1,gemma3-4b,0.063,-0.072,0.199,False
+en,strict,rouge_l_f1,llama3-8b,0.017,-0.084,0.119,False
+en,strict,rouge_l_f1,med42-8b,0.004,-0.106,0.114,False
+en,strict,rouge_l_f1,medgemma-27b,0.117,-0.022,0.256,False
+en,strict,rouge_l_f1,medgemma-4b,-0.005,-0.135,0.126,False
+en,strict,rouge_l_f1,qwen3-1.7b,0.016,-0.124,0.155,False
+en,strict,rouge_l_f1,qwen3-4b,-0.058,-0.184,0.068,False
+en,strict,stem_mink_20,ALL (pooled),-0.089,-0.157,-0.021,True
+en,strict,stem_mink_20,gemma3-1b,-0.063,-0.188,0.062,False
+en,strict,stem_mink_20,gemma3-27b,-0.193,-0.294,-0.092,True
+en,strict,stem_mink_20,gemma3-4b,-0.082,-0.2,0.036,False
+en,strict,stem_mink_20,llama3-8b,-0.094,-0.171,-0.017,True
+en,strict,stem_mink_20,med42-8b,-0.097,-0.173,-0.021,True
+en,strict,stem_mink_20,medgemma-27b,-0.188,-0.289,-0.087,True
+en,strict,stem_mink_20,medgemma-4b,-0.123,-0.219,-0.028,True
+en,strict,stem_mink_20,qwen3-1.7b,0.013,-0.088,0.115,False
+en,strict,stem_mink_20,qwen3-4b,0.016,-0.089,0.122,False
+en,strict,zlib_ratio,ALL (pooled),-0.003,-0.033,0.027,False
+en,strict,zlib_ratio,gemma3-1b,-0.045,-0.105,0.016,False
+en,strict,zlib_ratio,gemma3-27b,-0.041,-0.086,0.003,False
+en,strict,zlib_ratio,gemma3-4b,-0.08,-0.131,-0.028,True
+en,strict,zlib_ratio,llama3-8b,0.01,-0.022,0.043,False
+en,strict,zlib_ratio,med42-8b,0.018,-0.017,0.052,False
+en,strict,zlib_ratio,medgemma-27b,0.007,-0.037,0.05,False
+en,strict,zlib_ratio,medgemma-4b,-0.01,-0.05,0.03,False
+en,strict,zlib_ratio,qwen3-1.7b,0.038,-0.002,0.077,False
+en,strict,zlib_ratio,qwen3-4b,0.025,-0.015,0.065,False
+es,strict,lcp_tokens,ALL (pooled),0.069,-0.042,0.179,False
+es,strict,lcp_tokens,gemma3-1b,-0.029,-0.203,0.145,False
+es,strict,lcp_tokens,gemma3-27b,0.058,-0.094,0.21,False
+es,strict,lcp_tokens,gemma3-4b,0.121,-0.054,0.295,False
+es,strict,lcp_tokens,llama3-8b,0.133,0.008,0.259,False
+es,strict,lcp_tokens,med42-8b,0.053,-0.074,0.181,False
+es,strict,lcp_tokens,medgemma-27b,0.003,-0.149,0.155,False
+es,strict,lcp_tokens,medgemma-4b,0.128,-0.038,0.294,False
+es,strict,lcp_tokens,qwen3-1.7b,-0.008,-0.156,0.14,False
+es,strict,lcp_tokens,qwen3-4b,0.107,-0.057,0.271,False
+es,strict,levenshtein_ratio,ALL (pooled),0.108,0.014,0.202,False
+es,strict,levenshtein_ratio,gemma3-1b,0.065,-0.098,0.228,False
+es,strict,levenshtein_ratio,gemma3-27b,0.002,-0.141,0.146,False
+es,strict,levenshtein_ratio,gemma3-4b,0.106,-0.036,0.248,False
+es,strict,levenshtein_ratio,llama3-8b,0.103,-0.004,0.21,False
+es,strict,levenshtein_ratio,med42-8b,0.051,-0.06,0.161,False
+es,strict,levenshtein_ratio,medgemma-27b,0.008,-0.146,0.161,False
+es,strict,levenshtein_ratio,medgemma-4b,0.27,0.128,0.413,False
+es,strict,levenshtein_ratio,qwen3-1.7b,0.238,0.088,0.388,False
+es,strict,levenshtein_ratio,qwen3-4b,0.178,0.03,0.327,False
+es,strict,mean_logprob,ALL (pooled),0.055,-0.019,0.13,False
+es,strict,mean_logprob,gemma3-1b,0.109,-0.013,0.231,False
+es,strict,mean_logprob,gemma3-27b,0.079,-0.036,0.193,False
+es,strict,mean_logprob,gemma3-4b,0.028,-0.079,0.134,False
+es,strict,mean_logprob,llama3-8b,0.08,-0.001,0.161,False
+es,strict,mean_logprob,med42-8b,0.057,-0.026,0.139,False
+es,strict,mean_logprob,medgemma-27b,0.099,-0.009,0.208,False
+es,strict,mean_logprob,medgemma-4b,0.016,-0.08,0.112,False
+es,strict,mean_logprob,qwen3-1.7b,0.026,-0.074,0.126,False
+es,strict,mean_logprob,qwen3-4b,-0.017,-0.113,0.08,False
+es,strict,mink_20,ALL (pooled),0.047,-0.047,0.141,False
+es,strict,mink_20,gemma3-1b,0.141,-0.013,0.295,False
+es,strict,mink_20,gemma3-27b,0.14,0.003,0.277,False
+es,strict,mink_20,gemma3-4b,0.071,-0.066,0.208,False
+es,strict,mink_20,llama3-8b,0.061,-0.044,0.166,False
+es,strict,mink_20,med42-8b,0.019,-0.083,0.121,False
+es,strict,mink_20,medgemma-27b,0.106,-0.027,0.24,False
+es,strict,mink_20,medgemma-4b,0.025,-0.1,0.15,False
+es,strict,mink_20,qwen3-1.7b,-0.037,-0.167,0.094,False
+es,strict,mink_20,qwen3-4b,-0.066,-0.186,0.054,False
+es,strict,near_verbatim,ALL (pooled),0.066,-0.057,0.19,False
+es,strict,near_verbatim,gemma3-27b,0.177,-0.096,0.45,False
+es,strict,near_verbatim,llama3-8b,0.037,-0.108,0.183,False
+es,strict,near_verbatim,med42-8b,-0.016,-0.14,0.108,False
+es,strict,near_verbatim,medgemma-27b,0.177,-0.096,0.45,False
+es,strict,near_verbatim,qwen3-1.7b,-0.054,-0.235,0.128,False
+es,strict,near_verbatim,qwen3-4b,0.204,-0.101,0.51,False
+es,strict,rouge_l_f1,ALL (pooled),0.042,-0.043,0.126,False
+es,strict,rouge_l_f1,gemma3-1b,0.006,-0.135,0.146,False
+es,strict,rouge_l_f1,gemma3-27b,-0.013,-0.144,0.119,False
+es,strict,rouge_l_f1,gemma3-4b,0.037,-0.09,0.165,False
+es,strict,rouge_l_f1,llama3-8b,0.069,-0.024,0.163,False
+es,strict,rouge_l_f1,med42-8b,0.015,-0.087,0.117,False
+es,strict,rouge_l_f1,medgemma-27b,-0.019,-0.153,0.115,False
+es,strict,rouge_l_f1,medgemma-4b,0.187,0.06,0.314,False
+es,strict,rouge_l_f1,qwen3-1.7b,0.04,-0.082,0.162,False
+es,strict,rouge_l_f1,qwen3-4b,0.049,-0.074,0.173,False
+es,strict,stem_mink_20,ALL (pooled),0.05,-0.029,0.129,False
+es,strict,stem_mink_20,gemma3-1b,0.179,0.022,0.336,False
+es,strict,stem_mink_20,gemma3-27b,0.076,-0.048,0.201,False
+es,strict,stem_mink_20,gemma3-4b,0.031,-0.098,0.161,False
+es,strict,stem_mink_20,llama3-8b,-0.0,-0.091,0.09,False
+es,strict,stem_mink_20,med42-8b,0.017,-0.07,0.104,False
+es,strict,stem_mink_20,medgemma-27b,0.081,-0.039,0.202,False
+es,strict,stem_mink_20,medgemma-4b,0.072,-0.056,0.199,False
+es,strict,stem_mink_20,qwen3-1.7b,0.1,-0.024,0.224,False
+es,strict,stem_mink_20,qwen3-4b,-0.007,-0.116,0.102,False
+es,strict,zlib_ratio,ALL (pooled),0.02,-0.012,0.052,False
+es,strict,zlib_ratio,gemma3-1b,0.044,-0.009,0.097,False
+es,strict,zlib_ratio,gemma3-27b,0.026,-0.023,0.075,False
+es,strict,zlib_ratio,gemma3-4b,0.006,-0.04,0.052,False
+es,strict,zlib_ratio,llama3-8b,0.029,-0.006,0.063,False
+es,strict,zlib_ratio,med42-8b,0.019,-0.017,0.054,False
+es,strict,zlib_ratio,medgemma-27b,0.039,-0.008,0.087,False
+es,strict,zlib_ratio,medgemma-4b,0.002,-0.04,0.044,False
+es,strict,zlib_ratio,qwen3-1.7b,0.008,-0.034,0.051,False
+es,strict,zlib_ratio,qwen3-4b,-0.0,-0.043,0.043,False

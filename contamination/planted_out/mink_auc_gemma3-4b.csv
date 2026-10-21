@@ -1,0 +1,9 @@
+model,epochs,score,auc,ci_low,ci_high,auc_vs_base
+gemma3-4b,0,mink20,0.498,0.448,0.551,
+gemma3-4b,0,mean_logprob,0.501,0.448,0.555,
+planted-gemma3-4b-ep1,1,mink20,0.713,0.667,0.759,0.681
+planted-gemma3-4b-ep1,1,mean_logprob,0.708,0.661,0.754,0.729
+planted-gemma3-4b-ep3,3,mink20,1.0,1.0,1.0,0.998
+planted-gemma3-4b-ep3,3,mean_logprob,1.0,0.999,1.0,0.998
+planted-gemma3-4b-ep10,10,mink20,1.0,1.0,1.0,1.0
+planted-gemma3-4b-ep10,10,mean_logprob,1.0,1.0,1.0,1.0
