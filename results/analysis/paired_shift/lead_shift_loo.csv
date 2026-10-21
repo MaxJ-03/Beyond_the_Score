@@ -1,0 +1,22 @@
+pair,left_out,lead_shift
+medgemma-4b minus gemma3-4b,2020,-4.6
+medgemma-4b minus gemma3-4b,2021,-2.1
+medgemma-4b minus gemma3-4b,2022,-4.6
+medgemma-4b minus gemma3-4b,2023,-4.4
+medgemma-4b minus gemma3-4b,2024,-2.5
+medgemma-4b minus gemma3-4b,2025,-1.6
+medgemma-4b minus gemma3-4b,2026,-5.7
+medgemma-27b minus gemma3-27b,2020,-5.1
+medgemma-27b minus gemma3-27b,2021,-3.5
+medgemma-27b minus gemma3-27b,2022,-4.6
+medgemma-27b minus gemma3-27b,2023,-4.4
+medgemma-27b minus gemma3-27b,2024,-3.5
+medgemma-27b minus gemma3-27b,2025,-3.1
+medgemma-27b minus gemma3-27b,2026,-5.4
+med42-8b minus llama3-8b,2020,0.7
+med42-8b minus llama3-8b,2021,0.2
+med42-8b minus llama3-8b,2022,1.9
+med42-8b minus llama3-8b,2023,2.4
+med42-8b minus llama3-8b,2024,1.7
+med42-8b minus llama3-8b,2025,0.8
+med42-8b minus llama3-8b,2026,2.0

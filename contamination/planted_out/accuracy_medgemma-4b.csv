@@ -1,0 +1,5 @@
+model,epochs,acc_exposed,acc_held_out,planted_effect,ci_low,ci_high,acc_mir_2026,n_exposed,n_held_out
+medgemma-4b,0,55.6,52.1,0.0,0.0,0.0,62.4,232,234
+planted-medgemma-4b-ep1,1,51.3,45.3,2.5,-6.5,11.1,50.0,232,234
+planted-medgemma-4b-ep3,3,76.3,50.9,22.0,13.0,31.0,59.4,232,234
+planted-medgemma-4b-ep10,10,89.7,48.7,37.5,28.4,46.5,53.5,232,234
