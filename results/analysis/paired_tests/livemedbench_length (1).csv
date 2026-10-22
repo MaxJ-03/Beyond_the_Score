@@ -1,0 +1,10 @@
+model,n_cases,mean_output_tokens
+gemma3-1b,1926,14.7
+qwen3-1.7b,1926,143.3
+gemma3-4b,1926,17.4
+medgemma-4b,1926,48.6
+qwen3-4b,1926,128.8
+llama3-8b,1926,12.5
+med42-8b,1926,19.4
+gemma3-27b,1926,27.9
+medgemma-27b,1926,83.8
