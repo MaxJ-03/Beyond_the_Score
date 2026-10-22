@@ -1,0 +1,19 @@
+set,metric,medical_model,base_model,n_questions,medical_mean,base_mean,difference,ci95_low,ci95_high,only_medical_correct,only_base_correct,mcnemar_p
+MIR ES,accuracy (%),medgemma-4b,gemma3-4b,1149,55.7006,48.1288,7.5718,4.7868,10.4439,189,102,3.8e-07
+MIR ES,accuracy (%),medgemma-27b,gemma3-27b,1149,82.5936,79.0252,3.5683,1.7406,5.483,85,44,0.00039
+MIR ES,accuracy (%),med42-8b,llama3-8b,1149,58.0505,56.658,1.3925,-1.1314,3.9164,116,100,0.31
+MIR EN,accuracy (%),medgemma-4b,gemma3-4b,1149,62.5762,52.5674,10.0087,7.0496,12.9678,211,96,4.6e-11
+MIR EN,accuracy (%),medgemma-27b,gemma3-27b,1149,83.0287,79.2863,3.7424,1.8277,5.6571,87,44,0.00022
+MIR EN,accuracy (%),med42-8b,llama3-8b,1149,68.9295,67.1018,1.8277,-0.5222,4.2668,111,90,0.16
+CUPCase,accuracy (%),medgemma-4b,gemma3-4b,3508,80.4732,77.7651,2.7081,1.3113,4.1334,355,260,0.00015
+CUPCase,accuracy (%),medgemma-27b,gemma3-27b,3508,81.3854,88.3979,-7.0125,-8.1535,-5.9008,85,331,2.3e-35
+CUPCase,accuracy (%),med42-8b,llama3-8b,3508,85.5758,87.6283,-2.0525,-3.1642,-0.9692,147,219,0.0002
+K-QA,comprehensiveness x100,medgemma-4b,gemma3-4b,201,48.2585,56.9767,-8.7182,-13.6391,-3.7606,,,
+K-QA,comprehensiveness x100,medgemma-27b,gemma3-27b,201,69.3486,66.8295,2.5192,-0.949,5.9477,,,
+K-QA,comprehensiveness x100,med42-8b,llama3-8b,201,47.9821,52.689,-4.7069,-8.3953,-1.0598,,,
+K-QA,contradicted statements per answer,medgemma-4b,gemma3-4b,201,0.3333,0.3284,0.005,-0.0846,0.0945,,,
+K-QA,contradicted statements per answer,medgemma-27b,gemma3-27b,201,0.2687,0.2687,0.0,-0.0796,0.0746,,,
+K-QA,contradicted statements per answer,med42-8b,llama3-8b,201,0.3134,0.3333,-0.0199,-0.1095,0.0697,,,
+LiveMedBench,rubric score x100,medgemma-4b,gemma3-4b,1926,9.2345,8.7153,0.5192,-0.2028,1.2715,,,
+LiveMedBench,rubric score x100,medgemma-27b,gemma3-27b,1926,16.0555,12.0358,4.0197,3.177,4.8443,,,
+LiveMedBench,rubric score x100,med42-8b,llama3-8b,1926,8.7298,7.194,1.5358,0.9026,2.1395,,,
