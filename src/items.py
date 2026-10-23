@@ -1,20 +1,4 @@
-"""Questions in a common format, and the prompts that present them to a model.
-
-Every dataset in configs/datasets.yaml is loaded into a list of Item objects. The task field
-of a dataset decides what an item contains and how it is presented:
-
-    multiple_choice  question, lettered options and the correct letter (default)
-    rubric           open-ended case (LiveMedBench): case text, the patient's request and
-                     rubric items with points, graded later by src/judge.py
-    statements       open-ended question (K-QA): question with must-have and nice-to-have
-                     statements, graded later by src/judge.py
-
-Input formats:
-    jsonl  one JSON object per line. Multiple choice: id, year, question, options (mapping
-           from letter to text), answer (letter). Open-ended: id and question; all other keys
-           (for example request, rubric, must_have, date) are kept in Item.extra.
-    csv    multiple choice only; the columns block of the dataset maps CSV columns to fields.
-"""
+"""Questions in a common format (Item) and the prompts that present them to a model."""
 
 import json
 from dataclasses import dataclass, field
@@ -144,12 +128,7 @@ def _from_date(items, name, min_date):
 # ---------------------------------------------------------------- prompts
 
 def build_messages(item, eval_cfg, thinking, spec):
-    """Chat messages for one item.
-
-    Multiple choice: optional system prompt, then the instruction, question and options.
-    Open-ended: a single user message with the dataset's instruction, the question and, if
-    present, the patient's request (the format of the official LiveMedBench script).
-    """
+    """Chat messages for one item (system prompt, instruction, question and options, or the open-ended format)."""
     if item.task != "multiple_choice":
         user = f"{spec['instruction'].strip()}\n\n{item.question}"
         if item.extra.get("request"):

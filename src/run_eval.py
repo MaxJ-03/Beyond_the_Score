@@ -1,26 +1,5 @@
-"""Run one model on one or more datasets.
-
-The model is loaded once and evaluated on every requested dataset. For each question the
-script records the raw response, token counts and, for multiple-choice questions, the parsed
-answer and correctness. Answers to open-ended questions (rubric and statements tasks) are
-stored unparsed and graded afterwards by src/judge.py. For each dataset the script records
-the wall-clock generation time, which is converted to GPU-seconds in the analysis.
-
-Data loading and prompts are in src/items.py. This file contains:
-    1. answer parsing    the chosen option letter from a multiple-choice response
-    2. backends          vLLM for real runs, a mock backend for tests without a GPU
-    3. main              evaluation loop and output files
-
-Outputs (per model):
-    results/raw/<model>/<dataset>.jsonl      one record per question
-    results/raw/<model>/<dataset>.meta.json  timing, settings and software versions
-
-Usage:
-    python src/run_eval.py --model qwen3-4b
-    python src/run_eval.py --model qwen3-4b --datasets mir_2025 mir_2026 --limit 20
-    python src/run_eval.py --model qwen3-4b --latency-sample 20
-    python src/run_eval.py --model qwen3-4b --backend mock   (pipeline test without GPU)
-"""
+"""Run one model on one or more datasets and save responses, parsed answers and timing.
+Usage: python src/run_eval.py --model <key> [--datasets ...] [--limit N] [--backend mock]"""
 
 import argparse
 import json
@@ -63,13 +42,7 @@ def strip_reasoning(text):
 
 def extract_answer(text, valid_letters):
     """Return the chosen letter, or None if no unambiguous answer is found.
-
-    Rules, applied in order to the final response (reasoning sections removed):
-      1. the last LaTeX box such as "$\\boxed{B}$"
-      2. the last explicit statement such as "Answer: B", "**Answer:** B" or "the answer is (B)"
-      3. a letter at the very start of the response, e.g. "B", "B.", "(B)"
-      4. a single distinct standalone letter anywhere in the response
-    """
+    Tries a boxed letter, "Answer: X", a leading letter, then a single standalone letter."""
     letters = "".join(sorted(valid_letters))
     response = strip_reasoning(text)
     if not response:

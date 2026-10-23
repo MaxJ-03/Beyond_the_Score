@@ -1,15 +1,6 @@
 #!/bin/bash
-# Contamination tests (src/sanitize.py) for one model on all MIR datasets (or those in $DATASETS).
-#
-# Full run: submitted by scripts/submit_sanitize.sh, which sets MODEL_KEY and the time limit.
-# One model by hand:
-#   MODEL_KEY=qwen3-4b sbatch scripts/sanitize.sbatch
-# Positive control with a LoRA adapter (output folder results/sanitize/<model>+<LORA_NAME>/):
-#   MODEL_KEY=gemma3-4b LORA=/path/to/adapter LORA_NAME=mir2022 sbatch scripts/sanitize.sbatch
-# Smoke test: the unit tests and both contamination tests on 5 questions with the smallest
-# model (gemma3-1b), written to a temporary folder (tests/test_sanitize_smoke.py):
-#   SMOKE=1 sbatch scripts/sanitize.sbatch
-# Optional variables: DATASETS and TESTS (space-separated), LIMIT, OUT, OVERWRITE=1.
+# Contamination tests (src/sanitize.py) for $MODEL_KEY on all MIR datasets; optional LORA, LORA_NAME, DATASETS.
+# Smoke test: SMOKE=1 sbatch scripts/sanitize.sbatch (unit tests + smallest model on 5 questions).
 #SBATCH --job-name=medeval_sanitize
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1

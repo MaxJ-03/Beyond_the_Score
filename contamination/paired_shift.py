@@ -1,18 +1,5 @@
-"""Paired base-medical comparison: does a medical model's lead over its own base model shrink on
-unseen MIR editions?
-
-Both models of a pair answer the same questions. Per question, lead = medical model correct (0/1)
-minus base model correct (0/1); lead shift = mean lead on MIR 2025-2026 minus mean lead on
-2020-2024 (the common split of stage3). Edition difficulty and the shared pretraining affect both
-models equally and cancel, so no year-difficulty model is needed. Uncertainty: questions resampled
-within editions (4,000 times), and a permutation over the 21 ways to label two of the seven
-editions as unseen (smallest attainable p = 1/21 = 0.048). Also: the shift with each edition left
-out, and with 2026 as the only unseen edition.
-
-Run on the team's MIR results (stage3 checkout, read only):
-    python contamination/paired_shift.py --project <stage3 folder>
-Outputs (results/analysis/paired_shift/): lead_by_year.csv, lead_shift.csv, lead_shift_loo.csv
-"""
+"""Does a medical model's lead over its base model shrink on unseen MIR editions (2025-2026 vs 2020-2024)?
+Usage: python contamination/paired_shift.py --project <stage3 folder>"""
 
 import argparse
 import itertools

@@ -1,12 +1,6 @@
 #!/bin/bash
-# Evaluate one model on all default datasets (or those given in $DATASETS).
-#
-# Full run: submitted by scripts/submit_all.sh, which sets MODEL_KEY and the time limit.
-# Smoke test: one model, 20 questions per dataset, written to results_smoke/:
-#   SMOKE=1 sbatch scripts/evaluate.sbatch                  (default model qwen3-4b)
-#   SMOKE=1 MODEL_KEY=gemma3-4b sbatch scripts/evaluate.sbatch
-# Optional variables: DATASETS (space-separated keys), LATENCY_SAMPLE (default 20, 0 in the
-# smoke test), LIMIT and OUT (set by the smoke test).
+# Evaluate one model ($MODEL_KEY) on all default datasets or $DATASETS.
+# Smoke test: SMOKE=1 sbatch scripts/evaluate.sbatch (20 questions per dataset, to results_smoke/).
 #SBATCH --job-name=medeval
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1

@@ -1,11 +1,6 @@
 #!/bin/bash
-# Snellius driver of the contamination experiments. Run from the project folder on a login node:
-#   bash contamination/run.sh planted [gemma3-4b|medgemma-4b]  planted contamination (train, evaluate, Min-K%)
-#   bash contamination/run.sh medqa                            MedQA, nine models (stage3 settings)
-#   bash contamination/run.sh tests                            memorization tests, nine models + planted models
-#   bash contamination/run.sh analyse                          all tables (CPU, seconds)
-#   bash contamination/run.sh status                           today's jobs
-# Every GPU stage only submits jobs; run each stage once.
+# Snellius driver of the contamination experiments (login node), one stage per call:
+#   bash contamination/run.sh planted [model] | medqa | tests | analyse | status
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source "$HOME/venvs/medeval/bin/activate"

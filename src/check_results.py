@@ -1,16 +1,5 @@
 """Check that every model has complete and usable results for every dataset.
-
-For each model and each default dataset the script reports the number of items (compared with
-the dataset size), the share of answers cut off at the token limit, the share of answers with a
-reasoning section (written although the prompt asks for the answer only), and for multiple-choice
-datasets the accuracy and the share of answers without a recognizable letter. For open-ended
-datasets it reports the share of empty answers, the mean answer length, and the grading status
-with the mean score and the share of judge verdicts that could not be read.
-
-Usage:
-    python src/check_results.py                      table and list of problems
-    python src/check_results.py --out logs/check.csv also save the table
-"""
+Usage: python src/check_results.py [--out logs/check.csv]"""
 
 import argparse
 import json

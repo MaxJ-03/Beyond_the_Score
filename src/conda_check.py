@@ -1,29 +1,5 @@
-"""Contamination already reported for our models or benchmarks in the CONDA database.
-
-The Data Contamination Database of the CONDA workshop (Sainz et al., 2024) collects reported
-cases of benchmark contamination: which evaluation dataset was found in which model or
-pretraining corpus, how large a share of each split, by which approach, with a reference. It
-is published as one file, contamination_report.csv, in the Hugging Face Space
-CONDA-Workshop/Data-Contamination-Database.
-
-This script downloads that file (or reads a local copy) and lists every report that concerns
-one of our model families or one of the benchmarks our questions come from or overlap with.
-No GPU is needed; it runs on a login node with internet access.
-
-    model families   Gemma 3 and MedGemma, Llama 3 and Med42, Qwen3 (matched in the column
-                     "Contaminated Source"; other versions of these families, such as Llama 2
-                     or Qwen 1, do not match)
-    benchmarks       MIR and HEAD-QA (which contains MIR questions), CareQA, MedExpQA, MedQA,
-                     MedMCQA, LiveMedBench, K-QA, CUPCase (matched in "Evaluation Dataset")
-
-Outputs, written to results/analysis/contamination/:
-    conda_reports.csv     every matching report with the family and benchmark it matched
-    conda_source.json     download time, Space revision and size of the database file
-
-Usage:
-    python src/conda_check.py
-    python src/conda_check.py --file <local copy of contamination_report.csv>
-"""
+"""List CONDA database reports of contamination for our model families or benchmarks.
+Usage: python src/conda_check.py [--file <local contamination_report.csv>]"""
 
 import argparse
 import hashlib

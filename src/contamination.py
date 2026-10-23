@@ -1,54 +1,5 @@
-"""Memorization checks on the MIR and LiveMedBench results.
-
-The first three checks use the Spanish MIR answers in results/raw/<model>/mir_<year>_es.jsonl,
-the fourth the LiveMedBench judge scores; no GPU and no new model runs are needed.
-
-    year      year-difficulty adjustment (main contamination result). "Unseen" exam years
-              start at each model's unseen_from year in configs/models.yaml (the first exam
-              after its training cutoff). Because the cutoffs differ between models, a
-              regression with model and year effects separates the effect of being unseen from
-              the difficulty of each exam year:
-                  correct ~ model + year + unseen
-              As a check, the shift is also computed after subtracting a human reference
-              accuracy per year (analysis.human_difficulty in configs/datasets.yaml).
-    unparseable
-              answers without an option letter are scored as wrong. If they were more frequent
-              in some years, they could create or hide a shift; this check reports how often
-              they occur, why, and the year-adjusted shift with and without them.
-    overlap   positive control. MedExpQA (HiTZ/MedExpQA) contains real MIR questions and its
-              train split is part of MedGemma's training data. If memorization of these
-              questions mattered, MedGemma's lead over its base model Gemma 3 would be larger
-              on exactly those questions than on the other MIR questions of the same years.
-    livemedbench
-              the same idea on real-world data. The main LiveMedBench evaluation only uses cases
-              posted after every model's release (min_date in configs/datasets.yaml); this check
-              also uses the older graded cases. Each case's posting month is compared with each
-              model's training_cutoff, and a regression with model and case effects separates
-              the effect of a case being posted after the cutoff from the difficulty of the case:
-              score ~ model + case + unseen. Cases without a posting date are left out.
-
-Shifts are in percentage points; negative means lower accuracy on unseen exams, which is
-what contamination predicts.
-
-Outputs, written to results/analysis/contamination/:
-    accuracy_by_year.csv      accuracy per model and exam year, with seen or unseen status
-    model_based.csv           MAIN RESULT: unseen effect after removing exam difficulty
-    year_difficulty.csv       difficulty per year: model-based estimate and human reference
-    human_based.csv           CHECK: shift after subtracting the human reference per year
-    unparseable_by_year.csv   share of unparseable answers (%) per model and year
-    unparseable_reasons.csv   count per model and reason
-    unparseable_answers.csv   every unparseable answer, with the end of the response
-    shift_with_without.csv    year-adjusted shift with all answers and with parseable answers only
-    mir_overlap.csv           positive control result per model size (bootstrap 95% CI)
-    matched_questions.csv     MIR questions matched to MedExpQA questions
-    livemedbench_cutoff.csv   unseen effect on LiveMedBench rubric scores, pooled and per model
-
-Usage:
-    python src/contamination.py                                  all four checks
-    python src/contamination.py --checks year unparseable
-    python src/contamination.py --unseen-from qwen3-1.7b=2025 qwen3-4b=2025 --out <folder>
-    python src/contamination.py --medexpqa-dir <folder with the MedExpQA jsonl files>
-"""
+"""Memorization checks on MIR and LiveMedBench results: year adjustment, unparseable answers, MedExpQA overlap.
+Usage: python src/contamination.py [--checks ...] [--unseen-from model=year]"""
 
 import argparse
 import json
@@ -89,13 +40,8 @@ def load_answers(results_dir, unseen_from):
 
 
 def fit_unseen_effect(data, model=None, outcome="correct", fixed="year"):
-    """Regress the outcome on model and year effects plus an unseen indicator.
-
-    Without a model, one pooled unseen effect is estimated. With a model, that model gets its
-    own unseen indicator and all other models share a second one. Standard errors are
-    clustered by question, because a question answered by several models gives correlated
-    outcomes. Returns the fit and the effect with its 95% interval, in percentage points.
-    """
+    """Regress the outcome on model, year and unseen (pooled, or per model); SEs clustered by question.
+    Returns the fit and the effect with its 95% interval, in percentage points."""
     data = data.copy()
     if model is None:
         term, extra = "unseen", ""

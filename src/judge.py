@@ -1,46 +1,5 @@
-"""Grade open-ended answers with an LLM judge.
-
-For every model and every open-ended dataset (task rubric or statements in
-configs/datasets.yaml) that has answers in results/raw/<model>/<dataset>.jsonl but no grades
-yet, the judge (judge.model in configs/datasets.yaml, gpt-oss-120b) checks the answer against
-the reference of each item. The judge model is loaded once for all models and datasets. The
-prompts are the official ones of each benchmark (configs/judge_prompts.yaml).
-
-Scoring, as in the benchmark papers:
-    rubric      (LiveMedBench) each criterion is met or not met. Case score =
-                sum(points x met) / sum(positive points), clipped to [0, 1]; criteria with
-                negative points describe harmful content and lower the score when met.
-    statements  (K-QA) each must-have statement is entailed by the answer or not; each
-                must-have and nice-to-have statement is contradicted by the answer or not.
-                score = share of must-have statements entailed (comprehensiveness);
-                hallucinations = number of statements contradicted.
-Reasoning sections are removed before grading, so only the final response is judged
-(strip_reasoning in src/run_eval.py). An empty answer meets no criterion and entails or
-contradicts no statement. A judge output without a recognizable verdict counts as not met (or
-False) and is counted in n_unparsed.
-
-K-QA verdicts are read with the official rule ("True" or "False" in the last 20 characters).
-When that rule finds nothing, the last standalone "true" or "false" in the judge's final answer
-is used instead (for example when the verdict is followed by a closing remark).
-
-Outputs:
-    results/judged/<model>/<dataset>.jsonl      per item: item_id, score, hallucinations,
-                                                n_checks, n_unparsed and every check with
-                                                its verdict and the end of the judge's answer
-    results/judged/<model>/<dataset>.meta.json  judge, settings and timing
-    results/analysis/judge_validation.csv       (--validate) agreement with physicians on the
-                                                K-QA validation statements
-    results/analysis/judge_validation_items.csv (--validate) every validation statement
-
-Usage:
-    python src/judge.py                              grade all answers without grades
-    python src/judge.py --models qwen3-4b --datasets kqa
-    python src/judge.py --force                      grade again, overwriting existing grades
-    python src/judge.py --validate                   agreement with the K-QA physician labels
-    python src/judge.py --rescore                    read the stored K-QA verdicts again and
-                                                     recompute the scores (no GPU needed)
-    python src/judge.py --backend mock --limit 3     test without a GPU
-"""
+"""Grade open-ended answers (LiveMedBench rubrics, K-QA statements) with the LLM judge.
+Usage: python src/judge.py [--models ...] [--datasets ...] [--force | --validate | --rescore]"""
 
 import argparse
 import json

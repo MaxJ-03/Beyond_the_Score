@@ -1,23 +1,4 @@
-"""Text, scores and labels of the contamination tests (src/sanitize.py).
-
-Nothing here needs a model: the functions work on question text, token ids and
-log-probabilities, so they are tested without a GPU (tests/test_sanitize_metrics.py).
-
-Sections:
-    1. question text      the raw question as in the MIR booklet, and the split into halves
-    2. Min-K% Prob        scores from the log-probabilities of the question tokens
-    3. completion         similarity of a continuation to the real second half
-    4. seen or unseen     label of an exam edition for a model
-
-Adapted from LLMSanitize (Ravaut et al., 2024; closed_data_methods/min_prob.py and
-guided_prompting.py), with these changes:
-    - Min-K% uses at least one token (LLMSanitize takes int(n * k) tokens, which is zero for
-      short texts and gives NaN), and is stored as a mean log-probability, so that higher
-      means more likely (LLMSanitize stores the negative).
-    - ROUGE-L is computed on Unicode words. LLMSanitize uses the rouge_score package, whose
-      tokenizer removes every character outside a-z and 0-9 (Spanish "señale" becomes
-      "se ale") and whose stemmer is English only.
-"""
+"""Question text, scores and seen/unseen labels of the contamination tests (no model needed)."""
 
 import math
 import re
@@ -44,14 +25,7 @@ def question_number(item_id):
 
 
 def question_text(item, text_cfg, with_options=None):
-    """The question as raw text. With the default settings, as in the MIR booklet:
-
-        <stem>
-        1. <option A>
-        2. <option B>
-        3. <option C>
-        4. <option D>
-    """
+    """The question as raw text: the stem, then the options numbered as in the MIR booklet."""
     stem = item.question
     if text_cfg.get("include_question_number"):
         number = question_number(item.item_id)
@@ -72,13 +46,8 @@ def question_text(item, text_cfg, with_options=None):
 
 
 def split_at_words(text, ratio):
-    """Split a text after int(ratio * n) of its n whitespace-separated words (at least one
-    word on each side). Returns (prefix, reference, n_words, n_prefix_words).
-
-    The prefix keeps the original layout (line breaks) and ends without whitespace, because
-    tokenizers attach a space to the following word. The reference is the rest of the text,
-    starting with the whitespace the model has to produce, so prefix + reference == text.
-    """
+    """Split a text after int(ratio * n) of its n words; returns (prefix, reference, n_words, n_prefix_words).
+    prefix + reference == text; the reference starts with the whitespace after the prefix."""
     starts = [match.start() for match in re.finditer(r"\S+", text)]
     if len(starts) < 2:
         raise ValueError(f"Cannot split a text of fewer than two words: {text!r}")
@@ -95,12 +64,7 @@ def k_label(k, prefix=""):
 
 
 def text_logprobs(token_ids, logprobs, special_ids=()):
-    """Log-probabilities of the text tokens of a scored prompt.
-
-    The first prompt position has no log-probability (None): it is the BOS token where the
-    tokenizer has one, otherwise the first text token, which cannot be scored. Special tokens
-    are left out as well.
-    """
+    """Log-probabilities of the text tokens, without the first position (BOS) and special tokens."""
     if len(token_ids) != len(logprobs):
         raise ValueError(f"{len(token_ids)} tokens but {len(logprobs)} log-probabilities.")
     return [float(value) for token, value in zip(token_ids[1:], logprobs[1:])
@@ -210,15 +174,8 @@ def _end_of_month(date):
 
 
 def seen_labels(model_cfg, year, exam_date=None):
-    """Label of one exam edition for one model: (main label, strict label).
-
-    main    'unseen' from the unseen_from year in configs/models.yaml on (the first exam
-            after the training cutoff, as in src/contamination.py), 'seen' before.
-    strict  'seen' if the exam was held before the end of the training cutoff month,
-            'unseen' if it was held after the model's release, and 'ambiguous' in between
-            (after the cutoff, but before the release, e.g. MIR 2025 for Gemma 3). None if
-            the exam date or the release date is missing.
-    """
+    """Label of an edition for a model: (main from unseen_from, strict from release date;
+    'ambiguous' between training cutoff and release)."""
     unseen_from = model_cfg.get("unseen_from")
     main = None if unseen_from is None else ("unseen" if int(year) >= int(unseen_from) else "seen")
     release, cutoff = model_cfg.get("release"), model_cfg.get("training_cutoff")

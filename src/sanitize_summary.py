@@ -1,46 +1,5 @@
-"""Summary of the contamination tests (src/sanitize.py): seen against unseen MIR editions.
-
-For every model and language, each seen edition, and all seen editions together, are compared
-with the unseen editions of that model. Spanish is the primary analysis. English is only a
-partial control: its 2020 to 2024 text is CareQA's GPT-4 translation, public on Hugging Face
-since April 2024 (before the training cutoff of Gemma 3, MedGemma and Qwen3), while 2025 and
-2026 are Google machine translations, so an English difference also contains the change of
-translator.
-
-Splits (seen_labels in src/sanitize_metrics.py):
-    main    unseen from unseen_from in configs/models.yaml on
-    strict  unseen only if the exam was held after the model's release; editions between the
-            training cutoff and the release (ambiguous) are left out
-
-Scores (contamination predicts higher values on seen editions, except zlib_ratio, which is
-lower when the text is more likely):
-    mink_20, stem_mink_20   Min-K% Prob (primary_k in configs/sanitize.yaml), on the full
-                            question and on the stem alone
-    mean_logprob            mean log-probability of all tokens (minus the log-perplexity)
-    zlib_ratio              log-perplexity divided by the zlib-compressed length (LLMSanitize)
-    rouge_l_f1, levenshtein_ratio, lcp_tokens
-                            similarity of the continuation to the real second half
-    near_verbatim           share of continuations at or above the Levenshtein threshold
-
-Outputs, written to results/analysis/sanitize/:
-    by_edition.csv       mean of every score per model, language and edition, with 95%
-                         bootstrap CI (near_verbatim: the near-verbatim rate)
-    seen_vs_unseen.csv   every seen edition, and all seen editions pooled, against the unseen
-                         editions: means, difference (seen minus unseen) with 95% bootstrap
-                         CI, and ROC-AUC = probability that a seen question is closer to its
-                         text than an unseen one (0.5 = no separation)
-    year_adjusted.csv    unseen effect after removing differences between editions (length,
-                         source, translator), estimated across models as in
-                         src/contamination.py: z ~ model + edition + unseen, with the score
-                         standardized per model and language and oriented so that higher means
-                         closer to the text. Negative effects are what contamination predicts;
-                         effects are in standard deviations. Base models only (no LoRA).
-    mink_by_edition.png  mean Min-K% per edition, one panel per model, Spanish and English
-
-Usage:
-    python src/sanitize_summary.py
-    python src/sanitize_summary.py --results results_smoke --out results_smoke/analysis/sanitize
-"""
+"""Summary of the contamination tests: seen vs unseen editions (bootstrap CIs, ROC-AUC, edition-adjusted effect).
+Usage: python src/sanitize_summary.py [--results <dir>] [--out <dir>]"""
 
 import argparse
 

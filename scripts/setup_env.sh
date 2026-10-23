@@ -1,8 +1,5 @@
 #!/bin/bash
-# One-time environment setup on a Snellius login node.
-# Installs the dependencies from requirements.txt plus vLLM and records the installed
-# versions in requirements.lock.txt.
-# Usage: bash scripts/setup_env.sh            (FRESH=1 rebuilds the environment from scratch)
+# One-time environment setup on a Snellius login node (FRESH=1 rebuilds it).
 set -euo pipefail
 
 PYTHON_MODULE=${PYTHON_MODULE:-Python/3.12.3-GCCcore-13.3.0}

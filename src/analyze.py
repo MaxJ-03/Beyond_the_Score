@@ -1,37 +1,5 @@
-"""Aggregate raw evaluation results into quality and cost metrics.
-
-Metrics per model and dataset:
-    quality                  accuracy for multiple-choice datasets; for open-ended datasets
-                             the mean judge score from results/judged/ (rubric score or
-                             comprehensiveness, see the metric column), with 95% bootstrap CI
-    accuracy                 share of questions answered correctly (multiple choice only)
-    hallucinations_per_answer  contradicted statements per answer (statements task only)
-    chance_corrected_acc     (quality - c) / (1 - c), with c the mean of 1/k over items for
-                             multiple choice and 0 for open-ended datasets
-    invalid_rate             share of responses without a parseable answer
-    flops_per_question       2 * N * (input tokens + output tokens), averaged over items
-    gpu_seconds_per_question measured generation time times number of GPUs, per item
-    output_tokens_per_question
-    points_per_tflop         100 * chance_corrected_acc / (flops_per_question / 1e12): accuracy
-                             points above chance per TFLOP spent per question; higher is more
-                             cost-efficient, zero or negative at or below chance
-    points_per_gpu_second    the same with measured GPU time instead of FLOPs
-
-Comparisons:
-    rankings.csv             rank of each model per dataset, by quality and by cost-efficiency
-    rank_correlations.csv    Spearman correlation of cost-efficiency rankings between datasets
-    exam_shift.csv           accuracy on unseen minus seen exam years, per model and language,
-                             for two splits of the years:
-                               common     the same years for every model (analysis.common_split
-                                          in configs/datasets.yaml)
-                               per_model  unseen from the first exam after the model's training
-                                          cutoff (unseen_from in configs/models.yaml)
-    on_pareto_frontier       models for which no other model is both cheaper and better
-Open-ended datasets appear once their answers are graded by src/judge.py.
-
-Usage:
-    python src/analyze.py --results results
-"""
+"""Aggregate raw results into quality and cost metrics, rankings, exam shift and Pareto frontier.
+Usage: python src/analyze.py --results results"""
 
 import argparse
 import json

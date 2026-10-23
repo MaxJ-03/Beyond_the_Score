@@ -1,35 +1,5 @@
-"""Compare the three layers of questions: standard exam, new exam and real world.
-
-Layers (analysis.layers in configs/datasets.yaml):
-    standard_exam   older MIR editions (group older_exam), in the layer language
-    new_exam        newest MIR editions (group new_exam), in the layer language
-    <dataset>       every real-world dataset (group real_world) as its own layer, because
-                    their quality metrics differ (accuracy, rubric score, comprehensiveness)
-The layer language is English, so that only the type of question differs between layers.
-
-Quality per layer is pooled over its items. Chance-corrected quality is
-(quality - c) / (1 - c), with c the mean of 1/k for multiple choice and 0 for open-ended
-datasets. Cost efficiency is points per TFLOP, 100 * chance-corrected quality / (FLOPs per
-question / 1e12) as in summary.csv, so a higher value means a more cost-efficient model.
-
-Outputs, written to results/analysis/:
-    layer_summary.csv     per model and layer: quality, cost, both rankings, whether the
-                          model is the most cost-efficient one and on the Pareto frontier
-    layer_agreement.csv   per pair of layers: Spearman correlation of the quality and
-                          cost-efficiency rankings, the most cost-efficient model in each
-                          layer and whether the choice is the same
-    generalization.csv    per model: retention = chance-corrected quality on a real-world
-                          layer / chance-corrected quality on the new exam (left empty when
-                          the new-exam value is below MIN_BASE, near chance), and the accuracy
-                          drop for multiple-choice real-world layers; per family: retention of
-                          each smaller model minus retention of the largest model. Bootstrap
-                          95% CIs resample the items of both layers.
-
-Run after src/analyze.py, which writes the FLOPs per question to summary.csv.
-
-Usage:
-    python src/compare_layers.py
-"""
+"""Compare quality and cost efficiency across layers: standard exam, new exam and real world.
+Run after src/analyze.py. Usage: python src/compare_layers.py"""
 
 import argparse
 from itertools import combinations

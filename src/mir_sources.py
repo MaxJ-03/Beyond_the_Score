@@ -1,17 +1,5 @@
-"""Reading the raw MIR exam sources into the common Spanish format.
-
-Sections:
-    1. selection rules     shared by every edition: reserve, annulled and image-linked questions
-                           are removed, and the result is written to data/raw/mir_<year>_es.csv
-    2. official PDFs       text extraction from ministry booklets and answer keys
-    3. MIR 2025            the January 2025 exam (convocatoria 2024), built from the audited
-                           Version 0 PDFs in data/external/
-
-Output columns of every Spanish file:
-    id, year, question_number, question, option_a, option_b, option_c, option_d, answer
-
-This module is used by src/prepare_data.py and is not run on its own.
-"""
+"""Read the raw MIR sources (CareQA, official PDFs) into the common Spanish format.
+Used by src/prepare_data.py; not run on its own."""
 
 import hashlib
 import json
@@ -32,9 +20,7 @@ DATA_RAW = PROJECT_ROOT / "data" / "raw"
 
 # ---------------------------------------------------------------- 1. selection rules
 
-# Questions that refer to an attached image cannot be answered from text alone. The MIR
-# booklets mark them as "Pregunta vinculada a la imagen nº X". General mentions of imaging
-# ("prueba de imagen", "imagen en vidrio deslustrado") are deliberately not matched.
+# Questions linked to an image ("Pregunta vinculada a la imagen nº X"), not general mentions of imaging.
 IMAGE_PATTERN = re.compile(
     r"vinculada a la imagen"
     r"|imagen\s*n\.?\s*[º°o]?\s*\d+"
@@ -116,13 +102,7 @@ def read_pdf_text(path):
 
 
 def parse_booklet(text, max_question):
-    """Parse questions with four numbered options from booklet text.
-
-    The booklet numbers both questions and options ("17. ..." followed by "1. ", "2. ",
-    "3. ", "4. "). A state machine distinguishes them: after a question header, options
-    1 to 4 are expected in order; after option 4, the next header must be the following
-    question number. Continuation lines are appended to the current field.
-    """
+    """Parse questions with four numbered options from booklet text (state machine over numbered lines)."""
     numbered = re.compile(r"^\s*(\d{1,3})\s*[.\-)]\s+(.*)$")
     questions, current = [], None
     expected_question = 1
@@ -161,15 +141,7 @@ def parse_answer_key(text):
 
 
 # ---------------------------------------------------------------- 3. MIR 2025
-#
-# The January 25, 2025 exam (convocatoria 2024), Version 0, from:
-#   data/external/mir2025_questions_v0.pdf
-#   data/external/mir2025_answers_definitive_v0.pdf
-#
-# Fails closed if extraction cannot recover all 210 questions, 204 definitive answers, the
-# exact audited PDFs, and the independently audited 170-question content. The golden
-# checksum was derived from a separate machine-text audit; it does not claim that a human
-# visually proofread every PDF glyph.
+# January 2025 exam from the audited Version 0 PDFs in data/external/; stops on any audit mismatch.
 
 ROOT = PROJECT_ROOT
 QUESTION_PDF = ROOT / "data/external/mir2025_questions_v0.pdf"
@@ -184,9 +156,7 @@ EXPECTED_PDF_HASHES = {
     "mir2025_answers_definitive_v0.pdf": "b135110af27fa26f1fd661093ad443cdcf1afb6a8250948f684e05f5bd2ffa75",
 }
 
-# Semantic checksum of the independently audited 170-row CSV (all 9 fields,
-# sorted by question number, serialized as stable JSON). This protects against
-# silent question/option/answer changes while allowing CRLF vs LF CSV line endings.
+# Checksum of the audited 170-question CSV content (independent of line endings).
 EXPECTED_AUDITED_CONTENT_HASH = "d9e1aeec7c26ddb405cbaaf6fea6ae7ee7451523f9682158bd965ee6262305b7"
 
 
@@ -222,9 +192,7 @@ def check_source_pdfs():
     with pdfplumber.open(QUESTION_PDF) as pdf:
         first = (pdf.pages[0].extract_text() or "").upper()
         compact = re.sub(r"\s+", " ", first)
-        # The 2025 booklet prints "PRUEBAS SELECTIVAS" and "2024" in
-        # different text columns/lines. Confirm both the exam type and the
-        # "MEDICINA 2024" designation without requiring adjacent words.
+        # Exam type and "MEDICINA 2024" may be in different text columns, so check them separately.
         if not re.search(r"\bPRUEBAS\s+SELECTIVAS\b", compact) or not re.search(r"\bMEDICINA\s+2024\b", compact):
             raise SystemExit("Wrong question booklet: expected PRUEBAS SELECTIVAS and MEDICINA 2024 (January 2025 exam).")
         if not re.search(r"MEDICINA\s*-\s*VERSI[ÓO]N", compact) or not re.search(r"\b0\b", compact):
@@ -308,9 +276,7 @@ def prepare_mir2025():
             value = re.sub(r"(?<=\w)-\s+(?=\w)", "-", value)
             row[field] = value
 
-    # Verify the entire independently audited content BEFORE overwriting
-    # data/raw/mir_2025_es.csv. This includes all 170 stems, 680 options,
-    # question IDs, exam years and answer letters, not just counts.
+    # Verify all audited content before overwriting data/raw/mir_2025_es.csv.
     preview = pd.DataFrame(rows)
     if len(preview) != 170 or not preview["question_number"].is_unique:
         raise SystemExit("STOP: incorrect number or duplicate question numbers.")

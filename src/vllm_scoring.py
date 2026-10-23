@@ -1,28 +1,5 @@
-"""The vLLM calls of the contamination tests (src/sanitize.py).
-
-Everything that depends on the vLLM version is in this file. Written for and checked against
-the source of vLLM 0.31.0 (the version recorded in results/raw/*/*.meta.json):
-
-    raw text          prompts are passed as token ids (vllm.inputs.TokensPrompt), so no chat
-                      template or instruction is added and the scored tokens are known
-                      exactly. The BOS token is added by hand where the tokenizer has one
-                      (Gemma 3, Llama 3); Qwen3 has none.
-    log-probabilities SamplingParams(prompt_logprobs=1, max_tokens=1). RequestOutput.
-                      prompt_logprobs has one entry per prompt token: None for the first
-                      token (it has no context), otherwise a dict {token id: Logprob} that
-                      always contains the prompt token itself. The values are raw
-                      log-probabilities (logprobs_mode "raw_logprobs", the default), and vLLM
-                      skips the prefix cache for these requests, so every token is scored.
-    continuation      SamplingParams(temperature=0, max_tokens=n), greedy
-    LoRA              LLM(enable_lora=True, max_lora_rank=r) and a LoRARequest with each call
-
-LLMSanitize, written for vLLM 0.3.3, instead sends HTTP requests to a separate vLLM server
-(/v1/completions with echo=True) and takes the prompt log-probabilities from the response.
-
-The model is loaded by VLLMBackend from src/run_eval.py, i.e. with the settings of the
-accuracy evaluation in configs/models.yaml. MockScorer has the same interface and needs no
-GPU (tests and --backend mock).
-"""
+"""All vLLM-specific calls of the contamination tests (written for vLLM 0.31): prompt log-probs, greedy
+continuations and LoRA; MockScorer has the same interface without a GPU."""
 
 import json
 import random
@@ -34,10 +11,7 @@ LORA_RANKS = (1, 8, 16, 32, 64, 128, 256, 320, 512)
 
 
 def prompt_token_logprobs(prompt_logprobs, token_ids):
-    """Log-probability of every prompt token from RequestOutput.prompt_logprobs.
-
-    Returns a list aligned with token_ids whose first element is None.
-    """
+    """Log-probability of every prompt token from RequestOutput.prompt_logprobs (first element None)."""
     if prompt_logprobs is None or len(prompt_logprobs) != len(token_ids):
         found = None if prompt_logprobs is None else len(prompt_logprobs)
         raise RuntimeError(f"Expected prompt log-probabilities for {len(token_ids)} tokens, got {found}.")

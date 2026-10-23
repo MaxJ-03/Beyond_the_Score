@@ -1,18 +1,5 @@
-"""Shared helpers of the contamination experiments, and the multiple-choice evaluation they use.
-
-The shared project files (configs/models.yaml, configs/datasets.yaml, src/medeval) are read but
-never changed. On top of them this file adds
-  * the planted-contamination checkpoints as models (PLANTED_MODELS),
-  * the settings of the team pipeline (branch stage3), so that results are comparable with it:
-    a 1,024-token answer limit, MedGemma 27B answering directly, and stage3's answer parser.
-
-Commands (project folder):
-    python contamination/common.py eval --model qwen3-4b --datasets medqa         (GPU)
-    python contamination/common.py eval --model planted-gemma3-4b-ep1 --datasets mir_2020_es
-    python contamination/common.py reparse          re-score stored answers with the parser below
-Outputs of eval: results/raw/<model>/<dataset>.jsonl and .meta.json (same format as the
-shared pipeline).
-"""
+"""Shared helpers of the contamination experiments: planted models, stage3 settings and the evaluation.
+Usage: python contamination/common.py eval --model <key> --datasets <keys> | reparse"""
 
 import argparse
 import json

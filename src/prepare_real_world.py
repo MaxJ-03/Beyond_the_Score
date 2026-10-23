@@ -1,28 +1,5 @@
-"""Prepare the real-world datasets (third layer of the study).
-
-What it produces:
-    data/cupcase.jsonl            CUPCase (Perets et al., AAAI 2025): 3,562 case reports from
-                                  the BMC Journal of Medical Case Reports (2012 to 2020), four
-                                  candidate diagnoses each, multiple choice
-    data/livemedbench_en.jsonl    LiveMedBench (2026): English real-world cases from online
-                                  medical platforms, with posting date and grading rubric
-    data/kqa.jsonl                K-QA (Manes et al., 2024): 201 real patient questions with
-                                  physician-written must-have and nice-to-have statements
-    data/kqa_nli_validation.csv   K-QA statements labelled by three physicians, used to
-                                  validate the judge (python src/judge.py --validate)
-    data/<name>.report.json       counts and sources per dataset
-
-CUPCase options are shuffled with a fixed seed, so the correct diagnosis is not always in the
-same position. LiveMedBench is published in monthly files; all files are merged, later files
-replace earlier versions of the same case, and only English cases are kept (cases containing
-Chinese characters are removed, the rule of the official evaluation script). K-QA is
-downloaded from a fixed commit of its GitHub repository.
-
-Usage:
-    python src/prepare_real_world.py                           all three datasets
-    python src/prepare_real_world.py --datasets cupcase kqa
-    python src/prepare_real_world.py --livemedbench-dir <folder with the monthly json files>
-"""
+"""Prepare the real-world datasets: CUPCase, LiveMedBench (English) and K-QA.
+Usage: python src/prepare_real_world.py [--datasets ...] [--livemedbench-dir <folder>]"""
 
 import argparse
 import json

@@ -1,13 +1,5 @@
-"""Paired comparison of each medical model with its base model on the same questions.
-
-Multiple choice (MIR Spanish, MIR English, CUPCase): accuracy difference, paired bootstrap 95% CI
-and exact McNemar test. K-QA and LiveMedBench (cases from 2025-06-01): mean difference and paired
-bootstrap 95% CI. Also writes the mean LiveMedBench answer length per model.
-Seed 0 and 4,000 resamples for every bootstrap.
-
-Usage (from the repository root): python contamination/paired_tests.py [--root .] [--out folder]
-Output: results/analysis/paired_tests/paired_tests.csv and livemedbench_length.csv
-"""
+"""Paired comparison of each medical model with its base model on the same questions (bootstrap CI, McNemar).
+Usage: python contamination/paired_tests.py [--root .] [--out folder]"""
 
 import argparse
 import csv

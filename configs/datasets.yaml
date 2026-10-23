@@ -1,28 +1,5 @@
-# Dataset registry.
-#
-# Every dataset is converted to the same internal format (src/items.py). The task field
-# decides how questions are presented and scored:
-#   multiple_choice (default)  lettered options, scored by the parsed answer letter
-#   rubric                     open-ended case graded against rubric items (src/judge.py)
-#   statements                 open-ended question graded against statements (src/judge.py)
-# Two input formats are supported:
-#   jsonl: one JSON object per line. Multiple choice: id, year, question, options, answer
-#          (options is a mapping from letter to text, answer is a letter). Open-ended: id,
-#          question and the task-specific fields written by src/prepare_real_world.py.
-#   csv:   multiple choice only; the columns block maps the CSV columns to fields
-#
-# The group label describes the role of a dataset (reported in summary.csv):
-#   older_exam = older MIR editions, used as the standard benchmark (possibly seen in training)
-#   new_exam   = newest MIR editions (2025 and 2026), held after most or all model cutoffs
-#   real_world = questions from clinical practice (CUPCase, LiveMedBench, K-QA)
-#   reference  = additional benchmark, not part of the main comparison
-# Which exam years count as seen or unseen in the exam-shift and contamination analyses is
-# set by the exam year, not by the group: see analysis.common_split below and unseen_from in
-# configs/models.yaml.
-#
-# The *_es entries evaluate the original Spanish questions from data/raw/, which also
-# allows running before the translation is done. The instructions stay in English, so
-# that only the language of the question differs between the two versions.
+# Dataset registry: task (multiple_choice, rubric, statements), format (jsonl or csv) and group per dataset.
+# *_es entries are the original Spanish questions; seen/unseen years are set in analysis and models.yaml.
 
 datasets:
   mir_2022:
@@ -163,9 +140,7 @@ datasets:
     group: real_world
     language: en
     task: rubric
-    # Only cases posted on or after this date are used. It lies after the release of every
-    # evaluated model (the latest is MedGemma, 20 May 2025; release in configs/models.yaml),
-    # so no case can be part of any model's training data. src/items.py checks this.
+    # Only cases posted on or after this date (after every model's release) are used.
     min_date: "2025-06-01"
     instruction: >-
       IMPORTANT: Provide ONLY the final answer to the following question, without any
@@ -180,9 +155,7 @@ datasets:
     task: statements
     instruction: Answer the following patient question.
 
-# "auto" evaluates every non-optional dataset whose input file exists. A dataset added
-# later (for example MIR 2026 in English) is picked up automatically, and
-# scripts/submit_all.sh only runs the model and dataset combinations without results.
+# "auto" evaluates every non-optional dataset whose input file exists.
 default_datasets: auto
 
 evaluation:
@@ -212,17 +185,11 @@ judge:
   validation_file: data/kqa_nli_validation.csv
 
 analysis:
-  # Parameter count used in FLOPs = 2 * N * (input tokens + output tokens).
-  # lm_total: all language-model parameters, including embeddings (vision encoder excluded)
-  # lm_non_embedding: language-model parameters excluding the input embedding table
+  # Parameters N in FLOPs = 2 * N * tokens: lm_total (with embeddings) or lm_non_embedding.
   flops_param_count: lm_total
   bootstrap_samples: 2000
   bootstrap_seed: 0
-  # Common split of exam years for exam_shift.csv, identical for every model: the older
-  # editions (2020 to 2024) against the newest editions (2025 and 2026). It is not exact for
-  # every model: Llama 3 and Med42 cannot have seen 2024 (cutoff March 2023), and Qwen3 was
-  # released after the 2025 exam. The per-model split (unseen_from in configs/models.yaml)
-  # follows each model's cutoff.
+  # Same split for every model: 2020-2024 seen, 2025-2026 unseen (per-model split: unseen_from in models.yaml).
   common_split:
     seen_years: [2020, 2021, 2022, 2023, 2024]
     unseen_years: [2025, 2026]

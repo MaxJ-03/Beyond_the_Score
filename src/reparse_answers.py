@@ -1,13 +1,5 @@
 """Parse the stored multiple-choice answers again with the current answer parser.
-
-The model responses are kept in results/raw/<model>/<dataset>.jsonl, so a change to the parser
-in src/run_eval.py (extract_answer) can be applied to all results without running any model
-again. The fields predicted and correct are recomputed; everything else stays unchanged.
-
-Usage:
-    python src/reparse_answers.py                     all models and multiple-choice datasets
-    python src/reparse_answers.py --models medgemma-27b
-"""
+Usage: python src/reparse_answers.py [--models ...]"""
 
 import argparse
 import json

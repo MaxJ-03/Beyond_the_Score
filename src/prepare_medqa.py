@@ -1,15 +1,5 @@
 """Convert a MedQA dataset from Hugging Face into the pipeline's jsonl format.
-
-MedQA is distributed in several layouts on Hugging Face. This script detects the most
-common ones automatically:
-    options as a dict ({"A": "...", "B": "..."}), as a list, or as separate columns
-    the answer as a letter, a zero-based index, or the full answer text
-Column names can be overridden if detection fails. The detected layout and the first
-converted item are printed so the conversion can be checked.
-
-Usage:
-    python src/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl
-"""
+Usage: python src/prepare_medqa.py --hf-name awinml/medqa --split test --out data/medqa_test.jsonl"""
 
 import argparse
 import json

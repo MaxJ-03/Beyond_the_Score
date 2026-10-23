@@ -1,7 +1,4 @@
-"""Unit tests of the contamination-test scores (src/sanitize_metrics.py) and of the parsing of
-vLLM prompt log-probabilities (src/vllm_scoring.py). No GPU and no vLLM needed:
-    python -m pytest tests/test_sanitize_metrics.py
-"""
+"""Unit tests of the contamination-test scores and vLLM log-prob parsing (no GPU needed)."""
 
 import math
 from types import SimpleNamespace

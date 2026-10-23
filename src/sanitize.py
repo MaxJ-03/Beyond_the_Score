@@ -1,47 +1,5 @@
-"""Contamination tests on the raw MIR question text: completion and Min-K% Prob.
-
-Adapted from LLMSanitize (Ravaut et al., 2024, github.com/ntunlp/LLMSanitize) to the vLLM setup
-of src/run_eval.py. Every model in configs/models.yaml (except the judge and optional models)
-runs both tests on every dataset of the groups in configs/sanitize.yaml (all MIR editions,
-Spanish and English):
-
-    completion  the first half of each question (split at the middle word) is given to the
-                model as raw text, and the model continues it greedily for as many tokens as
-                the real second half has. The continuation is compared with the real second
-                half: ROUGE-L F1 (words), normalized Levenshtein similarity (characters) and
-                the number of leading tokens that match exactly. Continuations with a
-                Levenshtein similarity of at least near_verbatim_threshold are flagged.
-    mink        Min-K% Prob (Shi et al., 2023): mean log-probability of the k% least likely
-                tokens of the question, plus the mean log-probability (perplexity) of all
-                tokens and the zlib ratio of LLMSanitize. Higher scores on seen than on unseen
-                editions suggest exposure. Scored on the full question and on the stem alone
-                (stem_* columns), which does not depend on how the options are written.
-
-Both tests use the raw question text, laid out as in the MIR booklet (src/sanitize_metrics.py),
-without chat template or instruction. All vLLM calls are in src/vllm_scoring.py. Each model is
-loaded once and runs both tests on all datasets; with several models, each model runs in its
-own process so that its GPU memory is released before the next one starts.
-
-Every row carries two labels of the edition for that model (src/sanitize_metrics.py,
-seen_labels): seen (main, from unseen_from in configs/models.yaml) and seen_strict (unseen only
-if the exam was held after the model's release, ambiguous between cutoff and release).
-
-Outputs (one pair per model, dataset and test; existing outputs are skipped unless --overwrite,
-so an interrupted run continues where it stopped):
-    results/sanitize/<model>/<dataset>.completion.jsonl       one row per question
-    results/sanitize/<model>/<dataset>.mink.jsonl             one row per question
-    results/sanitize/<model>/<dataset>.<test>.meta.json       settings, timing, vLLM version,
-                                                              model revision
-With --lora, <model> is <model key>+<adapter name>.
-
-Usage:
-    python src/sanitize.py                                         all models and datasets
-    python src/sanitize.py --models gemma3-1b --datasets mir_2022_es mir_2026_es
-    python src/sanitize.py --models gemma3-1b --limit 5 --out results_smoke
-    python src/sanitize.py --models gemma3-4b --lora <adapter folder> --lora-name mir2022
-    python src/sanitize.py --backend mock --limit 5 --out results_smoke   (test without GPU)
-Analysis: python src/sanitize_summary.py
-"""
+"""Contamination tests on the raw MIR question text: completion and Min-K% Prob (adapted from LLMSanitize).
+Usage: python src/sanitize.py [--models ...] [--datasets ...] [--limit N] [--lora <adapter>]"""
 
 import argparse
 import json
@@ -170,9 +128,7 @@ def run_completion(scorer, items, settings):
         text = question_text(item, text_cfg)
         prefix, reference, n_words, n_prefix_words = split_at_words(text, cfg["split_ratio"])
         prefix_ids, full_ids = scorer.encode(prefix), scorer.encode(text)
-        # The real second half in tokens: the tokens of the full text after the prefix, if the
-        # prefix is tokenized the same way on its own (almost always, as it ends before a space
-        # or line break); otherwise the second half tokenized on its own.
+        # Reference tokens: the full text's tokens after the prefix if they align, else the reference on its own.
         aligned = full_ids[:len(prefix_ids)] == prefix_ids
         reference_ids = full_ids[len(prefix_ids):] if aligned else scorer.encode(reference)
         budget = max(1, min(len(reference_ids), cfg["max_new_tokens_cap"]))

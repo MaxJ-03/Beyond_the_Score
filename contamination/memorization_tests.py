@@ -1,31 +1,5 @@
-"""Memorization tests from LLMSanitize that the team pipeline (stage3) does not run.
-
-LLMSanitize (Ravaut et al., 2024, github.com/ntunlp/LLMSanitize) requires vLLM 0.3.3, which cannot
-load our models, so three of its closed-data tests are ported line by line (same prompts, text,
-sample size and scores; only the inference call differs):
-
-  guided completion   (Golchin and Surdeanu, 2024; "guided-prompting")
-      The model gets the question and first option and must write the remaining options, once
-      with an instruction that names the dataset and split ("guided") and once without
-      ("general"). If guided completions match the true text better (ROUGE-L), the model
-      recognises the dataset. Bootstrap p-value of guided minus general.
-  masked-option guessing   (Deng et al., 2024; "ts-guessing-question-multichoice")
-      One wrong option is hidden; the model must restore it. A wrong option cannot be inferred
-      from medical knowledge, so exact reproduction points to memorization. Score: exact match
-      with the hidden option (LLMSanitize compares with the correct option, a bug relative to
-      the paper; its number is stored as em_vs_correct_answer).
-  Min-K% likelihood   (Shi et al., 2024; "min-prob")
-      Mean log-probability of the k% least likely tokens of "question | options | answer";
-      reported for MedQA vs MIR 2026 (English) only, because Min-K% on older vs newer MIR
-      editions is part of stage3 (src/sanitize.py).
-
-Commands (project folder):
-    python contamination/memorization_tests.py run --model gemma3-4b --datasets medqa mir_2026   (GPU)
-    python contamination/memorization_tests.py run --model planted-gemma3-4b-ep3 --datasets mir_2020_es --n 0
-    python contamination/memorization_tests.py summary                                           (CPU)
-Outputs: results/llmsanitize/<method>/<model>/<dataset>.jsonl and .summary.json;
-summary tables in results/analysis/memorization_tests/.
-"""
+"""LLMSanitize memorization tests ported to our vLLM: guided completion, masked-option guessing and Min-K%.
+Usage: python contamination/memorization_tests.py run --model <key> --datasets <keys> | summary"""
 
 import argparse
 import json

@@ -1,12 +1,4 @@
-"""End-to-end tests of the contamination tests (src/sanitize.py and src/sanitize_summary.py).
-
-    test_pipeline_with_mock_backend   every model and MIR dataset, 5 questions each, with random
-                                      scores; no GPU (runs anywhere)
-    test_smoke_with_vllm              both tests on 5 questions of one Spanish and one English
-                                      dataset with the smallest model in configs/models.yaml
-                                      (Gemma 3 1B); needs vLLM, a GPU and the downloaded weights,
-                                      skipped otherwise. On Snellius: SMOKE=1 sbatch scripts/sanitize.sbatch
-"""
+"""End-to-end tests: mock backend on all models (no GPU), and vLLM on the smallest model (GPU only)."""
 
 import os
 import subprocess

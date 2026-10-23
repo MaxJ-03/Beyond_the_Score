@@ -1,23 +1,6 @@
 #!/bin/bash
-# Submit evaluation jobs for every model, but only for the datasets that do not have
-# results yet. Rerunning this script after adding a dataset therefore only evaluates
-# the new dataset. Results with answers that were cut off at a lower token limit than the
-# current one in configs/datasets.yaml, and results generated with other sampling_kwargs than
-# the current ones in configs/models.yaml, are outdated and are submitted again as well.
-#
-# The jobs run one after another: each job starts when the previous one has ended, so only
-# one job at a time is checked against the compute budget. A grading job (scripts/judge.sbatch)
-# is queued after the last evaluation job. A job that is cancelled or hits its time limit does
-# not stop the chain; rerunning this script submits whatever is still missing.
-#
-# Usage:
-#   bash scripts/submit_all.sh                      all available datasets, missing results only
-#   DATASETS="medqa" bash scripts/submit_all.sh     specific datasets
-#   INCLUDE_OPTIONAL=1 bash scripts/submit_all.sh   include optional models
-#   FORCE=1 bash scripts/submit_all.sh              rerun everything, overwriting results
-#   MODELS="gemma3-27b" bash scripts/submit_all.sh  only these models
-#   JUDGE=0 bash scripts/submit_all.sh              do not queue the grading job
-#   PARALLEL=1 bash scripts/submit_all.sh           submit all jobs at once instead of in a chain
+# Submit chained evaluation jobs for missing or outdated results, then a grading job.
+# Options: DATASETS, MODELS, INCLUDE_OPTIONAL=1, FORCE=1, JUDGE=0, PARALLEL=1.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source "$HOME/venvs/medeval/bin/activate"
@@ -71,9 +54,7 @@ if [[ ! -s logs/submit_list.txt ]]; then
     exit 0
 fi
 
-# Jobs of this project that are still pending or running. Models that already have a queued
-# job are skipped, and new jobs are appended to the end of the existing chain, so the script can
-# be rerun safely while earlier jobs are still in the queue.
+# Queued jobs of this project: skip models already queued and append to the end of the chain.
 queued=$(squeue -u "$USER" -h -o "%i %j" | awk '$2 ~ /^medeval/' | sort -n)
 previous=$(awk 'END {print $1}' <<< "$queued")
 

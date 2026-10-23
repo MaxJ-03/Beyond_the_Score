@@ -1,19 +1,6 @@
 #!/bin/bash
-# Submit contamination-test jobs (scripts/sanitize.sbatch) for every model that still has missing
-# outputs in results/sanitize/. Each job runs one model on all MIR datasets and skips the outputs
-# that already exist, so rerunning this script after an interrupted or timed-out job only does
-# the remaining work. The time limit of each job is the model's slurm_time in configs/models.yaml.
-#
-# The jobs run one after another and are appended to the end of the existing chain of this
-# project's jobs (also those of scripts/submit_all.sh), so only one job at a time is checked
-# against the compute budget. Models that already have a queued job are skipped.
-#
-# Usage:
-#   bash scripts/submit_sanitize.sh                                  all models, missing outputs only
-#   MODELS="gemma3-27b qwen3-4b" bash scripts/submit_sanitize.sh     only these models
-#   DATASETS="mir_2022_es mir_2026_es" bash scripts/submit_sanitize.sh
-#   OVERWRITE=1 bash scripts/submit_sanitize.sh                      rerun everything, overwriting outputs
-#   PARALLEL=1 bash scripts/submit_sanitize.sh                       submit all jobs at once instead of in a chain
+# Submit chained contamination-test jobs for models with missing outputs in results/sanitize/.
+# Options: MODELS, DATASETS, OVERWRITE=1, PARALLEL=1.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source "$HOME/venvs/medeval/bin/activate"

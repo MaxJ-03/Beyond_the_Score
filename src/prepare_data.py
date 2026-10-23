@@ -1,32 +1,5 @@
-"""Prepare all MIR datasets with one command.
-
-What it produces:
-    data/raw/mir_2020_es.csv to mir_2024_es.csv    Spanish, from CareQA on Hugging Face
-    data/mir_2020_en.csv to mir_2024_en.csv        English, CareQA's GPT-4 translation
-    data/raw/mir_2025_es.csv                       Spanish, from the audited Version 0 PDFs
-    data/mir_2025_en.csv                           English, from data/external/mir_2025_en_mlt.csv
-    data/raw/mir_2026_es.csv                       Spanish, from the scraped file
-                                                   data/external/mir2026_text_primary_es.csv
-    data/mir_2026_en.csv                           English, from data/external/mir_2026_en_mlt.csv
-    data/translation_checks/                       checks of all English files
-
-All English files have the Spanish text in parallel columns and contain exactly the
-questions of their Spanish counterpart. The main-question cutoff is 175 for MIR 2020-2021
-and 200 for MIR 2022-2026; image-linked, annulled and reserve questions are excluded (see
-src/mir_sources.py). Audited transcription corrections (src/mir_corrections.py) are
-applied during preparation.
-
-Sections:
-    1. CareQA, MIR 2020 to 2024 (Spanish and English)
-    2. MIR 2026 (Spanish)
-    3. English files from the 2025 and 2026 machine translations
-    4. translation checks
-    5. main
-
-Usage:
-    python src/prepare_data.py
-    python src/prepare_data.py --checks-only     only rerun the translation checks
-"""
+"""Prepare all MIR datasets (Spanish and English, 2020-2026) and check the translations.
+Usage: python src/prepare_data.py [--checks-only]"""
 
 import argparse
 import json
@@ -164,12 +137,7 @@ def prepare_2026(path, max_question):
 
 # ---------------------------------------------------------------- 3. English files from machine translations
 
-# The 2025 and 2026 translations were produced with the same procedure (Google machine
-# translation) and share one translation mode. Each entry gives the columns of the
-# translated file: the key that identifies a question, the matching column in the Spanish
-# file, the answer column and the English option columns. Known deviation in 2025: in
-# question 38, option C, the Spanish source contains the typographical error "0,3-05 mL",
-# which the translation renders as "0.3-0.5 mL"; the translation checks report the case.
+# 2025 and 2026 translations: key, Spanish key, answer and option columns of each file.
 TRANSLATIONS = {
     2025: {"key": "id", "spanish_key": "id", "answer": "answer",
            "options": {"a": "option_a_en", "b": "option_b_en", "c": "option_c_en", "d": "option_d_en"}},
@@ -186,14 +154,7 @@ def clean_text(value):
 
 def build_english(year, translation_path):
     """Write data/mir_<year>_en.csv from the translation of the selected Spanish questions.
-
-    The output has the same format as the CareQA English files:
-        id, year, answer, translation_mode, question_es, question_en,
-        option_a_es, option_a_en, ..., option_d_es, option_d_en
-    The Spanish text is taken from data/raw/mir_<year>_es.csv, so it is identical to the text
-    evaluated in the Spanish run. Stops if a selected question is missing from the
-    translation or if an answer letter differs between the two files.
-    """
+    Stops if a question is missing or an answer letter differs."""
     spec = TRANSLATIONS[year]
     spanish_path = DATA / "raw" / f"mir_{year}_es.csv"
     translation_path = resolve_path(translation_path)
@@ -255,13 +216,7 @@ def build_english(year, translation_path):
 
 
 # ---------------------------------------------------------------- 4. translation checks
-#
-# Checks per English file: empty translated fields and leftover option markers, answer
-# letters restricted to A to D, numbers in the Spanish source that are missing from the
-# English text (decimal commas are normalized, so 3,5 matches 3.5), and English to Spanish
-# length ratios far outside the typical range for the file. Written to
-# data/translation_checks/: validation_summary.csv (one row per year), validation_flags.csv
-# (every flagged field) and spot_check_sample.csv (a random sample per year for manual review).
+# Flags empty fields, missing numbers and unusual lengths; writes data/translation_checks/.
 
 FIELDS = ["question", "option_a", "option_b", "option_c", "option_d"]
 NUMBER_PATTERN = re.compile(r"\d+(?:[.,]\d+)?")

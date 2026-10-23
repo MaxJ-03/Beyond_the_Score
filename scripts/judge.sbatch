@@ -1,11 +1,6 @@
 #!/bin/bash
-# Grade all open-ended answers that have no grades yet with the judge (gpt-oss-120b).
-# The judge is loaded once for all models and datasets; rerunning only grades new answers.
-#   sbatch scripts/judge.sbatch                       grade everything that is missing
-#   VALIDATE=1 sbatch scripts/judge.sbatch            agreement with the K-QA physician labels
-#   JUDGE_ARGS="--models qwen3-4b --force" sbatch scripts/judge.sbatch
-# Grades are written per model and dataset, so a job that reaches its time limit loses only the
-# pair in progress; submitting the job again continues with the remaining pairs.
+# Grade all ungraded open-ended answers with the judge; VALIDATE=1 checks it against K-QA physicians.
+# Extra options: JUDGE_ARGS="--models qwen3-4b --force" sbatch scripts/judge.sbatch
 #SBATCH --job-name=medeval_judge
 #SBATCH --partition=gpu_h100
 #SBATCH --gpus=1

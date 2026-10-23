@@ -1,21 +1,5 @@
-"""Planted contamination: how much exposure to test questions can accuracy and Min-K% detect?
-
-Half of the MIR 2020-2022 questions are planted in a model by LoRA fine-tuning on the question
-text with its correct answer; the other half are held out. The planted effect is the accuracy
-gain on planted questions minus the gain on held-out questions (both relative to the base model).
-Min-K% Prob (Shi et al., 2024) is the likelihood-based detector: mean log-probability of the k%
-least likely tokens of a question; text seen in training has fewer very unlikely tokens.
-
-Commands (project folder; contamination/run.sh chains them on Snellius):
-    python contamination/planted.py split                      exposed / held-out split (CPU)
-    python contamination/planted.py train --model gemma3-4b    LoRA, checkpoints after 1, 3, 10 epochs (GPU)
-    python contamination/planted.py mink --model gemma3-4b     Min-K% of every question (GPU)
-    python contamination/planted.py analyse --base gemma3-4b   planted effect and Min-K% AUC (CPU)
-The checkpoints are evaluated with `common.py eval`.
-
-Outputs: contamination/planted_split.csv; checkpoints/planted/<model>-ep<E>[-adapter]/;
-results/mink/<model>/<dataset>.jsonl; contamination/planted_out/{accuracy,mink_auc}_<base>.csv (one pair per base model)
-"""
+"""Planted contamination: LoRA-train on half of MIR 2020-2022 and measure the accuracy and Min-K% effect.
+Usage: python contamination/planted.py split | train | mink | analyse --model/--base <key>"""
 
 import argparse
 import json

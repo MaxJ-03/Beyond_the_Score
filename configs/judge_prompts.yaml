@@ -1,13 +1,4 @@
-# Prompts of the LLM judge (src/judge.py), copied from the official evaluation code of each
-# benchmark so that the grading follows the benchmark authors. Placeholders in braces are
-# filled by src/judge.py; all other text is used verbatim.
-#
-#   rubric           LiveMedBench, github.com/ZhilingYan/LiveMedBench, evaluate/evaluate_model.py
-#                    (MIT license). One call per rubric criterion; the verdict is the "met"
-#                    field of the JSON answer.
-#   entails          K-QA, github.com/Itaymanes/K-QA, evaluation/prompts/is_entails.txt
-#   contradicts      K-QA, evaluation/prompts/is_contradict.txt (MIT license). One call per
-#                    statement; the verdict is "True" or "False" at the end of the answer.
+# Official judge prompts of LiveMedBench (rubric) and K-QA (entails, contradicts); {placeholders} filled by src/judge.py.
 
 rubric: |-
     Role: You are an Objective Grader.

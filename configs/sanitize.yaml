@@ -1,13 +1,5 @@
-# Settings of the contamination tests (src/sanitize.py) and their summary (src/sanitize_summary.py).
-#
-# The tests are adapted from LLMSanitize (Ravaut et al., 2024, github.com/ntunlp/LLMSanitize):
-#   completion  the model continues the first half of each question; the continuation is
-#               compared with the real second half
-#   mink        Min-K% Prob (Shi et al., 2023): mean log-probability of the k% least likely
-#               tokens of the question
-# Both tests read the raw question text, without chat template or instruction, because
-# memorization concerns the original text. Models and datasets come from configs/models.yaml
-# and configs/datasets.yaml; nothing is named here.
+# Settings of the contamination tests (src/sanitize.py, adapted from LLMSanitize): completion and Min-K% Prob
+# on the raw question text, without chat template.
 
 # Datasets: every non-optional dataset of these groups (configs/datasets.yaml) whose input file
 # exists, i.e. all MIR editions in Spanish and English.
@@ -16,12 +8,7 @@ dataset_groups: [older_exam, new_exam]
 # Models: every model in configs/models.yaml except the judge (role: judge) and optional models.
 
 text:
-  # How a question is written out. The default follows the official MIR booklet: the stem,
-  # then the four options on separate lines, numbered 1 to 4. The answer is never included
-  # (the booklet does not contain it).
-  #   numbers  "1. <option>"   (booklet)
-  #   letters  "A. <option>"   (as in the accuracy prompts and the CareQA viewer)
-  #   none     "<option>"
+  # Option labels: numbers ("1. ", as in the MIR booklet), letters ("A. ") or none.
   option_labels: numbers
   # false scores the stem only. With true, Min-K% is also stored for the stem alone
   # (stem_* columns), which does not depend on how the options are written.
@@ -44,19 +31,10 @@ mink:
   k_values: [0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
   primary_k: 0.2
 
-# Seed of the vLLM sampling parameters (decoding is greedy, so it only matters if the
-# temperature is changed) and of the bootstrap in the summary. The engine seed is the model
-# seed in configs/models.yaml, as in the accuracy evaluation.
+# Seed of the vLLM sampling and the summary bootstrap (the engine seed is in models.yaml).
 seed: 0
 
-# Date each MIR exam was held; the questions are public from that day on. Used for the strict
-# seen/unseen label (see src/sanitize_metrics.py, seen_labels); the main label is unseen_from
-# in configs/models.yaml. Sources:
-#   2020, 2021  isanidad.com (2021 was moved to March because of COVID-19)
-#   2022, 2023  one secondary listing only, not verified; no label depends on the exact day
-#   2024        Infobae, Sindicato Médico Andaluz
-#   2025        exam_held in src/mir_sources.py (official Version 0 booklet)
-#   2026        Redacción Médica, Infobae
+# Date each MIR exam was held, for the strict seen/unseen label (2022 and 2023 not verified).
 exam_dates:
   2020: "2020-01-25"
   2021: "2021-03-27"

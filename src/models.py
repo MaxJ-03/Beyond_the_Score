@@ -1,32 +1,5 @@
-"""Make sure every model is downloaded and its parameters are counted.
-
-Two steps, each skipped when nothing is missing:
-    1. weights   a model whose weights are complete in the Hugging Face cache is not
-                 downloaded again; incomplete or missing models are downloaded
-    2. counts    results/param_counts.json keeps the counts it already has; only models
-                 that are missing from it (or whose hf_id changed) are counted
-
-When both steps have nothing to do, the script only reports that everything is up to date,
-without contacting Hugging Face. Run it on a login node (or on the staging partition) with
-HF_HOME pointing to /scratch-shared/<username>/hf_cache; evaluation jobs then run with
-HF_HUB_OFFLINE=1. Gated models (Gemma 3, MedGemma, Llama 3) require a Hugging Face login and
-accepted licenses.
-
-Parameters are counted from the safetensors file headers, without loading weights and
-without PyTorch. Tensors of vision components in multimodal checkpoints (for example the
-vision tower and projector of Gemma 3) are excluded, because all questions are text-only.
-Counts written per model:
-    lm_total          all language-model parameters, including the embedding table
-    lm_non_embedding  language-model parameters excluding the input embedding table
-    vision_excluded   parameters excluded as vision components
-    total_in_files    every parameter in the checkpoint
-
-Usage:
-    python src/models.py                      all non-optional models and the judge
-    python src/models.py --models qwen3-4b gemma3-4b
-    python src/models.py --include-optional
-    python src/models.py --recount            count all selected models again
-"""
+"""Download missing model weights and count parameters from safetensors headers.
+Usage: python src/models.py [--models ...] [--include-optional] [--recount]"""
 
 import argparse
 import json
@@ -45,12 +18,7 @@ PARAM_COUNTS = PROJECT_ROOT / "results" / "param_counts.json"
 # ---------------------------------------------------------------- 1. weights
 
 def find_snapshot(repo_id):
-    """Locate the downloaded snapshot of a model in the Hugging Face cache, or return None.
-
-    The cache layout is <cache>/models--<org>--<name>/snapshots/<revision>/. The revision
-    recorded in refs/main is preferred; otherwise the most recently modified snapshot with
-    safetensors files is used.
-    """
+    """Locate the downloaded snapshot of a model in the Hugging Face cache, or return None."""
     from huggingface_hub import constants
 
     repo_dir = Path(constants.HF_HUB_CACHE) / ("models--" + repo_id.replace("/", "--"))
@@ -67,11 +35,7 @@ def find_snapshot(repo_id):
 
 
 def is_complete(snapshot):
-    """True if the snapshot has a config, a tokenizer and every weight file it lists.
-
-    Sharded checkpoints list their weight files in model.safetensors.index.json; every listed
-    file must exist (a download that was interrupted leaves some of them missing).
-    """
+    """True if the snapshot has a config, a tokenizer and every weight file it lists."""
     if snapshot is None or not (snapshot / "config.json").exists():
         return False
     if not any((snapshot / name).exists() for name in ("tokenizer.json", "tokenizer.model", "tokenizer_config.json")):
@@ -104,11 +68,7 @@ def ensure_weights(models, keys):
 # ---------------------------------------------------------------- 2. parameter counts
 
 def read_header_shapes(file):
-    """Yield (tensor name, number of elements) from a safetensors header.
-
-    A safetensors file starts with an 8-byte little-endian header length, followed by a
-    JSON header that lists every tensor with its shape.
-    """
+    """Yield (tensor name, number of elements) from a safetensors header."""
     with open(file, "rb") as handle:
         header_length = struct.unpack("<Q", handle.read(8))[0]
         header = json.loads(handle.read(header_length))
