@@ -1,4 +1,4 @@
-# medeval
+# Beyond the Score: What Medical Benchmarks Miss
 
 Code, data and results for our study of open LLMs on the Spanish MIR medical licensing exam:
 
